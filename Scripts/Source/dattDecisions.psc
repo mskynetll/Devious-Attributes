@@ -154,7 +154,7 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 			responseTypeMultiplier = (Math.abs(playerResponseType) * 0.05) / 2.0
 			obedienceMultiplier += responseTypeMultiplier 	
 			prideMultiplier -= responseTypeMultiplier
-			selfEsteemMultiplier -= responseTypeMultiplier			
+			selfEsteemMultiplier -= (responseTypeMultiplier * 1.2) ;hit for self-esteem more
 		ElseIf(playerResponseType < 0) ;player refused
 			;-5% for meekly refusing, -10% for strongly refusing
 			responseTypeMultiplier = (Math.abs(playerResponseType) * 0.05)
@@ -199,21 +199,54 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 
 	;calculate fetishes if player agreed to request, regardless of player status (free/slave etc.)
 	If (playerResponseType > 0)
+		float humiliationLover = Attributes.GetPlayerFetish(Constants.HumiliationLoverAttributeId)
+		float masochist = Attributes.GetPlayerFetish(Constants.MasochistAttributeId)
+		float exhibitionist = Attributes.GetPlayerFetish(Constants.ExhibitionistAttributeId)
+		float nympho = Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId)
+
+		;for humiliating task, additional hit to pride and self-esteem
+		If(decisionTypes.Find(1) >= 0) 
+			if(humiliationLover < 100.0) ;for additional hit, even if player is not horny
+				prideMultiplier -= responseTypeMultiplier
+				selfEsteemMultiplier -= (responseTypeMultiplier * 2) ;humiliation -> additional hit
+			Else
+				prideMultiplier += responseTypeMultiplier
+				selfEsteemMultiplier += (responseTypeMultiplier * 2) ;humiliation -> additional hit
+			EndIf
+		EndIf
+		If(decisionTypes.Find(3) >= 0) 
+			If(exhibitionist < 100.0)
+				prideMultiplier -= responseTypeMultiplier
+			Else
+				selfEsteemMultiplier += responseTypeMultiplier
+			EndIf
+		EndIf
+		If(decisionTypes.Find(4) >= 0)
+			If(nympho < 100.0)
+				;if player is not horny enough, hit to pride and self-esteem
+				prideMultiplier -= responseTypeMultiplier		
+				selfEsteemMultiplier -= (responseTypeMultiplier / 2)
+			Else
+				;if player reached max nympho - sex increases self-esteem
+				selfEsteemMultiplier += responseTypeMultiplier
+			EndIf
+		EndIf
+
 		If(playerArousal >= Libs.Config.ArousalThresholdToIncreaseFetish)
-			If(decisionTypes.Find(1) >= 0) ;there is humiliation in types
+			If(decisionTypes.Find(1) >= 0 && humiliationLover < 100.0) ;there is humiliation in types
 				Attributes.IncrementPlayerFetish(Constants.HumiliationLoverAttributeId,Libs.Config.FetishIncrementPerDecision)
 				prideMultiplier -= responseTypeMultiplier
-				selfEsteemMultiplier -= responseTypeMultiplier ;humiliation -> additional hit
+				selfEsteemMultiplier -= responseTypeMultiplier
 			EndIf
-			If(decisionTypes.Find(2) >= 0) ;there is pain in types
+			If(decisionTypes.Find(2) >= 0 && masochist < 100.0) ;there is pain in types
 				Attributes.IncrementPlayerFetish(Constants.MasochistAttributeId,Libs.Config.FetishIncrementPerDecision)
 				prideMultiplier -= responseTypeMultiplier
 			EndIf
-			If(decisionTypes.Find(3) >= 0) ;there is exhibitionism in types
+			If(decisionTypes.Find(3) >= 0 && exhibitionist < 100.0) ;there is exhibitionism in types
 				Attributes.IncrementPlayerFetish(Constants.ExhibitionistAttributeId,Libs.Config.FetishIncrementPerDecision)
 				prideMultiplier -= responseTypeMultiplier
 			EndIf	
-			If(decisionTypes.Find(4) >= 0) ;there is sex related stuff in types
+			If(decisionTypes.Find(4) >= 0 && nympho < 100.0) ;there is sex related stuff in types
 				Attributes.IncrementPlayerFetish(Constants.NymphomaniacAttributeId,Libs.Config.FetishIncrementPerDecision)
 				prideMultiplier -= responseTypeMultiplier
 				selfEsteemMultiplier += responseTypeMultiplier ;no hit to self-esteem if horny enough

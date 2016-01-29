@@ -68,7 +68,7 @@ Float Property FetishIncrementPerDecision Auto Hidden
 Float Property DefaultFetishIncrementPerDecision = 0.5 AutoReadonly Hidden
 
 Int Property WillpowerBaseDecisionCost Auto Hidden
-Int Property DefaultWillpowerBaseDecisionCost = 10 AutoReadonly Hidden
+Int Property DefaultWillpowerBaseDecisionCost = 15 AutoReadonly Hidden
 
 Int Property ObedienceDailyDecrease Auto Hidden
 Int Property DefaultObedienceDailyDecrease = 1 AutoReadonly Hidden
@@ -83,13 +83,13 @@ Float Property StatIncreasePercentagePerStealing Auto Hidden
 Float Property DefaultStatIncreasePercentagePerStealing = 0.1 AutoReadonly Hidden
 
 Float Property PrideHitPercentagePerRape Auto Hidden
-Float Property DefaultPrideHitPercentagePerRape = 10 AutoReadonly Hidden
+Float Property DefaultPrideHitPercentagePerRape = 15 AutoReadonly Hidden
 Float Property PrideIncreasePercentagePerEnemyKill Auto Hidden
 Float Property DefaultPrideIncreasePercentagePerEnemyKill = 0.5 AutoReadonly Hidden
 Float Property WillpowerHitPercentagePerRape Auto Hidden
 Float Property DefaultWillpowerHitPercentagePerRape = 50 AutoReadonly Hidden
 Float Property SelfesteemHitPercentagePerRape Auto Hidden
-Float Property DefaultSelfesteemHitPercentagePerRape = 2 AutoReadonly Hidden
+Float Property DefaultSelfesteemHitPercentagePerRape = 5 AutoReadonly Hidden
 Float Property SimulateRapeActorCount Auto Hidden
 
 ;Soft dependency flags

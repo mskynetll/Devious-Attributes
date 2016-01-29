@@ -66,7 +66,7 @@ EndFunction
 
 float Function GetFetish(Actor akActor, string fetishAttributeId)
 	float value = StorageUtil.GetFloatValue(akActor,fetishAttributeId)
-	If(value < 0)
+	If(value < 0 || value > 100.0)
 		Debug.MessageBox("Out-of-range value for fetishAttributeId=" + fetishAttributeId + " -> value="+value+". The value should be 0 or more.")
 		StorageUtil.SetFloatValue(akActor,fetishAttributeId, 0.0) ;in this case, set the default value
 	EndIf
@@ -97,6 +97,7 @@ Function IncrementFetish(Actor akActor, string fetishAttributeId, float incremen
 
 	float value = StorageUtil.GetFloatValue(akActor, fetishAttributeId, 0)
 	value += increment
+	value = Max(100.0,value) ;make sure the value won't go overboard
 	StorageUtil.SetFloatValue(akActor,fetishAttributeId, value)
 
 	If (fetishChangedEventId)
@@ -153,6 +154,11 @@ Float Function GetPlayerSubmissiveness()
 EndFunction
 
 Float Function GetSubmissiveness(Actor akActor)
+	int soulState = GetSoulState(akActor)
+	If(soulState == 1) ;willing slave
+		return 1.0
+	EndIf
+
 	float selfEsteem = GetAttribute(akActor, Constants.SelfEsteemAttributeId)
 	float pride = GetAttribute(akActor, Constants.PrideAttributeId)
 	float willpower = GetAttribute(akActor, Constants.WillpowerAttributeId)
