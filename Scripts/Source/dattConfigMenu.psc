@@ -462,10 +462,7 @@ Event OnOptionSliderAccept(int option, float value)
         DebugExtraSelfEsteemChange = value as int
         SetSliderOptionValue(debugExtraSelfEsteemChangeSliderId, value, "{0}")
     ElseIf (option == manualSoulStateSliderId)
-        If(debugPlayerSoulStateChangeEventId)
-            ModEvent.PushInt(debugPlayerSoulStateChangeEventId, value as int)
-            ModEvent.Send(debugPlayerSoulStateChangeEventId)
-        EndIf
+        Attributes.SetPlayerSoulState(value as int)
         SetSliderOptionValue(manualSoulStateSliderId, value, "{0}")
     EndIf
 EndEvent

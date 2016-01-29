@@ -12,6 +12,10 @@ Function Initialize()
 	attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
 	fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	soulStateChangedEventId = ModEvent.Create(Constants.SoulStateChangedEventName)
+
+	If(Libs.PlayerRef == None)
+		Debug.MessageBox("Player reference at dattAttributes equals to None. This is something that is not supposed to happen and needs to be reported.")
+	EndIf
 EndFunction
 
 ; 0 -> Free Spirit
@@ -35,7 +39,7 @@ Int Function GetPlayerSoulState()
 EndFunction
 
 Function SetSoulState(Actor akActor, int value)
-	If(value > 0 && value <= 3) ;simple guard against invalid values
+	If(value >= 0 && value < 3) ;simple guard against invalid values
 		StorageUtil.SetIntValue(akActor, Constants.SoulStateAttributeId, value)
 
 		If(soulStateChangedEventId)
@@ -43,6 +47,8 @@ Function SetSoulState(Actor akActor, int value)
 			ModEvent.PushInt(soulStateChangedEventId, value)
 			ModEvent.Send(fetishChangedEventId)
 		EndIf
+	Else
+		Debug.MessageBox("received invalid value for SetSoulState() -> value ="+value)
 	EndIf
 EndFunction
 

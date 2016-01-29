@@ -200,7 +200,7 @@ Function OnPlayerCastMagic(Form spell)
 		If(Libs.PlayerRef.IsInFaction(CollegeOfWinterholdFaction))
 			bonusMultiplier *= 2
 		EndIf
-		float prideMultiplier = (((100.0 + (Libs.Config.PrideIncreasePercentagePerSpellCast * bonusMultiplier)) / 100.0))
+		float prideMultiplier = 1.0 + ((Libs.Config.PrideIncreasePercentagePerSpellCast * bonusMultiplier) / 100.0)
 
 		pride *= prideMultiplier
 		Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride)
@@ -216,9 +216,9 @@ Function OnPlayerKill(Actor victim, int relationshipRank)
 
 	float bonusMultiplier = 1.0
 	If(Libs.PlayerRef.IsInFaction(DarkBrotherhoodFaction))
-		bonusMultiplier *= 2
+		bonusMultiplier = 2.0
 	EndIf
-	float killPrideMultiplier = ((100.0 + (Libs.Config.PrideIncreasePercentagePerEnemyKill * bonusMultiplier)) / 100.0)
+	float killPrideMultiplier = 1.0 + ((Libs.Config.PrideIncreasePercentagePerEnemyKill * bonusMultiplier) / 100.0)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 
 	;increase pride only if you kill you own or one level below at minimum
@@ -248,7 +248,7 @@ Function OnPlayerStealOrPickpocket(int goldAmount)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 
 	If(Libs.PlayerRef.IsInFaction(ThievesGuildFaction))
-		float multiplier = ((100.0 + Libs.Config.PrideIncreasePercentagePerEnemyKill) / 100.0)
+		float multiplier = 1.0 + (Libs.Config.PrideIncreasePercentagePerEnemyKill / 100.0)
 		pride *= multiplier
 		selfEsteem *= multiplier
 		If(goldAmount > 0)
@@ -265,7 +265,7 @@ Function OnPlayerRape(int actorCount)
 		Debug.Notification("Mod Event -> OnPlayerRape(), actorCount = " + actorCount)
 	EndIf
 
-   	float humiliationMultiplier = 1
+   	float humiliationMultiplier = 1.0
    	If (actorCount > 2)
    		;more than one agressor, add 10% for each aggressor to multiplier
    		humiliationMultiplier *= ((actorCount - 1) * 1.1)
@@ -278,9 +278,9 @@ Function OnPlayerRape(int actorCount)
 	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 
-   	pride *= ((((100.0 - Libs.Config.PrideHitPercentagePerRape) / 100.0) * humiliationMultiplier))
-   	selfEsteem *= (((100.0 - Libs.Config.SelfesteemHitPercentagePerRape) / 100.0) * humiliationMultiplier)
-   	willpower *= (((100.0 - Libs.Config.WillpowerHitPercentagePerRape) / 100.0) * humiliationMultiplier)
+   	pride *= (1.0 - ((Libs.Config.PrideHitPercentagePerRape / 100.0) * humiliationMultiplier))
+   	selfEsteem *=  (1.0 - ((Libs.Config.SelfesteemHitPercentagePerRape / 100.0) * humiliationMultiplier))
+   	willpower *= (1.0 - ((Libs.Config.WillpowerHitPercentagePerRape / 100.0) * humiliationMultiplier))
 
 	Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride)
 	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)
