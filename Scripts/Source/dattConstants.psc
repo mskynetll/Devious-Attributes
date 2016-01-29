@@ -22,9 +22,20 @@ String Property NymphomaniacAttributeId = "_Datt_Nymphomaniac" AutoReadonly Hidd
 ;event names -> out
 String Property AttributeChangedEventName = "Datt_AttributeChanged" AutoReadonly Hidden
 String Property FetishChangedEventName = "Datt_FetishChanged" AutoReadonly Hidden
+String Property SoulStateChangedEventName = "Datt_SoulStateChanged" AutoReadonly Hidden
 
 ;event names -> in
-String Property PlayerDecisionEventName = "Datt_PlayerDecision" AutoReadonly Hidden
+String Property PlayerDecisionEventName1 = "Datt_PlayerDecision1" AutoReadonly Hidden
+String Property PlayerDecisionEventName2 = "Datt_PlayerDecision2" AutoReadonly Hidden
+String Property PlayerDecisionEventName3 = "Datt_PlayerDecision3" AutoReadonly Hidden
+String Property PlayerDecisionEventName4 = "Datt_PlayerDecision4" AutoReadonly Hidden
+
+String Property PlayerDecisionWithExtraEventName1 = "Datt_PlayerDecision1WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName2 = "Datt_PlayerDecision2WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName3 = "Datt_PlayerDecision3WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName4 = "Datt_PlayerDecision4WithExtra" AutoReadonly Hidden
+
+String Property PlayerSoulStateChangeEventName = "Datt_PlayerSoulStateChange" AutoReadonly Hidden
 
 ;TODO : make defaults configurable
 ;also, consider making those configurable by profiles to allow roleplaying

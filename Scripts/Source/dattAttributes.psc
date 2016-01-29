@@ -6,10 +6,12 @@ dattLibraries Property Libs Auto
 
 int attributeChangedEventId
 int fetishChangedEventId
-
+int soulStateChangedEventId
+;
 Function Initialize()
 	attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
 	fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
+	soulStateChangedEventId = ModEvent.Create(Constants.SoulStateChangedEventName)
 EndFunction
 
 ; 0 -> Free Spirit
@@ -35,6 +37,12 @@ EndFunction
 Function SetSoulState(Actor akActor, int value)
 	If(value > 0 && value <= 3) ;simple guard against invalid values
 		StorageUtil.SetIntValue(akActor, Constants.SoulStateAttributeId, value)
+
+		If(soulStateChangedEventId)
+			ModEvent.PushForm(soulStateChangedEventId, akActor)
+			ModEvent.PushInt(soulStateChangedEventId, value)
+			ModEvent.Send(fetishChangedEventId)
+		EndIf
 	EndIf
 EndFunction
 
@@ -119,11 +127,11 @@ Function SetPlayerAttribute(string attributeId, float value)
 EndFunction
 
 Function SetAttribute(Actor akActor, string attributeId, float value)
-	If(Config.ShowDebugMessages)
+	float valueToSet = Max(Constants.MinStatValue, Min(Constants.MaxStatValue, value))
+	If(Config.ShowDebugMessages) ;
 		Debug.Notification("Devious Attributes -> SetAttribute(), attributeId=" + attributeId +", value=" + value)
 	EndIf
 
-	float valueToSet = Max(Constants.MinStatValue, Min(Constants.MaxStatValue, value))
 	StorageUtil.SetFloatValue(akActor,attributeId, valueToSet)
 
 	If (attributeChangedEventId)

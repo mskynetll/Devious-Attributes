@@ -6,20 +6,29 @@ dattLibraries Property Libs Auto
 dattAttributes Property Attributes Auto
 
 Function Initialize()
-	RegisterForModEvent("Datt_PlayerDecision1", "OnPlayerDecision1")
-	RegisterForModEvent("Datt_PlayerDecision2", "OnPlayerDecision2")
-	RegisterForModEvent("Datt_PlayerDecision3", "OnPlayerDecision3")
-	RegisterForModEvent("Datt_PlayerDecision4", "OnPlayerDecision4")
+	RegisterForModEvent(Constants.PlayerDecisionEventName1, "OnPlayerDecision1")
+	RegisterForModEvent(Constants.PlayerDecisionEventName2, "OnPlayerDecision2")
+	RegisterForModEvent(Constants.PlayerDecisionEventName3, "OnPlayerDecision3")
+	RegisterForModEvent(Constants.PlayerDecisionEventName4, "OnPlayerDecision4")
 
-	RegisterForModEvent("Datt_PlayerDecision1WithExtra", "OnPlayerDecision1WithExtra")
-	RegisterForModEvent("Datt_PlayerDecision2WithExtra", "OnPlayerDecision2WithExtra")
-	RegisterForModEvent("Datt_PlayerDecision3WithExtra", "OnPlayerDecision3WithExtra")
-	RegisterForModEvent("Datt_PlayerDecision4WithExtra", "OnPlayerDecision4WithExtra")
+	RegisterForModEvent(Constants.PlayerDecisionWithExtraEventName1, "OnPlayerDecision1WithExtra")
+	RegisterForModEvent(Constants.PlayerDecisionWithExtraEventName2, "OnPlayerDecision2WithExtra")
+	RegisterForModEvent(Constants.PlayerDecisionWithExtraEventName3, "OnPlayerDecision3WithExtra")
+	RegisterForModEvent(Constants.PlayerDecisionWithExtraEventName4, "OnPlayerDecision4WithExtra")
+
+	RegisterForModEvent(Constants.PlayerSoulStateChangeEventName, "OnPlayerSoulStateChange")
 
 	If(Libs.SexLabAroused == None)	
 		Debug.MessageBox("Warning, I see 'None' reference for SexLabAroused. I guess the script reference wasn't filled-out by the game. This should not happen, and needs to be reported. Nothing bad will happen, except that fetish values won't be calculated, since they depend on calculating arousal threshold...")
 	EndIf
 EndFunction
+
+Event OnPlayerSoulStateChange(int soulState)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnPlayerSoulStateChange")
+	EndIf
+	Attributes.SetPlayerSoulState(soulState)
+EndEvent
 
 Event OnPlayerDecision1(int playerResponseType, int decisionType)
 	If(Libs.Config.ShowDebugMessages)
@@ -151,7 +160,6 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 			responseTypeMultiplier = (Math.abs(playerResponseType) * 0.05)
 			obedienceMultiplier -= responseTypeMultiplier
 			prideMultiplier += (responseTypeMultiplier)
-			
 
 			If(soulState == Constants.State_ForcedSlave)
 				;20% more for willpower cost if one is a slave

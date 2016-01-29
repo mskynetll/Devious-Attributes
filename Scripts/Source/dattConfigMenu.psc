@@ -33,7 +33,9 @@ int debugExtraSelfEsteemChangeSliderId
 int debugPlayerDecisionWithExtraChangesToggleId
 int debugPlayerDecisionEventId
 int debugPlayerDecisionWithExtraEventId
+int debugPlayerSoulStateChangeEventId
 
+int manualSoulStateSliderId
 int refreshRateSliderId
 int simulateRapeActorCountSliderId
 int selfEsteemPeriodicIncreasePerDaySliderId
@@ -102,6 +104,9 @@ Event OnConfigInit()
     Pages[1] = AttributesPageName
     Pages[2] = DebugPageName   
 
+    If(RefreshRate == 0)
+        RefreshRate = DefaultRefreshRate
+    EndIf
     If(PrideHitPercentagePerRape == 0)
         PrideHitPercentagePerRape = DefaultPrideHitPercentagePerRape
     EndIf
@@ -137,6 +142,13 @@ Event OnConfigInit()
     EndIf
     CheckSoftDependencies()
 
+    If(Constants == None)
+        Debug.MessageBox("Constants == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    ElseIf(MonitorQuest == None)
+        Debug.MessageBox("MonitorQuest == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    ElseIf(Attributes == None)
+        Debug.MessageBox("Attributes == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    EndIf
 EndEvent
 
 Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
@@ -202,8 +214,9 @@ EndFunction
 
 Event OnPageReset(string page)
 {Called when a new page is selected, including the initial empty page} 	
-    debugPlayerDecisionEventId = ModEvent.Create("Datt_PlayerDecision1")
-    debugPlayerDecisionWithExtraEventId = ModEvent.Create("Datt_PlayerDecision1WithExtra")
+    debugPlayerDecisionEventId = ModEvent.Create(Constants.PlayerDecisionEventName1)
+    debugPlayerDecisionWithExtraEventId = ModEvent.Create(Constants.PlayerDecisionWithExtraEventName1)
+    debugPlayerSoulStateChangeEventId = ModEvent.Create(Constants.PlayerSoulStateChangeEventName)
     SetCursorFillMode(TOP_TO_BOTTOM)    
     If (page == SettingsPageName)
         AddHeaderOption("Mod Options")
@@ -232,12 +245,21 @@ Event OnPageReset(string page)
         float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
         float obedience = Attributes.GetPlayerAttribute(Constants.ObedienceAttributeId)
 
+        int soulState = Attributes.GetPlayerSoulState()
+
+        If(soulState == 0)
+            AddTextOption("Soul State", "Free(0)",1)
+        ElseIf(soulState == 1)
+            AddTextOption("Soul State", "Willing Sub(1)",1)
+        ElseIf(soulState == 2)
+            AddTextOption("Soul State", "Forced Slave(2)",1)
+        EndIf
+
         AddHeaderOption("Stats")
     	AddTextOption("Willpower", willpower, 1)
     	AddTextOption("Self-Esteem", selfEsteem, 1)
     	AddTextOption("Pride", pride, 1)
     	AddTextOption("Obedience", obedience, 1)
-
         ;since submissiveness is calculated between 0.0 and 1.0, display it as 0.0 -> 100.0
         ;for conformity's sake
     	AddTextOption("Submissiveness", Attributes.GetPlayerSubmissiveness() * 100.0, 1)
@@ -271,6 +293,9 @@ Event OnPageReset(string page)
             AddTextOption("Sanguine's Debauchery", "Not Installed", 1)    
         EndIf        
     ElseIf (page == DebugPageName)  
+        AddHeaderOption("Misc")
+        manualSoulStateSliderId = AddSliderOption("Soul State", Attributes.GetPlayerSoulState() as float, "{0}")
+
         AddHeaderOption("Stats")
     	resetStatsToggleId = AddToggleOption("Reset stats", false)
         simulateRapeToggleId = AddToggleOption("Simulate player victim", false)
@@ -373,6 +398,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(0.0)
         SetSliderDialogRange(-100.0, 100.0) 
         SetSliderDialogInterval(1.0)
+    ElseIf (option == manualSoulStateSliderId)
+        SetSliderDialogStartValue(Attributes.GetPlayerSoulState())
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0, 2.0) 
+        SetSliderDialogInterval(1.0)
     EndIf 
 EndEvent
 
@@ -431,6 +461,12 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == debugExtraSelfEsteemChangeSliderId)        
         DebugExtraSelfEsteemChange = value as int
         SetSliderOptionValue(debugExtraSelfEsteemChangeSliderId, value, "{0}")
+    ElseIf (option == manualSoulStateSliderId)
+        If(debugPlayerSoulStateChangeEventId)
+            ModEvent.PushInt(debugPlayerSoulStateChangeEventId, value as int)
+            ModEvent.Send(debugPlayerSoulStateChangeEventId)
+        EndIf
+        SetSliderOptionValue(manualSoulStateSliderId, value, "{0}")
     EndIf
 EndEvent
 
