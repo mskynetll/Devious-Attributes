@@ -49,7 +49,11 @@ int arousalThresholdToIncreaseFetishSliderId
 int obedienceDailyDecreaseSliderId
 int fetishIncrementPerDecisionSliderId
 int willpowerBaseDecisionCostSliderId
-
+int selfesteemIncreasePercentagePerConsensualSexSliderId
+int sdLooksChangePrideHitSliderId
+int sdLooksChangeSelfEsteemHitSliderId
+int sdSubSexPrideChangePercentageSliderId
+int sdSubEntertainSelfEsteemChangePercentageSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -60,6 +64,19 @@ Int Property DebugExtraSelfEsteemChange Auto
 Float Property RefreshRate Auto Hidden
 Bool Property IsRunningRefresh Auto Hidden
 Bool Property ShowDebugMessages Auto
+
+Float Property SdSubEntertainSelfEsteemChangePercentage Auto Hidden
+Float Property DefaultSdSubEntertainSelfEsteemChangePercentage = 10.0 AutoReadonly Hidden
+
+Float Property SdSubSexPrideChangePercentage Auto Hidden
+Float Property DefaultSdSubSexPrideChangePercentage = 5.0 AutoReadonly Hidden
+
+Float Property SdLooksChangePridePercentageHit Auto Hidden
+Float Property DefaultSdLooksChangePridePercentageHit = 50.0 AutoReadonly Hidden
+
+Float Property SdLooksChangeSelfEsteemPercentageHit Auto Hidden
+Float Property DefaultSdLooksChangeSelfEsteemPercentageHit = 25 AutoReadonly Hidden
+
 
 Int Property ArousalThresholdToIncreaseFetish Auto Hidden
 Int Property DefaultArousalThresholdToIncreaseFetish = 50 AutoReadonly Hidden
@@ -88,6 +105,10 @@ Float Property PrideIncreasePercentagePerEnemyKill Auto Hidden
 Float Property DefaultPrideIncreasePercentagePerEnemyKill = 0.5 AutoReadonly Hidden
 Float Property WillpowerHitPercentagePerRape Auto Hidden
 Float Property DefaultWillpowerHitPercentagePerRape = 50 AutoReadonly Hidden
+
+Float Property SelfesteemIncreasePercentagePerConsensualSex Auto Hidden
+Float Property DefaultSelfesteemIncreasePercentagePerConsensualSex = 1 AutoReadonly Hidden
+
 Float Property SelfesteemHitPercentagePerRape Auto Hidden
 Float Property DefaultSelfesteemHitPercentagePerRape = 5 AutoReadonly Hidden
 Float Property SimulateRapeActorCount Auto Hidden
@@ -140,6 +161,22 @@ Event OnConfigInit()
     If (WillpowerBaseDecisionCost == 0)
         WillpowerBaseDecisionCost = DefaultWillpowerBaseDecisionCost
     EndIf
+    If (SdLooksChangePridePercentageHit == 0.0)
+        SdLooksChangePridePercentageHit = DefaultSdLooksChangePridePercentageHit
+    EndIf
+    If (SdLooksChangeSelfEsteemPercentageHit == 0.0)
+        SdLooksChangeSelfEsteemPercentageHit = DefaultSdLooksChangeSelfEsteemPercentageHit
+    EndIf
+    If (SdSubSexPrideChangePercentage == 0.0)
+        SdSubSexPrideChangePercentage = DefaultSdSubSexPrideChangePercentage
+    EndIf
+    If (SdSubEntertainSelfEsteemChangePercentage == 0.0)
+        SdSubEntertainSelfEsteemChangePercentage = DefaultSdSubEntertainSelfEsteemChangePercentage
+    EndIf
+    If (SelfesteemIncreasePercentagePerConsensualSex == 0.0)
+        SelfesteemIncreasePercentagePerConsensualSex = DefaultSelfesteemIncreasePercentagePerConsensualSex
+    EndIf
+
     CheckSoftDependencies()
 
     If(Constants == None)
@@ -230,15 +267,22 @@ Event OnPageReset(string page)
 
         AddHeaderOption("Negative Stat Changes")
         prideHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - pride", PrideHitPercentagePerRape, "Decrease {1}%")        
-        selfesteemHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - self-esteem", PrideHitPercentagePerRape, "Decrease {1}%")        
+        selfesteemHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - self-esteem", SelfesteemHitPercentagePerRape, "Decrease {1}%")        
         willpowerHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - willpower", WillpowerHitPercentagePerRape, "Decrease {1}%")        
 
         AddHeaderOption("Positive Stat Changes")
-        selfEsteemPeriodicIncreasePerDaySliderId = AddSliderOption("Obedience", ObedienceDailyDecrease, "Decrease {0} per day")
+        obedienceDailyDecreaseSliderId = AddSliderOption("Obedience", ObedienceDailyDecrease, "Decrease {0} per day")
+        selfesteemIncreasePercentagePerConsensualSexSliderId = AddSliderOption("Self-esteem (consensual sex)", SelfesteemIncreasePercentagePerConsensualSex, "Increase {1}%")
         selfEsteemPeriodicIncreasePerDaySliderId = AddSliderOption("Self-esteem", SelfEsteemPeriodicIncreasePerDay, "Increase {0} per day")
         prideIncreasePercentagePerEnemyKillSliderId = AddSliderOption("Enemy kill - pride", PrideIncreasePercentagePerEnemyKill, "Increase {1}%")
         prideIncreasePercentagePerSpellCastSliderId = AddSliderOption("Spellcast - pride", PrideIncreasePercentagePerSpellCast, "Increase {1}%")
         statIncreasePercentagePerStealingSliderId = AddSliderOption("Stealing - pride,self-esteem", StatIncreasePercentagePerStealing, "Increase {1}%")
+
+        AddHeaderOption("SD+")
+        sdSubSexPrideChangePercentageSliderId = AddSliderOption("Sex with PC/sub - pride", SdSubSexPrideChangePercentage, "Change {1}%")
+        sdSubEntertainSelfEsteemChangePercentageSliderId = AddSliderOption("PC/sub Entertain - self-esteem", SdSubEntertainSelfEsteemChangePercentage, "Change {1}%")
+        sdLooksChangePrideHitSliderId = AddSliderOption("Looks Change - pride", SdLooksChangePridePercentageHit, "Decrease {1}%")
+        sdLooksChangeSelfEsteemHitSliderId = AddSliderOption("Looks Change - self-esteem", SdLooksChangeSelfEsteemPercentageHit, "Decrease {1}%")        
 	ElseIf (page == AttributesPageName) 
         float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
         float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
@@ -403,7 +447,33 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(0.0)
         SetSliderDialogRange(0, 2.0) 
         SetSliderDialogInterval(1.0)
+    ElseIf (option == sdLooksChangePrideHitSliderId)
+        SetSliderDialogStartValue(SdLooksChangePridePercentageHit)
+        SetSliderDialogDefaultValue(DefaultSdLooksChangePridePercentageHit)
+        SetSliderDialogRange(0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == sdLooksChangeSelfEsteemHitSliderId)
+        SetSliderDialogStartValue(SdLooksChangeSelfEsteemPercentageHit)
+        SetSliderDialogDefaultValue(DefaultSdLooksChangeSelfEsteemPercentageHit)
+        SetSliderDialogRange(0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == sdSubSexPrideChangePercentageSliderId)
+        SetSliderDialogStartValue(SdSubSexPrideChangePercentage)
+        SetSliderDialogDefaultValue(DefaultSdSubSexPrideChangePercentage)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == sdSubEntertainSelfEsteemChangePercentageSliderId)
+        SetSliderDialogStartValue(SdSubEntertainSelfEsteemChangePercentage)
+        SetSliderDialogDefaultValue(DefaultSdSubEntertainSelfEsteemChangePercentage)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == selfesteemIncreasePercentagePerConsensualSexSliderId)
+        SetSliderDialogStartValue(SelfesteemIncreasePercentagePerConsensualSex)
+        SetSliderDialogDefaultValue(DefaultSelfesteemIncreasePercentagePerConsensualSex)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(1.0)
     EndIf 
+    
 EndEvent
 
 
@@ -464,7 +534,23 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == manualSoulStateSliderId)
         Attributes.SetPlayerSoulState(value as int)
         SetSliderOptionValue(manualSoulStateSliderId, value, "{0}")
+    ElseIf (option == sdLooksChangePrideHitSliderId)
+        SdLooksChangePridePercentageHit = value
+        SetSliderOptionValue(sdLooksChangePrideHitSliderId, value, "Decrease {1}%")
+    ElseIf (option == sdLooksChangeSelfEsteemHitSliderId)
+        SdLooksChangeSelfEsteemPercentageHit = value
+        SetSliderOptionValue(sdLooksChangeSelfEsteemHitSliderId, value, "Decrease {1}%")
+    ElseIf (option == sdSubSexPrideChangePercentageSliderId)
+        SdSubSexPrideChangePercentage = value
+        SetSliderOptionValue(sdSubSexPrideChangePercentageSliderId, value, "Change {1}%")
+    ElseIf (option == sdSubEntertainSelfEsteemChangePercentageSliderId)
+        SdSubEntertainSelfEsteemChangePercentage = value
+        SetSliderOptionValue(sdSubEntertainSelfEsteemChangePercentageSliderId, value, "Change {1}%")
+    ElseIf (option == selfesteemIncreasePercentagePerConsensualSexSliderId)
+        SelfesteemIncreasePercentagePerConsensualSex = value
+        SetSliderOptionValue(selfesteemIncreasePercentagePerConsensualSexSliderId, value, "Increase {1}%")
     EndIf
+
 EndEvent
 
 Event OnOptionSelect(int option)

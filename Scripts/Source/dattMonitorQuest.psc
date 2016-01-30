@@ -89,8 +89,102 @@ Function RegisterForEvents()
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> registering events")
 	EndIf
-	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")		
+	RegisterForModEvent("SDEnslavedStart","OnSDEnslavedStart")
+	RegisterForModEvent("SDEnslavedStop", "OnSDEnslavedStop")
+	RegisterForModEvent("PCSubChangeLook", "OnPCSubChangeLook")
+	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
+
+	;undocumented, need to check with Skyrimll if its ok to use
+	RegisterForModEvent("PCSubWhip",   "OnSDStoryWhip")	
+	RegisterForModEvent("PCSubSex",   "OnSDStorySex")
+	RegisterForModEvent("PCSubEntertain",   "OnSDStoryEntertain")
+	RegisterForModEvent("SDEmancipateSlave",   "OnSDEmancipateSlave")
 EndFunction
+
+Event OnSDEmancipateSlave(String _eventName, String _args, Float _argc = 1.0, Form _sender)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDEmancipateSlave")
+	EndIf	
+
+	Attributes.SetPlayerSoulState(Constants.State_WillingSlave)
+EndEvent
+
+Event OnSDStoryEntertain(String _eventName, String _args, Float _argc = 1.0, Form _sender)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDStoryEntertain")
+	EndIf	
+
+	float humiliationMultiplier = 1.0
+	If  (_args == "Gangbang")
+		humiliationMultiplier = 2.0
+	ElseIf (_args == "Soloshow")
+		humiliationMultiplier = 1.5
+	EndIf
+
+	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+	If(Attributes.GetPlayerSoulState() == Constants.State_WillingSlave)
+		selfEsteem *= (1.0 + (Config.SdSubEntertainSelfEsteemChangePercentage / 100.0))
+	Else
+		selfEsteem *= (1.0 - (Config.SdSubEntertainSelfEsteemChangePercentage / 100.0))
+	EndIf
+	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId, selfEsteem)
+EndEvent
+
+Event OnSDStorySex(String _eventName, String _args, Float _argc = 1.0, Form _sender)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDStorySex")
+	EndIf	
+
+	float humiliationMultiplier = 1.0
+	If  (_args == "Gangbang")
+		humiliationMultiplier = 2.0
+	ElseIf (_args == "Soloshow")
+		humiliationMultiplier = 1.5
+	EndIf
+
+	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+	If(Attributes.GetPlayerSoulState() == Constants.State_WillingSlave) 
+		pride *= (1.0 + ((Config.SdSubSexPrideChangePercentage / 100.0) * humiliationMultiplier))
+	Else
+		pride *= (1.0 - ((Config.SdSubSexPrideChangePercentage / 100.0) * humiliationMultiplier))
+	EndIf
+	Attributes.SetPlayerAttribute(Constants.PrideAttributeId, pride)
+EndEvent
+
+Event OnSDStoryWhip(String _eventName, String _args, Float _argc = 1.0, Form _sender)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDStoryWhip")
+	EndIf
+EndEvent
+
+Event OnPCSubChangeLook()
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnPCSubChangeLook")
+	EndIf
+	;hit to pride and self-esteem
+	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+
+	selfEsteem *= (1.0 - (Config.SdLooksChangeSelfEsteemPercentageHit / 100.0))
+	pride *= (1.0 - (Config.SdLooksChangePridePercentageHit / 100.0))
+
+	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId, selfEsteem)
+	Attributes.SetPlayerAttribute(Constants.PrideAttributeId, pride)
+EndEvent
+
+Event OnSDEnslavedStart()
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDEnslavedStart")
+	EndIf
+	Attributes.SetPlayerSoulState(2)
+EndEvent
+
+Event OnSDEnslavedStop()
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSDEnslavedStop")
+	EndIf
+	Attributes.SetPlayerSoulState(0)
+EndEvent
 
 Event OnSleepStart(float afSleepStartTime, float afDesiredSleepEndTime)
 	Float hoursPassed = (afSleepStartTime - periodicUpdatesRefreshLastUpdateTime) * 24
@@ -236,6 +330,10 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
     sslThreadController controller = Libs.SexLab.HookController(argString)
     If (controller.IsVictim(Libs.PlayerRef))
 		OnPlayerRape(controller.ActorCount)    	
+    Else
+    	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+    	selfEsteem *= (1.0 + (Config.SelfesteemIncreasePercentagePerConsensualSex / 100.0))
+    	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)
     EndIf    
 EndEvent
 
