@@ -2,7 +2,7 @@ Scriptname dattConstants extends Quest
 
 Float Property MaxStatValue = 100.0 AutoReadonly Hidden
 Float Property MinStatValue = 0.0 AutoReadonly Hidden
-Float Property WillpowerBaseTickPerTimeUnit = 0.005 AutoReadonly Hidden
+
 
 String Property SoulStateAttributeId = "_Datt_Soul_State" AutoReadonly Hidden
 

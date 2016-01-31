@@ -58,6 +58,7 @@ int sdSubSexPrideChangePercentageSliderId
 int sdSubEntertainSelfEsteemChangePercentageSliderId
 int removeTraumaSpellToggleId
 int showRapeTraumaHoursToggleId
+int willpowerBaseTickPerTimeUnitSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -68,6 +69,9 @@ Int Property DebugExtraSelfEsteemChange Auto
 Float Property RefreshRate Auto Hidden
 Bool Property IsRunningRefresh Auto Hidden
 Bool Property ShowDebugMessages Auto
+
+Float Property WillpowerBaseTickPerTimeUnit Auto Hidden
+Float Property DefaultWillpowerBaseTickPerTimeUnit = 0.05 AutoReadonly Hidden
 
 Float Property SdSubEntertainSelfEsteemChangePercentage Auto Hidden
 Float Property DefaultSdSubEntertainSelfEsteemChangePercentage = 10.0 AutoReadonly Hidden
@@ -180,6 +184,9 @@ Event OnConfigInit()
     If (SelfesteemIncreasePercentagePerConsensualSex == 0.0)
         SelfesteemIncreasePercentagePerConsensualSex = DefaultSelfesteemIncreasePercentagePerConsensualSex
     EndIf
+    If (WillpowerBaseTickPerTimeUnit == 0.0)
+        WillpowerBaseTickPerTimeUnit = DefaultWillpowerBaseTickPerTimeUnit
+    EndIf
 
     CheckSoftDependencies()
 
@@ -262,7 +269,7 @@ Event OnPageReset(string page)
     If (page == SettingsPageName)
         AddHeaderOption("Mod Options")
         refreshRateSliderId = AddSliderOption("Stats refresh rate", RefreshRate, "Every {0} Seconds")
-        pauseRefreshTimerToggleId = AddToggleOption("Start/Stop stats refresh", IsRunningRefresh)        
+        pauseRefreshTimerToggleId = AddToggleOption("Start/Stop stats refresh", IsRunningRefresh)                
 
         AddHeaderOption("Player decision settings")        
         willpowerBaseDecisionCostSliderId  = AddSliderOption("Willpower base cost", WillpowerBaseDecisionCost, "{0}")
@@ -275,6 +282,7 @@ Event OnPageReset(string page)
         willpowerHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - willpower", WillpowerHitPercentagePerRape, "Decrease {1}%")        
 
         AddHeaderOption("Positive Stat Changes")
+        willpowerBaseTickPerTimeUnitSliderId = AddSliderOption("Base Willpower tick",WillpowerBaseTickPerTimeUnit, "{2} per time unit")
         obedienceDailyDecreaseSliderId = AddSliderOption("Obedience", ObedienceDailyDecrease, "Decrease {0} per day")
         selfesteemIncreasePercentagePerConsensualSexSliderId = AddSliderOption("Self-esteem (consensual sex)", SelfesteemIncreasePercentagePerConsensualSex, "Increase {1}%")
         selfEsteemPeriodicIncreasePerDaySliderId = AddSliderOption("Self-esteem", SelfEsteemPeriodicIncreasePerDay, "Increase {0} per day")
@@ -477,6 +485,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultSelfesteemIncreasePercentagePerConsensualSex)
         SetSliderDialogRange(0.0, 100.0) 
         SetSliderDialogInterval(1.0)
+    ElseIf (option == willpowerBaseTickPerTimeUnitSliderId)
+        SetSliderDialogStartValue(WillpowerBaseTickPerTimeUnit)
+        SetSliderDialogDefaultValue(DefaultWillpowerBaseTickPerTimeUnit)
+        SetSliderDialogRange(0.0, 50.0) 
+        SetSliderDialogInterval(0.01)
     EndIf 
     
 EndEvent
@@ -554,6 +567,9 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == selfesteemIncreasePercentagePerConsensualSexSliderId)
         SelfesteemIncreasePercentagePerConsensualSex = value
         SetSliderOptionValue(selfesteemIncreasePercentagePerConsensualSexSliderId, value, "Increase {1}%")
+    ElseIf (option == willpowerBaseTickPerTimeUnitSliderId)
+        WillpowerBaseTickPerTimeUnit = value
+        SetSliderOptionValue(willpowerBaseTickPerTimeUnitSliderId, value,"{2} per time unit")
     EndIf
 
 EndEvent

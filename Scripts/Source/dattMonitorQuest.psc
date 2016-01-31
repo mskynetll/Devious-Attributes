@@ -228,11 +228,11 @@ Event OnUpdate()
 		willpower = selfEsteem		
 	Else
 		float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
-		float tickBonus = (0.01 * SelfEsteem) + (0.01 * pride)
+		float tickBonus = (0.05 * SelfEsteem) + (0.05 * pride)
 		;if doing update for the first time, do nothing - will update stats next time		
 		If (shortRefreshLastUpdateTime > 0.0)
 			float hoursSinceLastUpdate = (Utility.GetCurrentGameTime() - shortRefreshLastUpdateTime) * 24
-			willpower = Min(Constants.MaxStatValue,willpower + (tickBonus + Constants.WillpowerBaseTickPerTimeUnit) * hoursSinceLastUpdate)
+			willpower = Min(Constants.MaxStatValue,willpower + ((tickBonus + Libs.Config.WillpowerBaseTickPerTimeUnit) * hoursSinceLastUpdate))
 			If(Libs.Config.ShowDebugMessages)
 				Debug.Notification("Event -> OnUpdate(), Willpower =" + Willpower)
 			EndIf
@@ -277,7 +277,7 @@ Function OnPeriodicStatsUpdate(Float hoursPassed)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 	float tickBonus = (0.01 * SelfEsteem) + (0.01 * pride)
 	
-	willpower = Min(Constants.MaxStatValue,willpower + (tickBonus + Constants.WillpowerBaseTickPerTimeUnit) * hoursPassed)
+	willpower = Min(Constants.MaxStatValue,willpower + ((tickBonus + Libs.Config.WillpowerBaseTickPerTimeUnit) * hoursPassed))
 	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower)
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Event -> OnPeriodicStatsUpdate(), Willpower =" + Willpower)
