@@ -7,6 +7,8 @@ dattAttributes Property Attributes Auto
 dattDecisions Property Decisions Auto
 dattConstants Property Constants Auto
 
+Spell Property RapeTraumaSpell Auto
+
 ;constants
 Float Property DefaultRefreshRate = 15.0 AutoReadonly Hidden ;in Seconds
 
@@ -54,6 +56,8 @@ int sdLooksChangePrideHitSliderId
 int sdLooksChangeSelfEsteemHitSliderId
 int sdSubSexPrideChangePercentageSliderId
 int sdSubEntertainSelfEsteemChangePercentageSliderId
+int removeTraumaSpellToggleId
+int showRapeTraumaHoursToggleId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -339,7 +343,8 @@ Event OnPageReset(string page)
     ElseIf (page == DebugPageName)  
         AddHeaderOption("Misc")
         manualSoulStateSliderId = AddSliderOption("Soul State", Attributes.GetPlayerSoulState() as float, "{0}")
-
+        removeTraumaSpellToggleId = AddToggleOption("Remove rape trauma", false)
+        showRapeTraumaHoursToggleId = AddToggleOption("Show rape trauma timer", false)
         AddHeaderOption("Stats")
     	resetStatsToggleId = AddToggleOption("Reset stats", false)
         simulateRapeToggleId = AddToggleOption("Simulate player victim", false)
@@ -572,5 +577,11 @@ Event OnOptionSelect(int option)
     ElseIf (option == debugPlayerDecisionWithExtraChangesToggleId)
         DebugSendPlayerDecisionWithExtraChanges(DebugPlayerResponseType, DebugPlayerDecisionType, DebugExtraPrideChange, DebugExtraSelfEsteemChange)
         Debug.MessageBox("Sending player decision (with extra changes), DebugPlayerResponseType=" + DebugPlayerResponseType + ", DebugPlayerDecisionType=" + DebugPlayerDecisionType)
+    ElseIf (option == removeTraumaSpellToggleId)
+        Libs.PlayerRef.DispelSpell(RapeTraumaSpell)        
+        Libs.PlayerRef.RemoveSpell(RapeTraumaSpell)
+    ElseIf (option == showRapeTraumaHoursToggleId)
+        int traumaDuration = StorageUtil.GetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)
+        Debug.MessageBox("Current rape trauma duration = " + traumaDuration + " (game hours until rape trauma wears off)")
     EndIf
 EndEvent

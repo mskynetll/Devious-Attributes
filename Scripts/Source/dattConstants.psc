@@ -49,3 +49,5 @@ Float Property DefaultObedience = 0.0 AutoReadonly Hidden
 Int Property State_FreeSpirit = 0 AutoReadonly Hidden
 Int Property State_WillingSlave = 1 AutoReadonly Hidden
 Int Property State_ForcedSlave = 2 AutoReadonly Hidden
+
+String Property RapeTraumaDurationId = "Datt_RapeTraumaDurationId" AutoReadonly Hidden

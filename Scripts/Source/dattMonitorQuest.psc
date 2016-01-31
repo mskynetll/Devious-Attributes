@@ -14,6 +14,8 @@ Faction Property ThievesGuildFaction Auto
 Faction Property DarkBrotherhoodFaction Auto
 Faction Property CollegeOfWinterholdFaction Auto
 
+Spell Property RapeTraumaSpell Auto
+
 dattLibraries Property Libs Auto
 dattAttributes Property Attributes Auto
 dattDecisions Property Decisions Auto
@@ -83,6 +85,10 @@ Function Maintenance()
 
 	Attributes.Initialize()
 	Decisions.Initialize()
+	
+	If(RapeTraumaSpell == None)
+		Debug.MessageBox("Rape trauma spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")
+	EndIf
 EndFunction
 
 Function RegisterForEvents()
@@ -95,10 +101,10 @@ Function RegisterForEvents()
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
 
 	;undocumented, need to check with Skyrimll if its ok to use
-	RegisterForModEvent("PCSubWhip",   "OnSDStoryWhip")	
-	RegisterForModEvent("PCSubSex",   "OnSDStorySex")
-	RegisterForModEvent("PCSubEntertain",   "OnSDStoryEntertain")
-	RegisterForModEvent("SDEmancipateSlave",   "OnSDEmancipateSlave")
+	RegisterForModEvent("PCSubWhip", "OnSDStoryWhip")	
+	RegisterForModEvent("PCSubSex", "OnSDStorySex")
+	RegisterForModEvent("PCSubEntertain", "OnSDStoryEntertain")
+	RegisterForModEvent("SDEmancipateSlave", "OnSDEmancipateSlave")
 EndFunction
 
 Event OnSDEmancipateSlave(String _eventName, String _args, Float _argc = 1.0, Form _sender)
@@ -367,6 +373,15 @@ Function OnPlayerRape(int actorCount)
    	If (actorCount > 2)
    		;more than one agressor, add 10% for each aggressor to multiplier
    		humiliationMultiplier *= ((actorCount - 1) * 1.1)
+   	EndIf
+
+   	If(!Libs.PlayerRef.HasSpell(RapeTraumaSpell))
+   		StorageUtil.SetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 12)
+   		Libs.PlayerRef.AddSpell(RapeTraumaSpell, false)
+   	Else
+   		int traumaDuration = StorageUtil.GetIntValue(Libs.PlayerRef, Constants.RapeTraumaDurationId, 0)
+   		traumaDuration += 12
+   		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.RapeTraumaDurationId, traumaDuration)
    	EndIf
 
    	;TODO : add humiliation multiplier for each worn devious device by player
