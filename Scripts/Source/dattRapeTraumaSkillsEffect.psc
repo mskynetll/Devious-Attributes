@@ -1,11 +1,11 @@
-Scriptname dattRapeTraumaMagickaEffect extends ActiveMagicEffect  
+Scriptname dattRapeTraumaSkillsEffect extends ActiveMagicEffect  
 
 Actor Property PlayerRef Auto
 dattConstants Property Constants Auto
 dattAttributes Property Attributes Auto
 
 Spell Property RapeTraumaSpell Auto
-Float Property OriginalMagickaRate Auto
+
 Int Property PlayerLevel Auto
 Float Property LessTraumaMultiplier Auto
 
@@ -26,11 +26,20 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 		LessTraumaMultiplier = 1.0 - (((0.5 * masochism) + (0.5 * nympho)) / 100.0)
 	Endif
 
-	OriginalMagickaRate = PlayerRef.GetAV("MagickaRate")
-	PlayerLevel = PlayerRef.GetLevel()
+	PlayerLevel = PlayerRef.GetLevel()		
 
-	PlayerRef.ModAV("Magicka", (-1 * PlayerLevel * 50) * LessTraumaMultiplier)
-	PlayerRef.ModAV("MagickaRate", (-1 * OriginalMagickaRate) * LessTraumaMultiplier)
+	float debuffModifier = -1 * (PlayerLevel * 5) * LessTraumaMultiplier
+
+    PlayerRef.ModAV("OneHanded", debuffModifier)
+	PlayerRef.ModAV("TwoHanded", debuffModifier)
+	PlayerRef.ModAV("Marksman", debuffModifier)
+
+	PlayerRef.ModAV("Alteration", debuffModifier)
+	PlayerRef.ModAV("Conjuration", debuffModifier)
+	PlayerRef.ModAV("Destruction", debuffModifier)
+	PlayerRef.ModAV("Illusion", debuffModifier)
+	PlayerRef.ModAV("Restoration", debuffModifier)
+	PlayerRef.ModAV("Enchanting", debuffModifier)
 
 	RegisterForSingleUpdateGameTime(traumaDuration)
 	RegisterForSleep()
@@ -38,11 +47,20 @@ EndEvent
 
 Event OnEffectFinish(Actor akTarget, Actor akCaster)
 	If(PlayerRef.HasSpell(RapeTraumaSpell))
-		PlayerRef.RemoveSpell(RapeTraumaSpell)		
+		PlayerRef.RemoveSpell(RapeTraumaSpell)			
 	Endif
 	
-	PlayerRef.ModAV("Magicka", PlayerLevel * 50 * LessTraumaMultiplier)
-	PlayerRef.ModAV("MagickaRate", OriginalMagickaRate * LessTraumaMultiplier)
+	float buffModifier = (PlayerLevel * 5) * LessTraumaMultiplier
+    PlayerRef.ModAV("OneHanded", buffModifier)
+	PlayerRef.ModAV("TwoHanded", buffModifier)
+	PlayerRef.ModAV("Marksman", buffModifier)
+
+	PlayerRef.ModAV("Alteration", buffModifier)
+	PlayerRef.ModAV("Conjuration", buffModifier)
+	PlayerRef.ModAV("Destruction", buffModifier)
+	PlayerRef.ModAV("Illusion", buffModifier)
+	PlayerRef.ModAV("Restoration", buffModifier)
+	PlayerRef.ModAV("Enchanting", buffModifier)
 EndEvent
 
 Event OnUpdateGameTime()

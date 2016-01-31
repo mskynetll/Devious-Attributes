@@ -245,7 +245,8 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 		OnPlayerRape(controller.ActorCount)    	
     Else
     	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
-    	selfEsteem *= (1.0 + (Config.SelfesteemIncreasePercentagePerConsensualSex / 100.0))
+    	float nymphoMultiplier = 1.0 + (Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId) / 100.0)
+    	selfEsteem *= ((1.0 + (Config.SelfesteemIncreasePercentagePerConsensualSex / 100.0)) * nymphoMultiplier)
     	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)
     EndIf    
 EndEvent
