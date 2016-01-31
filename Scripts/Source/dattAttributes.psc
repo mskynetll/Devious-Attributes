@@ -158,10 +158,16 @@ Float Function GetSubmissiveness(Actor akActor)
 	If(soulState == 1) ;willing slave
 		return 1.0
 	EndIf
+	
+	float obedience = GetAttribute(akActor, Constants.ObedienceAttributeId)
+	float willpower = GetAttribute(akActor, Constants.WillpowerAttributeId)
+	If(obedience >= willpower)
+		return obedience / Constants.MaxStatValue
+	EndIf
 
 	float selfEsteem = GetAttribute(akActor, Constants.SelfEsteemAttributeId)
-	float pride = GetAttribute(akActor, Constants.PrideAttributeId)
-	float willpower = GetAttribute(akActor, Constants.WillpowerAttributeId)
+	float pride = GetAttribute(akActor, Constants.PrideAttributeId)	
+
 	Return 1 - (((0.5 * Max(0.1,selfEsteem)) + (0.5 * Max(pride,willpower))) / Constants.MaxStatValue)
 EndFunction
 
