@@ -15,6 +15,7 @@ Faction Property DarkBrotherhoodFaction Auto
 Faction Property CollegeOfWinterholdFaction Auto
 
 Spell Property RapeTraumaSpell Auto
+Spell Property WhippingConsequenceSpell Auto
 
 dattLibraries Property Libs Auto
 dattAttributes Property Attributes Auto
@@ -161,6 +162,10 @@ Event OnSDStoryWhip(String _eventName, String _args, Float _argc = 1.0, Form _se
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> OnSDStoryWhip")
 	EndIf
+
+	;essentially refresh spell duration
+	Libs.PlayerRef.DispelSpell(WhippingConsequenceSpell)
+	WhippingConsequenceSpell.Cast(Libs.PlayerRef, None)
 EndEvent
 
 Event OnPCSubChangeLook()
