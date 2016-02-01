@@ -4,15 +4,8 @@ dattConstants Property Constants Auto
 dattConfigMenu Property Config Auto
 dattLibraries Property Libs Auto
 
-int attributeChangedEventId
-int fetishChangedEventId
-int soulStateChangedEventId
 ;
-Function Initialize()
-	attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
-	fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
-	soulStateChangedEventId = ModEvent.Create(Constants.SoulStateChangedEventName)
-
+Function Initialize()	
 	If(Libs.PlayerRef == None)
 		Debug.MessageBox("Player reference at dattAttributes equals to None. This is something that is not supposed to happen and needs to be reported.")
 	EndIf
@@ -41,7 +34,7 @@ EndFunction
 Function SetSoulState(Actor akActor, int value)
 	If(value >= 0 && value < 3) ;simple guard against invalid values
 		StorageUtil.SetIntValue(akActor, Constants.SoulStateAttributeId, value)
-
+		int soulStateChangedEventId = ModEvent.Create(Constants.SoulStateChangedEventName)
 		If(soulStateChangedEventId)
 			ModEvent.PushForm(soulStateChangedEventId, akActor as Form)
 			ModEvent.PushInt(soulStateChangedEventId, value)
@@ -78,6 +71,7 @@ Function SetFetish(Actor akActor, string fetishAttributeId, float value)
 	EndIf
 
 	StorageUtil.SetFloatValue(akActor,fetishAttributeId, value)
+	int fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	If (fetishChangedEventId)
 	    ModEvent.PushForm(fetishChangedEventId, akActor as Form) 
         ModEvent.PushString(fetishChangedEventId, fetishAttributeId)
@@ -99,7 +93,7 @@ Function IncrementFetish(Actor akActor, string fetishAttributeId, float incremen
 	value += increment
 	value = Max(100.0,value) ;make sure the value won't go overboard
 	StorageUtil.SetFloatValue(akActor as Form,fetishAttributeId, value)
-
+	int fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	If (fetishChangedEventId)
 	    ModEvent.PushForm(fetishChangedEventId, akActor as Form) 
         ModEvent.PushString(fetishChangedEventId, fetishAttributeId)
@@ -141,6 +135,7 @@ Function SetAttribute(Actor akActor, string attributeId, float value)
 
 	StorageUtil.SetFloatValue(akActor,attributeId, valueToSet)
 
+	int attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
 	If (attributeChangedEventId)		
         ModEvent.PushForm(attributeChangedEventId, akActor as Form) 
         ModEvent.PushString(attributeChangedEventId, attributeId)
@@ -178,6 +173,7 @@ EndFunction
 Function SendSubmissivenessChanged(Actor akActor)
 	float submissiveness = GetSubmissiveness(akActor)
 	StorageUtil.SetFloatValue(akActor, Constants.SubmissivenessAttributeId, submissiveness)
+	int attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
 	If (attributeChangedEventId)
         ModEvent.PushForm(attributeChangedEventId, akActor as Form) 
        	ModEvent.PushString(attributeChangedEventId, Constants.SubmissivenessAttributeId)

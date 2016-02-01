@@ -17,6 +17,11 @@ Faction Property CollegeOfWinterholdFaction Auto
 Spell Property RapeTraumaSpell Auto
 Spell Property WhippingConsequenceSpell Auto
 
+Spell Property LowWillpower5Spell Auto
+Spell Property LowWillpower10Spell Auto
+Spell Property HighWillpower5Spell Auto
+Spell Property HighWillpower10Spell Auto
+
 dattLibraries Property Libs Auto
 dattAttributes Property Attributes Auto
 dattDecisions Property Decisions Auto
@@ -87,8 +92,28 @@ Function Maintenance()
 	Attributes.Initialize()
 	Decisions.Initialize()
 	
+	CheckReferenceFillings()
+
+	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
+	SetRelevantWillpowerSpell(willpower)
+EndFunction
+
+Function CheckReferenceFillings()
 	If(RapeTraumaSpell == None)
 		Debug.MessageBox("Rape trauma spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")
+	EndIf
+
+	If(HighWillpower5Spell == None)
+		Debug.MessageBox("HighWillpower5Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(HighWillpower10Spell == None)
+		Debug.MessageBox("HighWillpower10Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowWillpower5Spell == None)
+		Debug.MessageBox("LowWillpower5Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowWillpower10Spell == None)
+		Debug.MessageBox("LowWillpower10Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
 	EndIf
 EndFunction
 
@@ -97,11 +122,78 @@ Function RegisterForEvents()
 		Debug.Notification("Devious Attributes -> registering events")
 	EndIf
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
+	RegisterForModEvent(Constants.AttributeChangedEventName, "OnAttributeChanged")
+
 EndFunction
 
-Event OnSleepStart(float afSleepStartTime, float afDesiredSleepEndTime)
-	Float hoursPassed = (afSleepStartTime - periodicUpdatesRefreshLastUpdateTime) * 24
-	OnPeriodicStatsUpdate(hoursPassed)	
+float lastWillpowerValue
+Event OnAttributeChanged(Form akActor, string attributeId, float value)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + value)
+	EndIf
+
+	If(attributeId == Constants.WillpowerAttributeId)
+		SetRelevantWillpowerSpell(value)
+	EndIf
+EndEvent
+
+Function SetRelevantWillpowerSpell(float willpowerValue)	
+	If(willpowerValue >= 85 && !Libs.PlayerRef.HasSpell(HighWillpower10Spell))
+		RemoveWillpowerSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighWillpower10Spell, false)
+	ElseIf (willpowerValue >= 50 && willpowerValue < 85 && !Libs.PlayerRef.HasSpell(HighWillpower5Spell))
+		RemoveWillpowerSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighWillpower5Spell, false)
+	ElseIf (willpowerValue < 50 && willpowerValue >= 25 && !Libs.PlayerRef.HasSpell(LowWillpower5Spell))
+		RemoveWillpowerSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowWillpower5Spell, false)			
+	ElseIf (willpowerValue < 25 && !Libs.PlayerRef.HasSpell(LowWillpower10Spell))
+		RemoveWillpowerSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowWillpower10Spell, false)			
+	EndIf
+EndFunction
+
+Function RemoveWillpowerSpellIfNeeded()
+	int dispelWillpowerEffectEventId = ModEvent.Create(Constants.WillpowerEffectEndEventName)
+	If(dispelWillpowerEffectEventId)
+		ModEvent.Send(dispelWillpowerEffectEventId)
+	EndIf
+
+	If(Libs.PlayerRef.HasSpell(HighWillpower5Spell))
+		Libs.PlayerRef.DispelSpell(HighWillpower5Spell)
+		Libs.PlayerRef.RemoveSpell(HighWillpower5Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(HighWillpower10Spell))
+		Libs.PlayerRef.DispelSpell(HighWillpower10Spell)
+		Libs.PlayerRef.RemoveSpell(HighWillpower10Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowWillpower5Spell))
+		Libs.PlayerRef.DispelSpell(LowWillpower5Spell)
+		Libs.PlayerRef.RemoveSpell(LowWillpower5Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowWillpower10Spell))
+		Libs.PlayerRef.DispelSpell(LowWillpower10Spell)
+		Libs.PlayerRef.RemoveSpell(LowWillpower10Spell)
+	EndIf
+EndFunction
+
+float sleepStartTime
+
+Event OnSleepStart(float afSleepStartTime, float afDesiredSleepEndTime)	
+	sleepStartTime = afSleepStartTime
+EndEvent
+
+Event OnSleepStop(bool abInterrupted)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnSleepStop()")
+	EndIf
+
+	float hoursPassed = Math.abs((sleepStartTime - Utility.GetCurrentGameTime()) * 24)
+	OnPeriodicStatsUpdate(hoursPassed)
+
+	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
+	willpower = Max(Constants.MaxStatValue, willpower + (hoursPassed * 10))
+	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower)
 EndEvent
 
 ;do all sorts of calculations at the end of the day
