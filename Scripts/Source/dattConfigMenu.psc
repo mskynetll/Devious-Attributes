@@ -59,6 +59,7 @@ int sdSubEntertainSelfEsteemChangePercentageSliderId
 int removeTraumaSpellToggleId
 int showRapeTraumaHoursToggleId
 int willpowerBaseTickPerTimeUnitSliderId
+int willpowerIncreasePerSleepHourSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -94,6 +95,9 @@ Float Property DefaultFetishIncrementPerDecision = 0.5 AutoReadonly Hidden
 
 Int Property WillpowerBaseDecisionCost Auto Hidden
 Int Property DefaultWillpowerBaseDecisionCost = 15 AutoReadonly Hidden
+
+Float Property WillpowerIncreasePerSleepHour Auto Hidden
+Float Property DefaultWillpowerIncreasePerSleepHour = 10.0 AutoReadonly Hidden
 
 Int Property ObedienceDailyDecrease Auto Hidden
 Int Property DefaultObedienceDailyDecrease = 1 AutoReadonly Hidden
@@ -186,6 +190,9 @@ Event OnConfigInit()
     EndIf
     If (WillpowerBaseTickPerTimeUnit == 0.0)
         WillpowerBaseTickPerTimeUnit = DefaultWillpowerBaseTickPerTimeUnit
+    EndIf
+    If (WillpowerIncreasePerSleepHour == 0.0)
+        WillpowerIncreasePerSleepHour = DefaultWillpowerIncreasePerSleepHour
     EndIf
 
     CheckSoftDependencies()
@@ -283,6 +290,7 @@ Event OnPageReset(string page)
 
         AddHeaderOption("Positive Stat Changes")
         willpowerBaseTickPerTimeUnitSliderId = AddSliderOption("Base Willpower tick",WillpowerBaseTickPerTimeUnit, "{2} per time unit")
+        willpowerIncreasePerSleepHourSliderId = AddSliderOption("Willpower increase/sleep", WillpowerIncreasePerSleepHour, "{1} per sleep hour")
         obedienceDailyDecreaseSliderId = AddSliderOption("Obedience", ObedienceDailyDecrease, "Decrease {0} per day")
         selfesteemIncreasePercentagePerConsensualSexSliderId = AddSliderOption("Self-esteem (consensual sex)", SelfesteemIncreasePercentagePerConsensualSex, "Increase {1}%")
         selfEsteemPeriodicIncreasePerDaySliderId = AddSliderOption("Self-esteem", SelfEsteemPeriodicIncreasePerDay, "Increase {0} per day")
@@ -490,6 +498,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultWillpowerBaseTickPerTimeUnit)
         SetSliderDialogRange(0.0, 50.0) 
         SetSliderDialogInterval(0.01)
+    ElseIf (option == willpowerIncreasePerSleepHourSliderId)
+        SetSliderDialogStartValue(WillpowerIncreasePerSleepHour)
+        SetSliderDialogDefaultValue(DefaultWillpowerIncreasePerSleepHour)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(0.5)
     EndIf 
     
 EndEvent
@@ -570,6 +583,9 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == willpowerBaseTickPerTimeUnitSliderId)
         WillpowerBaseTickPerTimeUnit = value
         SetSliderOptionValue(willpowerBaseTickPerTimeUnitSliderId, value,"{2} per time unit")
+    ElseIf (option == willpowerIncreasePerSleepHourSliderId)
+        WillpowerIncreasePerSleepHour = value
+        SetSliderOptionValue(willpowerIncreasePerSleepHourSliderId, value,"{1} per sleep hour")
     EndIf
 
 EndEvent

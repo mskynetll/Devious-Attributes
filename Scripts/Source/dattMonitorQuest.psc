@@ -192,7 +192,7 @@ Event OnSleepStop(bool abInterrupted)
 	OnPeriodicStatsUpdate(hoursPassed)
 
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
-	willpower = Max(Constants.MaxStatValue, willpower + (hoursPassed * 10))
+	willpower = Max(Constants.MaxStatValue, willpower + (hoursPassed * Libs.Config.WillpowerIncreasePerSleepHour))
 	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower)
 EndEvent
 
@@ -261,10 +261,9 @@ Function OnPeriodicStatsUpdate(Float hoursPassed)
 	
 		EndIf	
 
-		If(playerSoulState == Constants.State_FreeSpirit || playerSoulState == Constants.State_ForcedSlave)
-			float obedience = Attributes.GetPlayerAttribute(Constants.ObedienceAttributeId)
-			Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId, obedience - Libs.Config.ObedienceDailyDecrease)
-		EndIf
+		;conditioning to obey needs to be constantly reinforced, otherwise...
+		float obedience = Attributes.GetPlayerAttribute(Constants.ObedienceAttributeId)
+		Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId, obedience - Libs.Config.ObedienceDailyDecrease)
 	Else
 		If(Libs.Config.ShowDebugMessages)
 			Debug.Notification("OnPeriodicStatsUpdate(), hoursPassed < 12")
