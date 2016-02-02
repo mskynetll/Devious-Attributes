@@ -122,9 +122,18 @@ Function RegisterForEvents()
 		Debug.Notification("Devious Attributes -> registering events")
 	EndIf
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
+	RegisterForModEvent("OrgasmEnd", "OnOrgasmEnd")
 	RegisterForModEvent(Constants.AttributeChangedEventName, "OnAttributeChanged")
-
+	
 EndFunction
+
+Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnOrgasmEnd()")
+	EndIf	
+   float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId) 
+   Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower * (1.0 - (Libs.Config.WillpowerDecreasePerOrgasmPercentage / 100.0)))
+EndEvent
 
 float lastWillpowerValue
 Event OnAttributeChanged(Form akActor, string attributeId, float value)

@@ -60,6 +60,7 @@ int removeTraumaSpellToggleId
 int showRapeTraumaHoursToggleId
 int willpowerBaseTickPerTimeUnitSliderId
 int willpowerIncreasePerSleepHourSliderId
+int willpowerDecreasePerOrgasmPercentageSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -98,6 +99,9 @@ Int Property DefaultWillpowerBaseDecisionCost = 15 AutoReadonly Hidden
 
 Float Property WillpowerIncreasePerSleepHour Auto Hidden
 Float Property DefaultWillpowerIncreasePerSleepHour = 10.0 AutoReadonly Hidden
+
+Float Property WillpowerDecreasePerOrgasmPercentage Auto Hidden
+Float Property DefaultWillpowerDecreasePerOrgasmPercentage = 20.0 AutoReadonly Hidden
 
 Int Property ObedienceDailyDecrease Auto Hidden
 Int Property DefaultObedienceDailyDecrease = 1 AutoReadonly Hidden
@@ -194,7 +198,9 @@ Event OnConfigInit()
     If (WillpowerIncreasePerSleepHour == 0.0)
         WillpowerIncreasePerSleepHour = DefaultWillpowerIncreasePerSleepHour
     EndIf
-
+    If (WillpowerDecreasePerOrgasmPercentage == 0.0)
+        WillpowerDecreasePerOrgasmPercentage = DefaultWillpowerDecreasePerOrgasmPercentage
+    EndIf
     CheckSoftDependencies()
 
     If(Constants == None)
@@ -287,6 +293,7 @@ Event OnPageReset(string page)
         prideHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - pride", PrideHitPercentagePerRape, "Decrease {1}%")        
         selfesteemHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - self-esteem", SelfesteemHitPercentagePerRape, "Decrease {1}%")        
         willpowerHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - willpower", WillpowerHitPercentagePerRape, "Decrease {1}%")        
+        willpowerDecreasePerOrgasmPercentageSliderId = AddSliderOption("On orgasm - willpower", WillpowerDecreasePerOrgasmPercentage, "Decrease {1}%")
 
         AddHeaderOption("Positive Stat Changes")
         willpowerBaseTickPerTimeUnitSliderId = AddSliderOption("Base Willpower tick",WillpowerBaseTickPerTimeUnit, "{2} per time unit")
@@ -503,6 +510,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultWillpowerIncreasePerSleepHour)
         SetSliderDialogRange(0.0, 100.0) 
         SetSliderDialogInterval(0.5)
+    ElseIf (option == willpowerDecreasePerOrgasmPercentageSliderId)
+        SetSliderDialogStartValue(WillpowerDecreasePerOrgasmPercentage)
+        SetSliderDialogDefaultValue(DefaultWillpowerDecreasePerOrgasmPercentage)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(0.5)
     EndIf 
     
 EndEvent
@@ -586,6 +598,9 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == willpowerIncreasePerSleepHourSliderId)
         WillpowerIncreasePerSleepHour = value
         SetSliderOptionValue(willpowerIncreasePerSleepHourSliderId, value,"{1} per sleep hour")
+    ElseIf (option == willpowerDecreasePerOrgasmPercentageSliderId)
+        WillpowerDecreasePerOrgasmPercentage = value
+        SetSliderOptionValue(willpowerDecreasePerOrgasmPercentageSliderId, value,"Decrease {1}%")
     EndIf
 
 EndEvent
