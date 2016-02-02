@@ -254,9 +254,9 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 		EndIf
 	EndIf
 
-	Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride * prideMultiplier)
-	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem * selfEsteemMultiplier)
-	Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId,obedience * obedienceMultiplier)
+	Attributes.SetPlayerAttribute(Constants.PrideAttributeId,Max((pride * prideMultiplier) + prideExtraChange, Constants.MaxStatValue))
+	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,Max((selfEsteem * selfEsteemMultiplier) + selfEsteemExtraChange, Constants.MaxStatValue))
+	Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId,Max(obedience * obedienceMultiplier, Constants.MaxStatValue))
 EndFunction
 
 ;helpers
