@@ -29,7 +29,7 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 	OriginalMagickaRate = PlayerRef.GetAV("MagickaRate")
 	PlayerLevel = PlayerRef.GetLevel()
 
-	PlayerRef.ModAV("Magicka", (-1 * PlayerLevel * 50) * LessTraumaMultiplier)
+	PlayerRef.ModAV("Magicka", (-1 * PlayerLevel * 2) * LessTraumaMultiplier)
 	PlayerRef.ModAV("MagickaRate", (-1 * OriginalMagickaRate) * LessTraumaMultiplier)
 
 	RegisterForSingleUpdateGameTime(traumaDuration)
@@ -41,7 +41,7 @@ Event OnEffectFinish(Actor akTarget, Actor akCaster)
 		PlayerRef.RemoveSpell(RapeTraumaSpell)		
 	Endif
 	
-	PlayerRef.ModAV("Magicka", PlayerLevel * 50 * LessTraumaMultiplier)
+	PlayerRef.ModAV("Magicka", PlayerLevel * 2 * LessTraumaMultiplier)
 	PlayerRef.ModAV("MagickaRate", OriginalMagickaRate * LessTraumaMultiplier)
 EndEvent
 

@@ -41,6 +41,9 @@ String Property WillpowerEffectEndEventName = "Datt_WillpowerEffectEnd" AutoRead
 String Property SelfEsteemEffectEndEventName = "Datt_SelfEsteemEffectEnd" AutoReadonly Hidden
 String Property PrideEffectEndEventName = "Datt_PrideEffectEnd" AutoReadonly Hidden
 
+String Property EnableAllBuffsEventName = "Datt_EnableAllBuffsEventName" AutoReadonly Hidden
+String Property DisableAllBuffsEventName = "Datt_DisableAllBuffsEventName" AutoReadonly Hidden
+
 ;TODO : make defaults configurable
 ;also, consider making those configurable by profiles to allow roleplaying
 ; i.e. soldier has more pride (at least initially) than a beggar

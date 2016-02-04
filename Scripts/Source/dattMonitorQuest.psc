@@ -38,12 +38,15 @@ dattDecisions Property Decisions Auto
 dattConstants Property Constants Auto
 dattConfigMenu Property Config Auto
 
+String Property ModVersion Auto
+
 Event OnInit()
 	Debug.Notification("Devious Attributes Initialized")
 	RegisterForEvents()
 	SetDefaultStats(true)	
 	Libs.Config.IsRunningRefresh = true ;obviously run refreshes by default
-	Maintenance()
+	Libs.Config.VerifyConfigDefaults()
+	Maintenance(true)	
 
 	RegisterForSingleUpdate(3.0)
 	RegisterForSingleUpdateGameTime(1.0)
@@ -72,11 +75,13 @@ Function ToggleRefreshRunningState()
 EndFunction
 
 ;this runs on init and on game load
-Function Maintenance()
+Function Maintenance(bool isInit = false)
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> running maintenance...")
 	EndIf
-	
+
+	DoVersionMigrationIfNeeded()
+
 	RegisterForEvents()
 	Libs.Config.CheckSoftDependencies()
 
@@ -86,7 +91,7 @@ Function Maintenance()
 	EndIf
 
 	;on game load if needed start refresh timers
-	If(Libs.Config.IsRunningRefresh)
+	If(Libs.Config.IsRunningRefresh == true && isInit == false)
 		RegisterForSingleUpdate(1.0)
 		RegisterForSingleUpdateGameTime(1.0)
 		RegisterForSleep()
@@ -103,15 +108,27 @@ Function Maintenance()
 	Decisions.Initialize()
 	
 	CheckReferenceFillings()
+	If(Libs.Config.AttributeBuffsEnabled == true)		
+		float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
+		SetRelevantWillpowerSpell(willpower)
 
-	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
-	SetRelevantWillpowerSpell(willpower)
+		float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+		SetRelevantSelfesteemSpell(selfEsteem)
 
-	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
-	SetRelevantSelfesteemSpell(selfEsteem)
+		float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+		SetRelevantPrideSpell(pride)
+	EndIf
+EndFunction
 
-	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
-	SetRelevantPrideSpell(pride)
+Function DoVersionMigrationIfNeeded()
+	If(ModVersion == "") ;this stuff started 
+		Debug.Notification("Devious Attributes - upgrading to 0.5.1")
+		Debug.Notification("Attribute buffs disabled. Enable them in MCM menu...")
+		ModVersion = "0.5.1"
+		Libs.Config.VerifyConfigDefaults()
+		Libs.Config.AttributeBuffsEnabled = false
+		Libs.Config.PrideEffectMagnitude = 1.0
+	EndIf
 EndFunction
 
 Function CheckReferenceFillings()
@@ -166,8 +183,32 @@ Function RegisterForEvents()
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
 	RegisterForModEvent("OrgasmEnd", "OnOrgasmEnd")
 	RegisterForModEvent(Constants.AttributeChangedEventName, "OnAttributeChanged")
-	
+	RegisterForModEvent(Constants.EnableAllBuffsEventName, "OnEnableAllBuffs")
+	RegisterForModEvent(Constants.DisableAllBuffsEventName, "OnDisableAllBuffs")
 EndFunction
+
+Event OnEnableAllBuffs()
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnEnableAllBuffs()")
+	EndIf
+	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
+	SetRelevantWillpowerSpell(willpower)
+
+	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+	SetRelevantSelfesteemSpell(selfEsteem)
+
+	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+	SetRelevantPrideSpell(pride)
+EndEvent
+
+Event OnDisableAllBuffs()
+	If(Libs.Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> OnDisableAllBuffs()")
+	EndIf
+	RemovePrideSpellIfNeeded()
+	RemoveSelfesteemSpellIfNeeded()
+	RemoveWillpowerSpellIfNeeded()
+EndEvent
 
 Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
 	If(Libs.Config.ShowDebugMessages)
@@ -182,15 +223,16 @@ Event OnAttributeChanged(Form akActor, string attributeId, float value)
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + value)
 	EndIf
-
-	If(attributeId == Constants.WillpowerAttributeId)
-		SetRelevantWillpowerSpell(value)
-	EndIf
-	If(attributeId == Constants.SelfEsteemAttributeId)
-		SetRelevantSelfesteemSpell(value)
-	EndIf
-	If(attributeId == Constants.PrideAttributeId)
-		SetRelevantPrideSpell(value)
+	If(Libs.Config.AttributeBuffsEnabled == true)		
+		If(attributeId == Constants.WillpowerAttributeId)
+			SetRelevantWillpowerSpell(value)
+		EndIf
+		If(attributeId == Constants.SelfEsteemAttributeId)
+			SetRelevantSelfesteemSpell(value)
+		EndIf
+		If(attributeId == Constants.PrideAttributeId)
+			SetRelevantPrideSpell(value)
+		EndIf
 	EndIf
 EndEvent
 

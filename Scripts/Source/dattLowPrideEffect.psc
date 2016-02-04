@@ -5,11 +5,12 @@ Int Property PlayerLevel Auto Hidden
 Float Property ModdedAmount Auto Hidden
 dattAttributes Property Attributes Auto
 dattConstants Property Constants Auto
+dattConfigMenu Property Config Auto
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 	PlayerLevel = PlayerRef.GetLevel()
 	float masochist = Attributes.GetPlayerFetish(Constants.MasochistAttributeId)
-	ModdedAmount = (GetMagnitude() / 100.0) * (PlayerLevel * 25) * (1.0 - (masochist / 100.0))
+	ModdedAmount = (GetMagnitude() / 100.0) * (PlayerLevel * Config.PrideEffectMagnitude) * (1.0 - (masochist / 100.0))
 	PlayerRef.ModAV("Health", -1 * ModdedAmount)
 
 	RegisterForModEvent("Datt_PrideEffectEnd", "OnDispel")

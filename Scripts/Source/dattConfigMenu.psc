@@ -35,7 +35,6 @@ int debugExtraSelfEsteemChangeSliderId
 int debugPlayerDecisionWithExtraChangesToggleId
 int debugPlayerDecisionEventId
 int debugPlayerDecisionWithExtraEventId
-int debugPlayerSoulStateChangeEventId
 
 int manualSoulStateSliderId
 int refreshRateSliderId
@@ -61,6 +60,8 @@ int showRapeTraumaHoursToggleId
 int willpowerBaseTickPerTimeUnitSliderId
 int willpowerIncreasePerSleepHourSliderId
 int willpowerDecreasePerOrgasmPercentageSliderId
+int prideEffectMagnitudeSliderId
+int attributeBuffsEnabledToggleId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -86,7 +87,6 @@ Float Property DefaultSdLooksChangePridePercentageHit = 50.0 AutoReadonly Hidden
 
 Float Property SdLooksChangeSelfEsteemPercentageHit Auto Hidden
 Float Property DefaultSdLooksChangeSelfEsteemPercentageHit = 25 AutoReadonly Hidden
-
 
 Int Property ArousalThresholdToIncreaseFetish Auto Hidden
 Int Property DefaultArousalThresholdToIncreaseFetish = 50 AutoReadonly Hidden
@@ -129,6 +129,11 @@ Float Property SelfesteemHitPercentagePerRape Auto Hidden
 Float Property DefaultSelfesteemHitPercentagePerRape = 5 AutoReadonly Hidden
 Float Property SimulateRapeActorCount Auto Hidden
 
+Float Property PrideEffectMagnitude Auto Hidden
+Float Property DefaultPrideEffectMagnitude = 1.0 AutoReadonly Hidden
+
+Bool Property AttributeBuffsEnabled Auto Hidden
+
 ;Soft dependency flags
 Bool Property IsRealisticNeedsInstalled Auto
 Bool Property IsSexlabSexualFameInstalled Auto
@@ -140,7 +145,20 @@ Event OnConfigInit()
     Pages[0] = SettingsPageName
     Pages[1] = AttributesPageName
     Pages[2] = DebugPageName   
+    
+    VerifyConfigDefaults()
+    CheckSoftDependencies()
 
+    If(Constants == None)
+        Debug.MessageBox("Constants == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    ElseIf(MonitorQuest == None)
+        Debug.MessageBox("MonitorQuest == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    ElseIf(Attributes == None)
+        Debug.MessageBox("Attributes == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    EndIf
+EndEvent
+
+Function VerifyConfigDefaults()
     If(RefreshRate == 0)
         RefreshRate = DefaultRefreshRate
     EndIf
@@ -201,18 +219,13 @@ Event OnConfigInit()
     If (WillpowerDecreasePerOrgasmPercentage == 0.0)
         WillpowerDecreasePerOrgasmPercentage = DefaultWillpowerDecreasePerOrgasmPercentage
     EndIf
-    CheckSoftDependencies()
-
-    If(Constants == None)
-        Debug.MessageBox("Constants == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
-    ElseIf(MonitorQuest == None)
-        Debug.MessageBox("MonitorQuest == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
-    ElseIf(Attributes == None)
-        Debug.MessageBox("Attributes == None -> something happened with references filling out. This is not supposed to happen and needs to be reported.")
+    If (PrideEffectMagnitude == 0.0)
+        PrideEffectMagnitude = DefaultPrideEffectMagnitude
     EndIf
-EndEvent
+EndFunction
 
 Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
+    debugPlayerDecisionEventId = ModEvent.Create(Constants.PlayerDecisionEventName1)    
     If(debugPlayerDecisionEventId)
         If(ShowDebugMessages)
             Debug.Notification("Devious Attributes -> debug.SendPlayerDecision()")
@@ -229,6 +242,7 @@ Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
 EndFunction
 
 Function DebugSendPlayerDecisionWithExtraChanges(int playerResponseType, int decisionType,int prideExtraChange, int selfEsteemExtraChange)
+    debugPlayerDecisionWithExtraEventId = ModEvent.Create(Constants.PlayerDecisionWithExtraEventName1)    
     If(debugPlayerDecisionWithExtraEventId)
         If(ShowDebugMessages)
             Debug.Notification("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges()")
@@ -275,11 +289,9 @@ EndFunction
 
 Event OnPageReset(string page)
 {Called when a new page is selected, including the initial empty page} 	
-    debugPlayerDecisionEventId = ModEvent.Create(Constants.PlayerDecisionEventName1)
-    debugPlayerDecisionWithExtraEventId = ModEvent.Create(Constants.PlayerDecisionWithExtraEventName1)
-    debugPlayerSoulStateChangeEventId = ModEvent.Create(Constants.PlayerSoulStateChangeEventName)
     SetCursorFillMode(TOP_TO_BOTTOM)    
     If (page == SettingsPageName)
+        AddTextOption("Mod Version", MonitorQuest.ModVersion, 1)
         AddHeaderOption("Mod Options")
         refreshRateSliderId = AddSliderOption("Stats refresh rate", RefreshRate, "Every {0} Seconds")
         pauseRefreshTimerToggleId = AddToggleOption("Start/Stop stats refresh", IsRunningRefresh)                
@@ -288,6 +300,10 @@ Event OnPageReset(string page)
         willpowerBaseDecisionCostSliderId  = AddSliderOption("Willpower base cost", WillpowerBaseDecisionCost, "{0}")
         fetishIncrementPerDecisionSliderId  = AddSliderOption("Fetish increment", FetishIncrementPerDecision, "{1}")
         arousalThresholdToIncreaseFetishSliderId = AddSliderOption("Arousal threshold - fetishes", ArousalThresholdToIncreaseFetish)        
+
+        AddHeaderOption("Attribute Buffs/Debuffs")
+        attributeBuffsEnabledToggleId = AddToggleOption("Enable Attribute Buffs",AttributeBuffsEnabled)
+        prideEffectMagnitudeSliderId = AddSliderOption("Pride Buff", PrideEffectMagnitude, "Magnitude x{1}")
 
         AddHeaderOption("Negative Stat Changes")
         prideHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - pride", PrideHitPercentagePerRape, "Decrease {1}%")        
@@ -306,10 +322,10 @@ Event OnPageReset(string page)
         statIncreasePercentagePerStealingSliderId = AddSliderOption("Stealing - pride,self-esteem", StatIncreasePercentagePerStealing, "Increase {1}%")
 
         AddHeaderOption("SD+")
-        sdSubSexPrideChangePercentageSliderId = AddSliderOption("Sex with PC/sub - pride", SdSubSexPrideChangePercentage, "Change {1}%")
-        sdSubEntertainSelfEsteemChangePercentageSliderId = AddSliderOption("PC/sub Entertain - self-esteem", SdSubEntertainSelfEsteemChangePercentage, "Change {1}%")
-        sdLooksChangePrideHitSliderId = AddSliderOption("Looks Change - pride", SdLooksChangePridePercentageHit, "Decrease {1}%")
-        sdLooksChangeSelfEsteemHitSliderId = AddSliderOption("Looks Change - self-esteem", SdLooksChangeSelfEsteemPercentageHit, "Decrease {1}%")        
+        sdSubSexPrideChangePercentageSliderId = AddSliderOption("Sex with PC/sub - pride", SdSubSexPrideChangePercentage, "Change {1}%",1)
+        sdSubEntertainSelfEsteemChangePercentageSliderId = AddSliderOption("PC/sub Entertain - self-esteem", SdSubEntertainSelfEsteemChangePercentage, "Change {1}%",1)
+        sdLooksChangePrideHitSliderId = AddSliderOption("Looks Change - pride", SdLooksChangePridePercentageHit, "Decrease {1}%",1)
+        sdLooksChangeSelfEsteemHitSliderId = AddSliderOption("Looks Change - self-esteem", SdLooksChangeSelfEsteemPercentageHit, "Decrease {1}%",1)        
 	ElseIf (page == AttributesPageName) 
         float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
         float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
@@ -520,6 +536,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultWillpowerDecreasePerOrgasmPercentage)
         SetSliderDialogRange(0.0, 100.0) 
         SetSliderDialogInterval(0.5)
+    ElseIf (option == prideEffectMagnitudeSliderId)
+        SetSliderDialogStartValue(PrideEffectMagnitude)
+        SetSliderDialogDefaultValue(DefaultPrideEffectMagnitude)
+        SetSliderDialogRange(0.0, 15.0) 
+        SetSliderDialogInterval(0.1)
     EndIf 
     
 EndEvent
@@ -606,6 +627,12 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == willpowerDecreasePerOrgasmPercentageSliderId)
         WillpowerDecreasePerOrgasmPercentage = value
         SetSliderOptionValue(willpowerDecreasePerOrgasmPercentageSliderId, value,"Decrease {1}%")
+    ElseIf (option == prideEffectMagnitudeSliderId)
+        PrideEffectMagnitude = value
+        MonitorQuest.RemovePrideSpellIfNeeded()
+        float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+        MonitorQuest.SetRelevantPrideSpell(pride)
+        SetSliderOptionValue(prideEffectMagnitudeSliderId, value,"Magnitude x{1}")
     EndIf
 
 EndEvent
@@ -635,5 +662,18 @@ Event OnOptionSelect(int option)
     ElseIf (option == showRapeTraumaHoursToggleId)
         int traumaDuration = StorageUtil.GetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)
         Debug.MessageBox("Current rape trauma duration = " + traumaDuration + " (game hours until rape trauma wears off)")
+    ElseIf (option == attributeBuffsEnabledToggleId)
+        If(AttributeBuffsEnabled == true)
+            int eventId = ModEvent.Create(Constants.DisableAllBuffsEventName)
+            AttributeBuffsEnabled = false            
+            ModEvent.Send(eventId)
+        Else
+            int eventId = ModEvent.Create(Constants.EnableAllBuffsEventName)
+            AttributeBuffsEnabled = true            
+            ModEvent.Send(eventId)
+        EndIf
+        SetToggleOptionValue(attributeBuffsEnabledToggleId, AttributeBuffsEnabled)
     EndIf
+    
+
 EndEvent
