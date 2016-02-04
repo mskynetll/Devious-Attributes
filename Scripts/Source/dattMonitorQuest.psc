@@ -22,6 +22,16 @@ Spell Property LowWillpower10Spell Auto
 Spell Property HighWillpower5Spell Auto
 Spell Property HighWillpower10Spell Auto
 
+Spell Property LowSelfesteem25Spell Auto
+Spell Property LowSelfesteem50Spell Auto
+Spell Property HighSelfesteem25Spell Auto
+Spell Property HighSelfesteem50Spell Auto
+
+Spell Property LowPride25Spell Auto
+Spell Property LowPride50Spell Auto
+Spell Property HighPride25Spell Auto
+Spell Property HighPride50Spell Auto
+
 dattLibraries Property Libs Auto
 dattAttributes Property Attributes Auto
 dattDecisions Property Decisions Auto
@@ -96,6 +106,12 @@ Function Maintenance()
 
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
 	SetRelevantWillpowerSpell(willpower)
+
+	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
+	SetRelevantSelfesteemSpell(selfEsteem)
+
+	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
+	SetRelevantPrideSpell(pride)
 EndFunction
 
 Function CheckReferenceFillings()
@@ -114,6 +130,32 @@ Function CheckReferenceFillings()
 	EndIf
 	If(LowWillpower10Spell == None)
 		Debug.MessageBox("LowWillpower10Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+
+	If(HighSelfesteem25Spell == None)
+		Debug.MessageBox("HighSelfesteem25Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(HighSelfesteem50Spell == None)
+		Debug.MessageBox("HighSelfesteem50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowSelfesteem25Spell == None)
+		Debug.MessageBox("LowSelfesteem25Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowSelfesteem50Spell == None)
+		Debug.MessageBox("LowSelfesteem50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+
+	If(HighPride25Spell == None)
+		Debug.MessageBox("HighPride25Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(HighPride50Spell == None)
+		Debug.MessageBox("HighPride50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowPride25Spell == None)
+		Debug.MessageBox("LowPride25Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+	If(LowPride50Spell == None)
+		Debug.MessageBox("LowPride50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
 	EndIf
 EndFunction
 
@@ -144,7 +186,45 @@ Event OnAttributeChanged(Form akActor, string attributeId, float value)
 	If(attributeId == Constants.WillpowerAttributeId)
 		SetRelevantWillpowerSpell(value)
 	EndIf
+	If(attributeId == Constants.SelfEsteemAttributeId)
+		SetRelevantSelfesteemSpell(value)
+	EndIf
+	If(attributeId == Constants.PrideAttributeId)
+		SetRelevantPrideSpell(value)
+	EndIf
 EndEvent
+
+Function SetRelevantPrideSpell(float prideValue)	
+	If(prideValue >= 75 && !Libs.PlayerRef.HasSpell(HighPride50Spell))
+		RemovePrideSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighPride50Spell, false)
+	ElseIf (prideValue >= 50 && prideValue < 75 && !Libs.PlayerRef.HasSpell(HighPride25Spell))
+		RemovePrideSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighPride25Spell, false)
+	ElseIf (prideValue < 50 && prideValue >= 25 && !Libs.PlayerRef.HasSpell(LowPride25Spell))
+		RemovePrideSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowPride25Spell, false)			
+	ElseIf (prideValue < 25 && !Libs.PlayerRef.HasSpell(LowPride50Spell))
+		RemovePrideSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowPride50Spell, false)			
+	EndIf
+EndFunction
+
+Function SetRelevantSelfesteemSpell(float selfesteemValue)	
+	If(selfesteemValue >= 75 && !Libs.PlayerRef.HasSpell(HighSelfesteem50Spell))
+		RemoveSelfesteemSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighSelfesteem50Spell, false)
+	ElseIf (selfesteemValue >= 50 && selfesteemValue < 75 && !Libs.PlayerRef.HasSpell(HighSelfesteem25Spell))
+		RemoveSelfesteemSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(HighSelfesteem25Spell, false)
+	ElseIf (selfesteemValue < 50 && selfesteemValue >= 25 && !Libs.PlayerRef.HasSpell(LowSelfesteem25Spell))
+		RemoveSelfesteemSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowSelfesteem25Spell, false)			
+	ElseIf (selfesteemValue < 25 && !Libs.PlayerRef.HasSpell(LowSelfesteem50Spell))
+		RemoveSelfesteemSpellIfNeeded()
+		Libs.PlayerRef.AddSpell(LowSelfesteem50Spell, false)			
+	EndIf
+EndFunction
 
 Function SetRelevantWillpowerSpell(float willpowerValue)	
 	If(willpowerValue >= 85 && !Libs.PlayerRef.HasSpell(HighWillpower10Spell))
@@ -159,6 +239,54 @@ Function SetRelevantWillpowerSpell(float willpowerValue)
 	ElseIf (willpowerValue < 25 && !Libs.PlayerRef.HasSpell(LowWillpower10Spell))
 		RemoveWillpowerSpellIfNeeded()
 		Libs.PlayerRef.AddSpell(LowWillpower10Spell, false)			
+	EndIf
+EndFunction
+
+Function RemovePrideSpellIfNeeded()
+	int dispelPrideEffectEventId = ModEvent.Create(Constants.PrideEffectEndEventName)
+	If(dispelPrideEffectEventId)
+		ModEvent.Send(dispelPrideEffectEventId)
+	EndIf
+
+	If(Libs.PlayerRef.HasSpell(HighPride25Spell))
+		Libs.PlayerRef.DispelSpell(HighPride25Spell)
+		Libs.PlayerRef.RemoveSpell(HighPride25Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(HighPride50Spell))
+		Libs.PlayerRef.DispelSpell(HighPride50Spell)
+		Libs.PlayerRef.RemoveSpell(HighPride50Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowPride25Spell))
+		Libs.PlayerRef.DispelSpell(LowPride25Spell)
+		Libs.PlayerRef.RemoveSpell(LowPride25Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowPride50Spell))
+		Libs.PlayerRef.DispelSpell(LowPride50Spell)
+		Libs.PlayerRef.RemoveSpell(LowPride50Spell)
+	EndIf
+EndFunction
+
+Function RemoveSelfesteemSpellIfNeeded()
+	int dispelSelfEsteemEffectEventId = ModEvent.Create(Constants.SelfEsteemEffectEndEventName)
+	If(dispelSelfEsteemEffectEventId)
+		ModEvent.Send(dispelSelfEsteemEffectEventId)
+	EndIf
+
+	If(Libs.PlayerRef.HasSpell(HighSelfesteem25Spell))
+		Libs.PlayerRef.DispelSpell(HighSelfesteem25Spell)
+		Libs.PlayerRef.RemoveSpell(HighSelfesteem25Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(HighSelfesteem50Spell))
+		Libs.PlayerRef.DispelSpell(HighSelfesteem50Spell)
+		Libs.PlayerRef.RemoveSpell(HighSelfesteem50Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowSelfesteem25Spell))
+		Libs.PlayerRef.DispelSpell(LowSelfesteem25Spell)
+		Libs.PlayerRef.RemoveSpell(LowSelfesteem25Spell)
+	EndIf
+	If(Libs.PlayerRef.HasSpell(LowSelfesteem50Spell))
+		Libs.PlayerRef.DispelSpell(LowSelfesteem50Spell)
+		Libs.PlayerRef.RemoveSpell(LowSelfesteem50Spell)
 	EndIf
 EndFunction
 

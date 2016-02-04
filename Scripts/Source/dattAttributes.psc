@@ -91,8 +91,11 @@ Function IncrementFetish(Actor akActor, string fetishAttributeId, float incremen
 
 	float value = StorageUtil.GetFloatValue(akActor, fetishAttributeId, 0)
 	value += increment
-	value = Max(100.0,value) ;make sure the value won't go overboard
-	StorageUtil.SetFloatValue(akActor as Form,fetishAttributeId, value)
+	If(value > 100.0)
+		value = 100.0
+	EndIf
+
+	StorageUtil.SetFloatValue(akActor,fetishAttributeId, value)
 	int fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	If (fetishChangedEventId)
 	    ModEvent.PushForm(fetishChangedEventId, akActor as Form) 

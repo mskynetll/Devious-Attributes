@@ -38,6 +38,8 @@ String Property PlayerDecisionWithExtraEventName4 = "Datt_PlayerDecision4WithExt
 String Property PlayerSoulStateChangeEventName = "Datt_PlayerSoulStateChange" AutoReadonly Hidden
 
 String Property WillpowerEffectEndEventName = "Datt_WillpowerEffectEnd" AutoReadonly Hidden
+String Property SelfEsteemEffectEndEventName = "Datt_SelfEsteemEffectEnd" AutoReadonly Hidden
+String Property PrideEffectEndEventName = "Datt_PrideEffectEnd" AutoReadonly Hidden
 
 ;TODO : make defaults configurable
 ;also, consider making those configurable by profiles to allow roleplaying
