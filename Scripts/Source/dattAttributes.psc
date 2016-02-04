@@ -63,6 +63,7 @@ float Function GetFetish(Actor akActor, string fetishAttributeId)
 		Debug.MessageBox("Out-of-range value for fetishAttributeId=" + fetishAttributeId + " -> value="+value+". The value should be 0 or more.")
 		StorageUtil.SetFloatValue(akActor,fetishAttributeId, 0.0) ;in this case, set the default value
 	EndIf
+	return value
 EndFunction
 
 Function SetFetish(Actor akActor, string fetishAttributeId, float value)
@@ -81,6 +82,9 @@ Function SetFetish(Actor akActor, string fetishAttributeId, float value)
 EndFunction
 
 Function IncrementPlayerFetish(string fetishAttributeId, float increment)
+	If(Libs.PlayerRef == None)
+		Debug.MessageBox("Libs.PlayerRef is none, the reference seems not to be filled. This is not something that is supposed to happen...")
+	EndIf
 	IncrementFetish(Libs.PlayerRef, fetishAttributeId, increment)
 EndFunction
 
@@ -89,9 +93,9 @@ Function IncrementFetish(Actor akActor, string fetishAttributeId, float incremen
 		Debug.Notification("Devious Attributes -> IncrementFetish(), fetishAttributeId=" + fetishAttributeId +", increment=" + increment)
 	EndIf
 
-	float value = StorageUtil.GetFloatValue(akActor, fetishAttributeId, 0)
+	float value = StorageUtil.GetFloatValue(akActor, fetishAttributeId)
 	value += increment
-	If(value > 100.0)
+	If(value > 100.0 || value < 0)
 		value = 100.0
 	EndIf
 

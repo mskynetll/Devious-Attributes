@@ -335,11 +335,16 @@ Event OnPageReset(string page)
         ;for conformity's sake
     	AddTextOption("Submissiveness", Attributes.GetPlayerSubmissiveness() * 100.0, 1)
 
+        float humiliation = Attributes.GetPlayerFetish(Constants.HumiliationLoverAttributeId)
+        float exhibitionist = Attributes.GetPlayerFetish(Constants.ExhibitionistAttributeId)
+        float masochist = Attributes.GetPlayerFetish(Constants.MasochistAttributeId)
+        float nympho = Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId)
+
         AddHeaderOption("Traits")
-        AddTextOption("Humiliation Lover", Attributes.GetPlayerFetish(Constants.HumiliationLoverAttributeId), 1)
-        AddTextOption("Exhibitionist", Attributes.GetPlayerFetish(Constants.ExhibitionistAttributeId), 1)
-        AddTextOption("Masochist", Attributes.GetPlayerFetish(Constants.MasochistAttributeId), 1)
-        AddTextOption("Nympho", Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId), 1)
+        AddTextOption("Humiliation Lover",humiliation, 1)
+        AddTextOption("Exhibitionist", exhibitionist, 1)
+        AddTextOption("Masochist", masochist, 1)
+        AddTextOption("Nympho", nympho, 1)
 
         AddHeaderOption("Optional Mods")
 
