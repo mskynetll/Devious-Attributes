@@ -6,6 +6,9 @@ Float Property MinStatValue = 0.0 AutoReadonly Hidden
 
 String Property SoulStateAttributeId = "_Datt_Soul_State" AutoReadonly Hidden
 
+;misc value keys for StorageUtil
+String Property RapeTraumaLevelId = "_Datt_RapeTraumaLevel" AutoReadonly Hidden
+
 ;attribute value keys for StorageUtil
 String Property PrideAttributeId = "_Datt_Pride" AutoReadonly Hidden
 String Property SelfEsteemAttributeId = "_Datt_SelfEsteem" AutoReadonly Hidden
@@ -40,6 +43,7 @@ String Property PlayerSoulStateChangeEventName = "Datt_PlayerSoulStateChange" Au
 String Property WillpowerEffectEndEventName = "Datt_WillpowerEffectEnd" AutoReadonly Hidden
 String Property SelfEsteemEffectEndEventName = "Datt_SelfEsteemEffectEnd" AutoReadonly Hidden
 String Property PrideEffectEndEventName = "Datt_PrideEffectEnd" AutoReadonly Hidden
+String Property RapeTraumaEffectEndEventName = "Datt_RapeTraumaEffectEnd" AutoReadonly Hidden
 
 String Property EnableAllBuffsEventName = "Datt_EnableAllBuffsEventName" AutoReadonly Hidden
 String Property DisableAllBuffsEventName = "Datt_DisableAllBuffsEventName" AutoReadonly Hidden

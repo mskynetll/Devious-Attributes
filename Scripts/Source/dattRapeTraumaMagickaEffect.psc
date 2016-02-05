@@ -34,6 +34,12 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 
 	RegisterForSingleUpdateGameTime(traumaDuration)
 	RegisterForSleep()
+
+	RegisterForModEvent(Constants.RapeTraumaEffectEndEventName, "OnDispel")
+EndEvent
+
+Event OnDispel()
+	Dispel()
 EndEvent
 
 Event OnEffectFinish(Actor akTarget, Actor akCaster)

@@ -14,7 +14,10 @@ Faction Property ThievesGuildFaction Auto
 Faction Property DarkBrotherhoodFaction Auto
 Faction Property CollegeOfWinterholdFaction Auto
 
+Faction Property DattRapeTraumaFaction Auto
+
 Spell Property RapeTraumaSpell Auto
+Spell Property NewRapeTraumaSpell Auto
 Spell Property WhippingConsequenceSpell Auto
 
 Spell Property LowWillpower5Spell Auto
@@ -39,6 +42,9 @@ dattConstants Property Constants Auto
 dattConfigMenu Property Config Auto
 
 String Property ModVersion Auto
+
+Float Property LastRapeTraumaChange Auto Hidden
+Float Property LastRapeTraumaDurationDelta Auto Hidden
 
 Event OnInit()
 	Debug.Notification("Devious Attributes Initialized")
@@ -83,7 +89,7 @@ Function Maintenance(bool isInit = false)
 	DoVersionMigrationIfNeeded()
 
 	RegisterForEvents()
-	Libs.Config.CheckSoftDependencies()
+	Config.CheckSoftDependencies()
 
 	;on game load, make sure we do not go below minimum refresh rate
 	If(Libs.Config.RefreshRate < Libs.Config.MinRefreshRate || Libs.Config.RefreshRate > Libs.Config.MaxRefreshRate)
@@ -118,6 +124,11 @@ Function Maintenance(bool isInit = false)
 		float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 		SetRelevantPrideSpell(pride)
 	EndIf
+
+	If(Libs.PlayerRef.HasSpell(NewRapeTraumaSpell) == false)
+		Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
+	EndIf
+
 EndFunction
 
 Function DoVersionMigrationIfNeeded()
@@ -128,6 +139,17 @@ Function DoVersionMigrationIfNeeded()
 		Libs.Config.VerifyConfigDefaults()
 		Libs.Config.AttributeBuffsEnabled = false
 		Libs.Config.PrideEffectMagnitude = 1.0
+	EndIf
+	If(ModVersion == "0.5.1")
+		Debug.Notification("Devious Attributes - upgrading 0.5.1 -> 0.5.2")
+		ModVersion = "0.5.2"
+		RemoveOldRapeTrauma(true) ;there is a new effect, so remove the old one if it is active
+
+		Libs.PlayerRef.AddToFaction(DattRapeTraumaFaction)
+		Libs.PlayerRef.SetFactionRank(DattRapeTraumaFaction, 0)
+		Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
+		LastRapeTraumaChange = Utility.GetCurrentGameTime()
+		Libs.Config.VerifyConfigDefaults()
 	EndIf
 EndFunction
 
@@ -173,6 +195,10 @@ Function CheckReferenceFillings()
 	EndIf
 	If(LowPride50Spell == None)
 		Debug.MessageBox("LowPride50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
+	EndIf
+
+	If(DattRapeTraumaFaction == None)
+		Debug.MessageBox("DattRapeTraumaFaction faction reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")		
 	EndIf
 EndFunction
 
@@ -373,6 +399,8 @@ Event OnSleepStop(bool abInterrupted)
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
 	willpower = Max(Constants.MaxStatValue, willpower + (hoursPassed * Libs.Config.WillpowerIncreasePerSleepHour))
 	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower)
+
+	UpdateRapeTraumaLevelIfNeeded()
 EndEvent
 
 ;do all sorts of calculations at the end of the day
@@ -389,7 +417,43 @@ Event OnUpdateGameTime()
 		;that stats like self-esteem improve only once in a while -> i.e slowly
 		RegisterForSingleUpdateGameTime(12.0)
 	EndIf
+	
+	UpdateRapeTraumaLevelIfNeeded()	
 EndEvent
+
+Function UpdateRapeTraumaLevelIfNeeded()
+	float hoursPassed = Math.abs(Utility.GetCurrentGameTime() - LastRapeTraumaChange) * 24.0
+	float rapeTraumaLevel = Libs.PlayerRef.GetFactionRank(DattRapeTraumaFaction)
+	If(hoursPassed >= LastRapeTraumaDurationDelta && rapeTraumaLevel > 0)
+		Debug.Notification("Recent traumatic experience fades away, becoming more distant...")
+		Libs.PlayerRef.ModFactionRank(DattRapeTraumaFaction, -1)
+
+		Libs.PlayerRef.RemoveSpell(NewRapeTraumaSpell)	
+		Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
+
+		LastRapeTraumaChange = Utility.GetCurrentGameTime()
+
+		float masochism = Attributes.GetPlayerFetish(Constants.MasochistAttributeId)
+		float nympho = Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId)
+		float lessTraumaMultiplier
+		If(masochism >= 95.0 || nympho >= 95.0)
+			;even if the fetishes are at max, there is still minimum damage from rape
+			lessTraumaMultiplier = 0.05 
+		Else
+			lessTraumaMultiplier = 1.0 - (((0.5 * masochism) + (0.5 * nympho)) / 100.0)
+		Endif
+		LastRapeTraumaDurationDelta = Libs.Config.RapeTraumaDurationHours * lessTraumaMultiplier		
+
+		If(Libs.PlayerRef.GetFactionRank(DattRapeTraumaFaction) > 0)			
+   			float traumaDuration = StorageUtil.GetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)   		
+   			StorageUtil.SetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, traumaDuration - LastRapeTraumaDurationDelta)		
+   		Else
+   			StorageUtil.SetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)
+		EndIf
+
+		RegisterForSingleUpdateGameTime(LastRapeTraumaDurationDelta)
+	EndIf
+EndFunction
 
 Event OnUpdate()
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
@@ -542,6 +606,24 @@ Function OnPlayerStealOrPickpocket(int goldAmount)
 	EndIf
 EndFunction
 
+Function RemoveOldRapeTrauma(bool resetTraumaDuration)
+	If(Libs.PlayerRef.HasSpell(RapeTraumaSpell))
+		Libs.PlayerRef.DispelSpell(RapeTraumaSpell)
+		Libs.PlayerRef.RemoveSpell(RapeTraumaSpell)		
+	
+		int dispelEffectEventId = ModEvent.Create(Constants.RapeTraumaEffectEndEventName)
+		If(dispelEffectEventId)
+			ModEvent.Send(dispelEffectEventId)
+		EndIf
+	EndIf
+
+	If(resetTraumaDuration == true)
+		StorageUtil.SetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0.0)
+		StorageUtil.SetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaLevelId, 0)
+	EndIf
+EndFunction
+
+
 Function OnPlayerRape(int actorCount)
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Mod Event -> OnPlayerRape(), actorCount = " + actorCount)
@@ -553,14 +635,7 @@ Function OnPlayerRape(int actorCount)
    		humiliationMultiplier *= ((actorCount - 1) * 1.1)
    	EndIf
 
-   	If(!Libs.PlayerRef.HasSpell(RapeTraumaSpell))
-   		StorageUtil.SetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 12)
-   		Libs.PlayerRef.AddSpell(RapeTraumaSpell, false)
-   	Else
-   		int traumaDuration = StorageUtil.GetIntValue(Libs.PlayerRef, Constants.RapeTraumaDurationId, 0)
-   		traumaDuration += 12
-   		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.RapeTraumaDurationId, traumaDuration)
-   	EndIf
+   	ApplyRapeTrauma()
 
    	;TODO : add humiliation multiplier for each worn devious device by player
 
@@ -576,6 +651,44 @@ Function OnPlayerRape(int actorCount)
 	Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride)
 	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)
 	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId,willpower)
+EndFunction
+
+Function RemoveRapeTrauma()
+	Libs.PlayerRef.SetFactionRank(DattRapeTraumaFaction, 0)
+EndFunction
+
+float Function GetRapeTraumaLevel()
+	return Libs.PlayerRef.GetFactionRank(DattRapeTraumaFaction)
+EndFunction
+
+Function ApplyRapeTrauma()
+	float masochism = Attributes.GetPlayerFetish(Constants.MasochistAttributeId)
+	float nympho = Attributes.GetPlayerFetish(Constants.NymphomaniacAttributeId)
+	float lessTraumaMultiplier
+	If(masochism >= 95.0 || nympho >= 95.0)
+		;even if the fetishes are at max, there is still minimum damage from rape
+		lessTraumaMultiplier = 0.05 
+	Else
+		lessTraumaMultiplier = 1.0 - (((0.5 * masochism) + (0.5 * nympho)) / 100.0)
+	Endif
+	float traumaDurationDelta
+   	If(!Libs.PlayerRef.HasSpell(NewRapeTraumaSpell))
+   		float traumaDuration = Libs.Config.RapeTraumaDurationHours * lessTraumaMultiplier
+   		traumaDurationDelta = traumaDuration
+   		StorageUtil.SetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, traumaDuration)   		
+   	Else
+   		float traumaDuration = StorageUtil.GetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)   		
+   		traumaDurationDelta = Libs.Config.RapeTraumaDurationHours * lessTraumaMultiplier
+   		traumaDuration += traumaDurationDelta
+   		StorageUtil.SetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, traumaDuration)		
+   	EndIf	
+
+	Libs.PlayerRef.ModFactionRank(DattRapeTraumaFaction, 1)
+	Libs.PlayerRef.RemoveSpell(NewRapeTraumaSpell)	
+	Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
+	LastRapeTraumaChange = Utility.GetCurrentGameTime()
+	RegisterForSingleUpdateGameTime(traumaDurationDelta)
+	LastRapeTraumaDurationDelta = traumaDurationDelta
 EndFunction
 
 Float Function Max(Float A, Float B)

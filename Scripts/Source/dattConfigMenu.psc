@@ -62,6 +62,7 @@ int willpowerIncreasePerSleepHourSliderId
 int willpowerDecreasePerOrgasmPercentageSliderId
 int prideEffectMagnitudeSliderId
 int attributeBuffsEnabledToggleId
+int rapeTraumaDurationHoursSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -72,6 +73,9 @@ Int Property DebugExtraSelfEsteemChange Auto
 Float Property RefreshRate Auto Hidden
 Bool Property IsRunningRefresh Auto Hidden
 Bool Property ShowDebugMessages Auto
+
+Int Property RapeTraumaDurationHours Auto Hidden
+Int Property DefaultRapeTraumaDurationHours = 12 AutoReadonly Hidden
 
 Float Property WillpowerBaseTickPerTimeUnit Auto Hidden
 Float Property DefaultWillpowerBaseTickPerTimeUnit = 0.05 AutoReadonly Hidden
@@ -222,6 +226,9 @@ Function VerifyConfigDefaults()
     If (PrideEffectMagnitude == 0.0)
         PrideEffectMagnitude = DefaultPrideEffectMagnitude
     EndIf
+    If (RapeTraumaDurationHours == 0)
+        RapeTraumaDurationHours = DefaultRapeTraumaDurationHours
+    EndIf
 EndFunction
 
 Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
@@ -301,7 +308,8 @@ Event OnPageReset(string page)
         fetishIncrementPerDecisionSliderId  = AddSliderOption("Fetish increment", FetishIncrementPerDecision, "{1}")
         arousalThresholdToIncreaseFetishSliderId = AddSliderOption("Arousal threshold - fetishes", ArousalThresholdToIncreaseFetish)        
 
-        AddHeaderOption("Attribute Buffs/Debuffs")
+        AddHeaderOption("Buffs/Debuffs")        
+        rapeTraumaDurationHoursSliderId = AddSliderOption("Rape trauma duration", RapeTraumaDurationHours, "{0} hours")
         attributeBuffsEnabledToggleId = AddToggleOption("Enable Attribute Buffs",AttributeBuffsEnabled)
         prideEffectMagnitudeSliderId = AddSliderOption("Pride Buff", PrideEffectMagnitude, "Magnitude x{1}")
 
@@ -361,6 +369,9 @@ Event OnPageReset(string page)
         AddTextOption("Exhibitionist", exhibitionist, 1)
         AddTextOption("Masochist", masochist, 1)
         AddTextOption("Nympho", nympho, 1)
+
+        AddHeaderOption("Misc")
+        AddTextOption("Rape Trauma Level", MonitorQuest.Libs.PlayerRef.GetFactionRank(MonitorQuest.DattRapeTraumaFaction), 1)
 
         AddHeaderOption("Optional Mods")
 
@@ -541,8 +552,13 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultPrideEffectMagnitude)
         SetSliderDialogRange(0.0, 15.0) 
         SetSliderDialogInterval(0.1)
+    ElseIf (option == rapeTraumaDurationHoursSliderId)
+        SetSliderDialogStartValue(RapeTraumaDurationHours)
+        SetSliderDialogDefaultValue(DefaultRapeTraumaDurationHours)
+        SetSliderDialogRange(1.0, 48.0) 
+        SetSliderDialogInterval(1.0)
     EndIf 
-    
+
 EndEvent
 
 
@@ -633,6 +649,10 @@ Event OnOptionSliderAccept(int option, float value)
         float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
         MonitorQuest.SetRelevantPrideSpell(pride)
         SetSliderOptionValue(prideEffectMagnitudeSliderId, value,"Magnitude x{1}")
+    ElseIf (option == rapeTraumaDurationHoursSliderId)
+        RapeTraumaDurationHours = value as int
+        MonitorQuest.RemoveRapeTrauma()
+        SetSliderOptionValue(rapeTraumaDurationHoursSliderId, value,"{0} hours")                
     EndIf
 
 EndEvent
@@ -657,11 +677,12 @@ Event OnOptionSelect(int option)
         DebugSendPlayerDecisionWithExtraChanges(DebugPlayerResponseType, DebugPlayerDecisionType, DebugExtraPrideChange, DebugExtraSelfEsteemChange)
         Debug.MessageBox("Sending player decision (with extra changes), DebugPlayerResponseType=" + DebugPlayerResponseType + ", DebugPlayerDecisionType=" + DebugPlayerDecisionType)
     ElseIf (option == removeTraumaSpellToggleId)
-        Libs.PlayerRef.DispelSpell(RapeTraumaSpell)        
-        Libs.PlayerRef.RemoveSpell(RapeTraumaSpell)
+        MonitorQuest.RemoveOldRapeTrauma(true)
+        MonitorQuest.RemoveRapeTrauma()
+        Debug.MessageBox("Removed Rape Trauma spell and reset trauma duration...")
     ElseIf (option == showRapeTraumaHoursToggleId)
-        int traumaDuration = StorageUtil.GetIntValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)
-        Debug.MessageBox("Current rape trauma duration = " + traumaDuration + " (game hours until rape trauma wears off)")
+        float traumaDuration = StorageUtil.GetFloatValue(Libs.PlayerRef as Form, Constants.RapeTraumaDurationId, 0)
+        Debug.MessageBox("Current rape trauma duration = " + traumaDuration + " (game hours until current trauma stage wears off)")
     ElseIf (option == attributeBuffsEnabledToggleId)
         If(AttributeBuffsEnabled == true)
             int eventId = ModEvent.Create(Constants.DisableAllBuffsEventName)
