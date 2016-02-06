@@ -129,6 +129,11 @@ Function Maintenance(bool isInit = false)
 		Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
 	EndIf
 
+	int onMaintenanceEventId = ModEvent.Create(Constants.MaintenanceEventName)
+	;send notification to consequences mods so they run maintenance as well
+	If(onMaintenanceEventId) 
+		ModEvent.Send(onMaintenanceEventId)
+	Endif
 EndFunction
 
 Function DoVersionMigrationIfNeeded()
@@ -150,6 +155,34 @@ Function DoVersionMigrationIfNeeded()
 		Libs.PlayerRef.AddSpell(NewRapeTraumaSpell, false)
 		LastRapeTraumaChange = Utility.GetCurrentGameTime()
 		Libs.Config.VerifyConfigDefaults()
+	EndIf
+	If(ModVersion == "0.5.2")
+		Debug.Notification("Devious Attributes - upgrading 0.5.2 -> 0.6.0")
+		ModVersion = "0.6.0"
+		;migrated from using storage util to global variables, so 
+		;make sure we don't lose values that existed in previous version
+		float willpower = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.WillpowerAttributeId)
+		float pride = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.PrideAttributeId)
+		float selfEsteem = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.SelfEsteemAttributeId)
+		float obedience = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.ObedienceAttributeId)
+
+		Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride)
+		Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)
+		Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId,willpower)
+		Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId,obedience)
+
+		float humiliation = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.HumiliationLoverAttributeId)
+		float masochist = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.MasochistAttributeId)
+		float exhibitionist = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.ExhibitionistAttributeId)
+		float nympho = StorageUtil.GetFloatValue(Libs.PlayerRef, Constants.NymphomaniacAttributeId)
+
+		Attributes.SetPlayerFetish(Constants.HumiliationLoverAttributeId,humiliation)
+		Attributes.SetPlayerFetish(Constants.MasochistAttributeId,masochist)
+		Attributes.SetPlayerFetish(Constants.ExhibitionistAttributeId, exhibitionist)
+		Attributes.SetPlayerFetish(Constants.NymphomaniacAttributeId, nympho)
+
+		int soulState = StorageUtil.GetIntValue(Libs.PlayerRef, Constants.SoulStateAttributeId)
+		Attributes.SetPlayerSoulState(soulState)
 	EndIf
 EndFunction
 
@@ -183,7 +216,6 @@ Function CheckReferenceFillings()
 	If(LowSelfesteem50Spell == None)
 		Debug.MessageBox("LowSelfesteem50Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
 	EndIf
-
 	If(HighPride25Spell == None)
 		Debug.MessageBox("HighPride25Spell spell reference wasn't filled by the game. This is most likely a bug, and needs to be reported.")	
 	EndIf
@@ -211,7 +243,13 @@ Function RegisterForEvents()
 	RegisterForModEvent(Constants.AttributeChangedEventName, "OnAttributeChanged")
 	RegisterForModEvent(Constants.EnableAllBuffsEventName, "OnEnableAllBuffs")
 	RegisterForModEvent(Constants.DisableAllBuffsEventName, "OnDisableAllBuffs")
+
+	RegisterForModEvent(Constants.SetAttributeEventName, "OnSetAttribute")
 EndFunction
+
+Event OnSetAttribute(string attributeId, float value)
+	Attributes.SetPlayerAttribute(attributeId,value)
+EndEvent
 
 Event OnEnableAllBuffs()
 	If(Libs.Config.ShowDebugMessages)
@@ -245,22 +283,52 @@ Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
 EndEvent
 
 float lastWillpowerValue
-Event OnAttributeChanged(Form akActor, string attributeId, float value)
+Event OnAttributeChanged(Form akActor, string attributeId, float oldValue, float newValue)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + value)
+		Debug.Notification("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + newValue)
 	EndIf
+
+	DisplayAttributeChangeMessageIfNeeded(attributeId, oldValue, newValue)
+	
 	If(Libs.Config.AttributeBuffsEnabled == true)		
 		If(attributeId == Constants.WillpowerAttributeId)
-			SetRelevantWillpowerSpell(value)
+			SetRelevantWillpowerSpell(newValue)
 		EndIf
 		If(attributeId == Constants.SelfEsteemAttributeId)
-			SetRelevantSelfesteemSpell(value)
+			SetRelevantSelfesteemSpell(newValue)
 		EndIf
 		If(attributeId == Constants.PrideAttributeId)
-			SetRelevantPrideSpell(value)
+			SetRelevantPrideSpell(newValue)
 		EndIf
 	EndIf
 EndEvent
+
+Function DisplayAttributeChangeMessageIfNeeded(string attributeId, float oldValue, float newValue)
+	string msg = ""
+	If(attributeId == Constants.WillpowerAttributeId)	
+		If((oldValue <= 33 && newValue > 33) || (oldValue <= 66 && newValue > 66) || (oldValue <= 85 && newValue > 85))
+			msg = "Your recent experiences make you mentally stronger..."
+		ElseIf((oldValue > 25 && newValue <= 25) || (oldValue > 50 && newValue <= 50) || (oldValue > 75 && newValue <= 75))
+			msg = "Your recent experiences make you more susceptible to suggestions..."
+		EndIf
+	ElseIf(attributeId == Constants.SelfEsteemAttributeId)
+		If((oldValue <= 25 && newValue > 25) || (oldValue <= 50 && newValue > 50) || (oldValue <= 75 && newValue > 75))
+			msg = "Your feel more confident and self-assured..."
+		ElseIf((oldValue > 25 && newValue <= 25) || (oldValue > 50 && newValue <= 50) || (oldValue > 75 && newValue <= 75))
+			msg = "Your feel less confidence, making you easier prey to predators..."
+		EndIf
+	ElseIf(attributeId == Constants.PrideAttributeId)
+		If((oldValue <= 25 && newValue > 25) || (oldValue <= 50 && newValue > 50) || (oldValue <= 75 && newValue > 75))
+			msg = "Your recent actions and experiences make you more pride..."
+		ElseIf((oldValue > 25 && newValue <= 25) || (oldValue > 50 && newValue <= 50) || (oldValue > 75 && newValue <= 75))
+			msg = "Your recent experiences make you less proud..."
+		EndIf		
+	EndIf
+
+	If(msg != "")
+		Debug.Notification(msg)
+	EndIf
+EndFunction
 
 Function SetRelevantPrideSpell(float prideValue)	
 	If(prideValue >= 75 && !Libs.PlayerRef.HasSpell(HighPride50Spell))
@@ -418,6 +486,12 @@ Event OnUpdateGameTime()
 		RegisterForSingleUpdateGameTime(12.0)
 	EndIf
 	
+	int onUpdateGameTimeEventId = ModEvent.Create(Constants.OnPeriodicUpdateEventName)
+	If(onUpdateGameTimeEventId)
+		ModEvent.PushFloat(onUpdateGameTimeEventId,hoursPassed)
+		ModEvent.Send(onUpdateGameTimeEventId)
+	EndIf
+
 	UpdateRapeTraumaLevelIfNeeded()	
 EndEvent
 
@@ -637,16 +711,19 @@ Function OnPlayerRape(int actorCount)
 
    	ApplyRapeTrauma()
 
-   	;TODO : add humiliation multiplier for each worn devious device by player
+   	int wornDeviceCount = StorageUtil.GetIntValue(Libs.PlayerRef, "_Datt_Device_Count")
+
+   	;increase hit by 5% for each worn device
+   	float deviceHumiliationMultiplier = 1.0 + (0.05 * wornDeviceCount)
 
 ;dealing with percentages makes changes non-linear
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
 	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
 
-   	pride *= (1.0 - ((Libs.Config.PrideHitPercentagePerRape / 100.0) * humiliationMultiplier))
-   	selfEsteem *=  (1.0 - ((Libs.Config.SelfesteemHitPercentagePerRape / 100.0) * humiliationMultiplier))
-   	willpower *= (1.0 - ((Libs.Config.WillpowerHitPercentagePerRape / 100.0) * humiliationMultiplier))
+   	pride *= (1.0 - ((Libs.Config.PrideHitPercentagePerRape / 100.0) * humiliationMultiplier * deviceHumiliationMultiplier))
+   	selfEsteem *=  (1.0 - ((Libs.Config.SelfesteemHitPercentagePerRape / 100.0) * humiliationMultiplier * deviceHumiliationMultiplier))
+   	willpower *= (1.0 - ((Libs.Config.WillpowerHitPercentagePerRape / 100.0) * humiliationMultiplier * deviceHumiliationMultiplier))
 
 	Attributes.SetPlayerAttribute(Constants.PrideAttributeId,pride)
 	Attributes.SetPlayerAttribute(Constants.SelfEsteemAttributeId,selfEsteem)

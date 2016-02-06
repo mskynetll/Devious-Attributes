@@ -63,6 +63,7 @@ int willpowerDecreasePerOrgasmPercentageSliderId
 int prideEffectMagnitudeSliderId
 int attributeBuffsEnabledToggleId
 int rapeTraumaDurationHoursSliderId
+int removeArmbinderRemovedDebuffToggleId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -398,8 +399,12 @@ Event OnPageReset(string page)
     ElseIf (page == DebugPageName)  
         AddHeaderOption("Misc")
         manualSoulStateSliderId = AddSliderOption("Soul State", Attributes.GetPlayerSoulState() as float, "{0}")
+
+        AddHeaderOption("Buffs/Debuffs")
         removeTraumaSpellToggleId = AddToggleOption("Remove rape trauma", false)
         showRapeTraumaHoursToggleId = AddToggleOption("Show rape trauma timer", false)
+        removeArmbinderRemovedDebuffToggleId = AddToggleOption("Remove Armbinder removed debuff",false)
+
         AddHeaderOption("Stats")
     	resetStatsToggleId = AddToggleOption("Reset stats", false)
         simulateRapeToggleId = AddToggleOption("Simulate player victim", false)
@@ -694,6 +699,9 @@ Event OnOptionSelect(int option)
             ModEvent.Send(eventId)
         EndIf
         SetToggleOptionValue(attributeBuffsEnabledToggleId, AttributeBuffsEnabled)
+    ElseIf (option == removeArmbinderRemovedDebuffToggleId)
+        int eventId = ModEvent.Create(Constants.RemoveArmbinderRemovedDebuffEventName)
+        ModEvent.Send(eventId)
     EndIf
     
 

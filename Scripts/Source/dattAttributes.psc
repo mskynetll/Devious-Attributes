@@ -4,7 +4,17 @@ dattConstants Property Constants Auto
 dattConfigMenu Property Config Auto
 dattLibraries Property Libs Auto
 
-;
+GlobalVariable Property dattWillpower Auto
+GlobalVariable Property dattPride Auto
+GlobalVariable Property dattSelfEsteem Auto
+GlobalVariable Property dattObedience Auto
+
+GlobalVariable Property dattNymphomaniac Auto
+GlobalVariable Property dattHumiliationLover Auto
+GlobalVariable Property dattExhibitionist Auto
+GlobalVariable Property dattMasochist Auto
+
+GlobalVariable Property dattSoulState Auto
 Function Initialize()	
 	If(Libs.PlayerRef == None)
 		Debug.MessageBox("Player reference at dattAttributes equals to None. This is something that is not supposed to happen and needs to be reported.")
@@ -15,7 +25,7 @@ EndFunction
 ; 1 -> Willing Slave
 ; 2 -> Forced Slave
 Int Function GetSoulState(Actor akActor)
-	int value = StorageUtil.GetIntValue(akActor,Constants.SoulStateAttributeId)
+	int value = dattSoulState.GetValue() as int
 	If(value < 0 || value > 3) 
 		;simple guard against invalid values
 		;since this is stored in storageUtil and other mods can access it, 
@@ -33,6 +43,7 @@ EndFunction
 
 Function SetSoulState(Actor akActor, int value)
 	If(value >= 0 && value < 3) ;simple guard against invalid values
+		dattSoulState.SetValueInt(value)
 		StorageUtil.SetIntValue(akActor, Constants.SoulStateAttributeId, value)
 		int soulStateChangedEventId = ModEvent.Create(Constants.SoulStateChangedEventName)
 		If(soulStateChangedEventId)
@@ -58,10 +69,16 @@ float Function GetPlayerFetish(string fetishAttributeId)
 EndFunction
 
 float Function GetFetish(Actor akActor, string fetishAttributeId)
-	float value = StorageUtil.GetFloatValue(akActor,fetishAttributeId)
+	GlobalVariable variable = GetFetishVariableFor(fetishAttributeId)
+	If(variable == None)
+		return -1.0
+	EndIf
+	float value = variable.GetValue()
 	If(value < 0 || value > 100.0)
 		Debug.MessageBox("Out-of-range value for fetishAttributeId=" + fetishAttributeId + " -> value="+value+". The value should be 0 or more.")
 		StorageUtil.SetFloatValue(akActor,fetishAttributeId, 0.0) ;in this case, set the default value
+		variable.SetValue(0.0)
+		return 0.0
 	EndIf
 	return value
 EndFunction
@@ -70,7 +87,12 @@ Function SetFetish(Actor akActor, string fetishAttributeId, float value)
 	If(Libs.Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> SetFetishValue(), fetishAttributeId=" + fetishAttributeId +", value=" + value)
 	EndIf
+	GlobalVariable variable = GetFetishVariableFor(fetishAttributeId)
+	If(variable == None)
+		return
+	EndIf
 
+	variable.SetValue(value)
 	StorageUtil.SetFloatValue(akActor,fetishAttributeId, value)
 	int fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	If (fetishChangedEventId)
@@ -92,14 +114,20 @@ Function IncrementFetish(Actor akActor, string fetishAttributeId, float incremen
 	If(Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> IncrementFetish(), fetishAttributeId=" + fetishAttributeId +", increment=" + increment)
 	EndIf
+	GlobalVariable variable = GetFetishVariableFor(fetishAttributeId)
+	If(variable == None)
+		return
+	EndIf
 
-	float value = StorageUtil.GetFloatValue(akActor, fetishAttributeId)
+	float value = variable.GetValue()
 	value += increment
 	If(value > 100.0 || value < 0)
 		value = 100.0
 	EndIf
-
+	
+	variable.SetValue(value)
 	StorageUtil.SetFloatValue(akActor,fetishAttributeId, value)
+
 	int fetishChangedEventId = ModEvent.Create(Constants.FetishChangedEventName)
 	If (fetishChangedEventId)
 	    ModEvent.PushForm(fetishChangedEventId, akActor as Form) 
@@ -111,9 +139,15 @@ EndFunction
 
 float Function GetAttribute(Actor akActor, string attributeId)
 	float value = StorageUtil.GetFloatValue(akActor,attributeId, -1.0)	
+	GlobalVariable variable = GetAttributeVariableFor(attributeId)
+	If(variable == None)
+		return -1.0
+	EndIf
+
 	If(value == -1.0)
 		value = GetDefaultValue(attributeId)
-		StorageUtil.SetFloatValue(akActor,attributeId, value)
+		StorageUtil.SetFloatValue(akActor,attributeId, value)		
+		variable.SetValue(value)
 	EndIf
 
 	If (value < Constants.MinStatValue || value > Constants.MaxStatValue)
@@ -121,9 +155,11 @@ float Function GetAttribute(Actor akActor, string attributeId)
 		;this should never happen, but still - there are no fool-proof plans
 		Debug.MessageBox("Out-of-range value for attributeId="+attributeId+" -> expected it to be between " + Constants.MinStatValue + " and " + Constants.MaxStatValue + ", but the value=" + value)
 		StorageUtil.SetFloatValue(akActor,attributeId, Constants.MinStatValue)
+		variable.SetValue(Constants.MinStatValue)
 		return Constants.MinStatValue
 	EndIf
-	return value
+
+	return variable.GetValue()
 EndFunction
 
 float Function GetPlayerAttribute(string attributeId)
@@ -136,16 +172,24 @@ EndFunction
 
 Function SetAttribute(Actor akActor, string attributeId, float value)
 	float valueToSet = Max(Constants.MinStatValue, Min(Constants.MaxStatValue, value))
-	If(Config.ShowDebugMessages) ;
+	If(Config.ShowDebugMessages)
 		Debug.Notification("Devious Attributes -> SetAttribute(), attributeId=" + attributeId +", value=" + value)
 	EndIf
+	
+	GlobalVariable variable = GetAttributeVariableFor(attributeId)
+	If(variable == None)
+		return
+	EndIf
 
+	float oldValue = StorageUtil.GetFloatValue(akActor,attributeId)
 	StorageUtil.SetFloatValue(akActor,attributeId, valueToSet)
+	variable.SetValue(valueToSet)
 
 	int attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
 	If (attributeChangedEventId)		
         ModEvent.PushForm(attributeChangedEventId, akActor as Form) 
         ModEvent.PushString(attributeChangedEventId, attributeId)
+        ModEvent.PushFloat(attributeChangedEventId, oldValue)
         ModEvent.PushFloat(attributeChangedEventId, valueToSet)
         ModEvent.Send(attributeChangedEventId)
     EndIf
@@ -196,6 +240,36 @@ float Function GetDefaultValue(string attributeId)
 		return Constants.DefaultObedience
 	EndIf
 EndFunction
+
+GlobalVariable Function GetAttributeVariableFor(string attributeId)
+	If(attributeId == Constants.PrideAttributeId)
+		return dattPride
+	ElseIf(attributeId == Constants.SelfEsteemAttributeId)
+		return dattSelfEsteem
+	ElseIf(attributeId == Constants.WillpowerAttributeId)
+		return dattWillpower
+	ElseIf(attributeId == Constants.ObedienceAttributeId)
+		return dattObedience
+	Else
+		return None
+	EndIf
+EndFunction
+
+GlobalVariable Function GetFetishVariableFor(string attributeId)
+	If(attributeId == Constants.HumiliationLoverAttributeId)
+		return dattHumiliationLover
+	ElseIf(attributeId == Constants.ExhibitionistAttributeId)
+		return dattExhibitionist
+	ElseIf(attributeId == Constants.MasochistAttributeId)
+		return dattMasochist
+	ElseIf(attributeId == Constants.NymphomaniacAttributeId)
+		return dattNymphomaniac
+	Else
+		return None
+	EndIf
+EndFunction
+
+
 
 Float Function Max(Float A, Float B)
 	If (A > B)
