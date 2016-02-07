@@ -50,6 +50,7 @@ String Property DisableAllBuffsEventName = "Datt_DisableAllBuffsEventName" AutoR
 
 String Property MaintenanceEventName = "Datt_MaintenanceEventName" AutoReadonly Hidden
 String Property SetAttributeEventName = "Datt_SetAttribute" AutoReadonly Hidden
+String Property ModAttributeEventName = "Datt_ModAttribute" AutoReadonly Hidden
 String Property OnPeriodicUpdateEventName = "Datt_OnPeriodicUpdateEventName" AutoReadonly Hidden
 String Property RemoveArmbinderRemovedDebuffEventName = "Datt_RemoveArmbinderRemovedDebuffEventName" AutoReadonly Hidden
 

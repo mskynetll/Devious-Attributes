@@ -150,13 +150,14 @@ float Function GetAttribute(Actor akActor, string attributeId)
 		variable.SetValue(value)
 	EndIf
 
-	If (value < Constants.MinStatValue || value > Constants.MaxStatValue)
-		;guard against other mods setting invalid values
-		;this should never happen, but still - there are no fool-proof plans
-		Debug.MessageBox("Out-of-range value for attributeId="+attributeId+" -> expected it to be between " + Constants.MinStatValue + " and " + Constants.MaxStatValue + ", but the value=" + value)
+	If (value < Constants.MinStatValue)
 		StorageUtil.SetFloatValue(akActor,attributeId, Constants.MinStatValue)
 		variable.SetValue(Constants.MinStatValue)
 		return Constants.MinStatValue
+	ElseIf (value > Constants.MaxStatValue)
+		StorageUtil.SetFloatValue(akActor,attributeId, Constants.MaxStatValue)
+		variable.SetValue(Constants.MaxStatValue)
+		return Constants.MaxStatValue
 	EndIf
 
 	return variable.GetValue()
@@ -181,7 +182,7 @@ Function SetAttribute(Actor akActor, string attributeId, float value)
 		return
 	EndIf
 
-	float oldValue = StorageUtil.GetFloatValue(akActor,attributeId)
+	float oldValue = variable.GetValue()
 	StorageUtil.SetFloatValue(akActor,attributeId, valueToSet)
 	variable.SetValue(valueToSet)
 
@@ -191,6 +192,34 @@ Function SetAttribute(Actor akActor, string attributeId, float value)
         ModEvent.PushString(attributeChangedEventId, attributeId)
         ModEvent.PushFloat(attributeChangedEventId, oldValue)
         ModEvent.PushFloat(attributeChangedEventId, valueToSet)
+        ModEvent.Send(attributeChangedEventId)
+    EndIf
+EndFunction
+
+Function ModPlayerAttribute(string attributeId, float value)
+	ModAttribute(Libs.PlayerRef, attributeId, value)
+EndFunction
+
+Function ModAttribute(Actor akActor, string attributeId, float value)
+	If(Config.ShowDebugMessages)
+		Debug.Notification("Devious Attributes -> ModAttribute(), attributeId=" + attributeId +", value=" + value)
+	EndIf
+	
+	GlobalVariable variable = GetAttributeVariableFor(attributeId)
+	If(variable == None)
+		return
+	EndIf
+
+	float oldValue = variable.GetValue()
+	variable.Mod(value)
+	StorageUtil.SetFloatValue(akActor,attributeId, oldValue + value)
+	
+	int attributeChangedEventId = ModEvent.Create(Constants.AttributeChangedEventName)
+	If (attributeChangedEventId)		
+        ModEvent.PushForm(attributeChangedEventId, akActor as Form) 
+        ModEvent.PushString(attributeChangedEventId, attributeId)
+        ModEvent.PushFloat(attributeChangedEventId, oldValue)
+        ModEvent.PushFloat(attributeChangedEventId, oldValue + value)
         ModEvent.Send(attributeChangedEventId)
     EndIf
 EndFunction

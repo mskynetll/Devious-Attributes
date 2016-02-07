@@ -245,10 +245,15 @@ Function RegisterForEvents()
 	RegisterForModEvent(Constants.DisableAllBuffsEventName, "OnDisableAllBuffs")
 
 	RegisterForModEvent(Constants.SetAttributeEventName, "OnSetAttribute")
+	RegisterForModEvent(Constants.ModAttributeEventName, "OnModAttribute")
 EndFunction
 
 Event OnSetAttribute(string attributeId, float value)
 	Attributes.SetPlayerAttribute(attributeId,value)
+EndEvent
+
+Event OnModAttribute(string attributeId, float value)
+	Attributes.ModPlayerAttribute(attributeId,value)
 EndEvent
 
 Event OnEnableAllBuffs()
