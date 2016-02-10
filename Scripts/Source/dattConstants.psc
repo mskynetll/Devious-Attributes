@@ -52,6 +52,7 @@ String Property MaintenanceEventName = "Datt_MaintenanceEventName" AutoReadonly 
 String Property SetAttributeEventName = "Datt_SetAttribute" AutoReadonly Hidden
 String Property ModAttributeEventName = "Datt_ModAttribute" AutoReadonly Hidden
 String Property OnPeriodicUpdateEventName = "Datt_OnPeriodicUpdateEventName" AutoReadonly Hidden
+String Property OnPeriodicRefreshStartedEventName = "Datt_PeriodicRefreshStarted" AutoReadonly Hidden
 String Property RemoveArmbinderRemovedDebuffEventName = "Datt_RemoveArmbinderRemovedDebuffEventName" AutoReadonly Hidden
 
 ;TODO : make defaults configurable
@@ -68,3 +69,8 @@ Int Property State_WillingSlave = 1 AutoReadonly Hidden
 Int Property State_ForcedSlave = 2 AutoReadonly Hidden
 
 String Property RapeTraumaDurationId = "Datt_RapeTraumaDurationId" AutoReadonly Hidden
+
+;keys for external access
+String Property GagPrideReduceTickId = "Datt_GagPrideReduceTick" AutoReadonly Hidden
+String Property BaseDDTickId = "Datt_BaseDDTick" AutoReadonly Hidden
+String Property IsRunningRefreshId = "Datt_IsRunningRefresh" AutoReadonly Hidden

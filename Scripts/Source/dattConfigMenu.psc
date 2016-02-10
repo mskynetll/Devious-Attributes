@@ -64,6 +64,8 @@ int prideEffectMagnitudeSliderId
 int attributeBuffsEnabledToggleId
 int rapeTraumaDurationHoursSliderId
 int removeArmbinderRemovedDebuffToggleId
+int gagPrideReduceTickSliderId
+int baseDDTickSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -77,6 +79,14 @@ Bool Property ShowDebugMessages Auto
 
 Int Property RapeTraumaDurationHours Auto Hidden
 Int Property DefaultRapeTraumaDurationHours = 12 AutoReadonly Hidden
+
+;gagPrideReduceTickSliderId
+
+Float Property BaseDDTick Auto Hidden
+Float Property DefaultBaseDDTick = 1.0 AutoReadonly Hidden
+
+Float Property GagPrideReduceTick Auto Hidden
+Float Property DefaultGagPrideReduceTick = 0.5 AutoReadonly Hidden
 
 Float Property WillpowerBaseTickPerTimeUnit Auto Hidden
 Float Property DefaultWillpowerBaseTickPerTimeUnit = 0.05 AutoReadonly Hidden
@@ -230,6 +240,12 @@ Function VerifyConfigDefaults()
     If (RapeTraumaDurationHours == 0)
         RapeTraumaDurationHours = DefaultRapeTraumaDurationHours
     EndIf
+    If (GagPrideReduceTick == 0.0)
+        GagPrideReduceTick = DefaultGagPrideReduceTick
+    EndIf
+    If(BaseDDTick == 0.0)
+        BaseDDTick = DefaultBaseDDTick
+    EndIf
 EndFunction
 
 Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
@@ -319,6 +335,8 @@ Event OnPageReset(string page)
         selfesteemHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - self-esteem", SelfesteemHitPercentagePerRape, "Decrease {1}%")        
         willpowerHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - willpower", WillpowerHitPercentagePerRape, "Decrease {1}%")        
         willpowerDecreasePerOrgasmPercentageSliderId = AddSliderOption("On orgasm - willpower", WillpowerDecreasePerOrgasmPercentage, "Decrease {1}%")
+        gagPrideReduceTickSliderId = AddSliderOption("Gag worn - pride", GagPrideReduceTick, "Decrease per hour {1}")
+        baseDDTickSliderId = AddSliderOption("Base tick/each DD", BaseDDTick, "{1} change per hour")
 
         AddHeaderOption("Positive Stat Changes")
         willpowerBaseTickPerTimeUnitSliderId = AddSliderOption("Base Willpower tick",WillpowerBaseTickPerTimeUnit, "{2} per time unit")
@@ -372,6 +390,7 @@ Event OnPageReset(string page)
         AddTextOption("Nympho", nympho, 1)
 
         AddHeaderOption("Misc")
+        AddTextOption("Worn Devices Count", StorageUtil.GetIntValue(Libs.PlayerRef, "_Datt_Device_Count"), 1)
         AddTextOption("Rape Trauma Level", MonitorQuest.Libs.PlayerRef.GetFactionRank(MonitorQuest.DattRapeTraumaFaction), 1)
 
         AddHeaderOption("Optional Mods")
@@ -382,9 +401,9 @@ Event OnPageReset(string page)
             AddTextOption("Realistic Needs and Diseases", "Not Installed", 1)    
         EndIf
         If (IsSexlabSexualFameInstalled)
-            AddTextOption("SexLab - Sexual Fame [SLSF]", "Installed", 1)    
+            AddTextOption("SexLab - Sexual Fame", "Installed", 1)    
         Else
-            AddTextOption("SexLab - Sexual Fame [SLSF]", "Not Installed", 1)    
+            AddTextOption("SexLab - Sexual Fame", "Not Installed", 1)    
         EndIf
         If (IsSkoomaWhoreInstalled)
             AddTextOption("Skooma Whore", "Installed", 1)    
@@ -562,6 +581,16 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultRapeTraumaDurationHours)
         SetSliderDialogRange(1.0, 48.0) 
         SetSliderDialogInterval(1.0)
+    ElseIf (option == gagPrideReduceTickSliderId)
+        SetSliderDialogStartValue(GagPrideReduceTick)
+        SetSliderDialogDefaultValue(DefaultGagPrideReduceTick)
+        SetSliderDialogRange(0.0, 50.0) 
+        SetSliderDialogInterval(0.1)
+    ElseIf (option == baseDDTickSliderId)
+        SetSliderDialogStartValue(BaseDDTick)
+        SetSliderDialogDefaultValue(DefaultBaseDDTick)
+        SetSliderDialogRange(0.1, 10.0) 
+        SetSliderDialogInterval(0.1)
     EndIf 
 
 EndEvent
@@ -658,6 +687,14 @@ Event OnOptionSliderAccept(int option, float value)
         RapeTraumaDurationHours = value as int
         MonitorQuest.RemoveRapeTrauma()
         SetSliderOptionValue(rapeTraumaDurationHoursSliderId, value,"{0} hours")                
+    ElseIf (option == gagPrideReduceTickSliderId)
+        GagPrideReduceTick = value
+        StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.GagPrideReduceTickId, value)
+        SetSliderOptionValue(gagPrideReduceTickSliderId, value,"Decrease per hour {1}")                
+    ElseIf (option == baseDDTickSliderId)
+        BaseDDTick = value
+        StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.BaseDDTickId, value)
+        SetSliderOptionValue(baseDDTickSliderId, value,"{1} change per hour")                
     EndIf
 
 EndEvent

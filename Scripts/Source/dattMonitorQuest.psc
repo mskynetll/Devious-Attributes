@@ -69,6 +69,7 @@ Function ToggleRefreshRunningState()
 		EndIf
 		Libs.Config.IsRunningRefresh = !Libs.Config.IsRunningRefresh		
 		UnregisterForSleep()
+		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 0)
 	Else
 		If(Libs.Config.ShowDebugMessages)
 			Debug.Notification("Devious Attributes -> periodic stat refresh started")
@@ -77,6 +78,12 @@ Function ToggleRefreshRunningState()
 		RegisterForSingleUpdate(1.0)
 		RegisterForSingleUpdateGameTime(1.0)
 		RegisterForSleep()
+		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 1)
+
+		int periodicRefreshStartedEventId = ModEvent.Create(Constants.OnPeriodicRefreshStartedEventName)
+		If(periodicRefreshStartedEventId)
+			ModEvent.Send(periodicRefreshStartedEventId)
+		EndIf
 	EndIf
 EndFunction
 
@@ -184,6 +191,13 @@ Function DoVersionMigrationIfNeeded()
 		int soulState = StorageUtil.GetIntValue(Libs.PlayerRef, Constants.SoulStateAttributeId)
 		Attributes.SetPlayerSoulState(soulState)
 	EndIf
+	If(ModVersion == "0.6.0")
+		Debug.Notification("Devious Attributes - upgrading 0.6.0 -> 0.6.1")
+		ModVersion = "0.6.1"
+		Config.GagPrideReduceTick = Config.DefaultGagPrideReduceTick ;just to make sure
+		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.GagPrideReduceTickId, Config.DefaultGagPrideReduceTick)
+	EndIf
+	;
 EndFunction
 
 Function CheckReferenceFillings()
@@ -491,10 +505,10 @@ Event OnUpdateGameTime()
 		RegisterForSingleUpdateGameTime(12.0)
 	EndIf
 	
-	int onUpdateGameTimeEventId = ModEvent.Create(Constants.OnPeriodicUpdateEventName)
-	If(onUpdateGameTimeEventId)
+	int onUpdateGameTimeEventId = ModEvent.Create("Datt_OnPeriodicUpdateEventName")	
+	If(onUpdateGameTimeEventId)		
 		ModEvent.PushFloat(onUpdateGameTimeEventId,hoursPassed)
-		ModEvent.Send(onUpdateGameTimeEventId)
+		ModEvent.Send(onUpdateGameTimeEventId)	
 	EndIf
 
 	UpdateRapeTraumaLevelIfNeeded()	
