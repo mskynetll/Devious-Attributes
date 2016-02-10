@@ -66,6 +66,7 @@ int rapeTraumaDurationHoursSliderId
 int removeArmbinderRemovedDebuffToggleId
 int gagPrideReduceTickSliderId
 int baseDDTickSliderId
+int collarSelfEsteemChangeTickSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -87,6 +88,10 @@ Float Property DefaultBaseDDTick = 1.0 AutoReadonly Hidden
 
 Float Property GagPrideReduceTick Auto Hidden
 Float Property DefaultGagPrideReduceTick = 0.5 AutoReadonly Hidden
+
+Float Property CollarSelfEsteemChangeTick Auto Hidden
+Float Property DefaultCollarSelfEsteemChangeTick = 0.1 AutoReadonly Hidden
+
 
 Float Property WillpowerBaseTickPerTimeUnit Auto Hidden
 Float Property DefaultWillpowerBaseTickPerTimeUnit = 0.05 AutoReadonly Hidden
@@ -336,6 +341,7 @@ Event OnPageReset(string page)
         willpowerHitPercentagePerRapeSliderId = AddSliderOption("Sex Victim - willpower", WillpowerHitPercentagePerRape, "Decrease {1}%")        
         willpowerDecreasePerOrgasmPercentageSliderId = AddSliderOption("On orgasm - willpower", WillpowerDecreasePerOrgasmPercentage, "Decrease {1}%")
         gagPrideReduceTickSliderId = AddSliderOption("Gag worn - pride", GagPrideReduceTick, "Decrease per hour {1}")
+        collarSelfEsteemChangeTickSliderId = AddSliderOption("Collar worn - self-esteem", CollarSelfEsteemChangeTick, "Change per hour {1}")
         baseDDTickSliderId = AddSliderOption("Base tick/each DD", BaseDDTick, "{1} change per hour")
 
         AddHeaderOption("Positive Stat Changes")
@@ -591,6 +597,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(DefaultBaseDDTick)
         SetSliderDialogRange(0.1, 10.0) 
         SetSliderDialogInterval(0.1)
+    ElseIf (option == collarSelfEsteemChangeTickSliderId)
+        SetSliderDialogStartValue(CollarSelfEsteemChangeTick)
+        SetSliderDialogDefaultValue(DefaultCollarSelfEsteemChangeTick)
+        SetSliderDialogRange(0.1, 10.0) 
+        SetSliderDialogInterval(0.1)
     EndIf 
 
 EndEvent
@@ -695,6 +706,10 @@ Event OnOptionSliderAccept(int option, float value)
         BaseDDTick = value
         StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.BaseDDTickId, value)
         SetSliderOptionValue(baseDDTickSliderId, value,"{1} change per hour")                
+    ElseIf (option == collarSelfEsteemChangeTickSliderId)
+        CollarSelfEsteemChangeTick = value
+        StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.CollarSelfEsteemChangeTickId, value)
+        SetSliderOptionValue(collarSelfEsteemChangeTickSliderId, value,"Change per hour {1}")                
     EndIf
 
 EndEvent
@@ -706,11 +721,21 @@ Event OnOptionSelect(int option)
         MonitorQuest.ToggleRefreshRunningState()
         Debug.MessageBox("Exit the menu to apply this change")
         SetToggleOptionValue(pauseRefreshTimerToggleId, IsRunningRefresh)
+        If(IsRunningRefresh)
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 1)
+        Else
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 0)
+        EndIf                
     ElseIf (option == simulateRapeToggleId)
         Debug.MessageBox("OnPlayerRape() with " + (simulateRapeActorCount as int) + " actors")
         MonitorQuest.OnPlayerRape(simulateRapeActorCount as int)
     ElseIf (option == showDebugMessagesToggleId)
         ShowDebugMessages = !ShowDebugMessages
+        If(ShowDebugMessages)
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 1)
+        Else
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 0)
+        EndIf        
         SetToggleOptionValue(showDebugMessagesToggleId, ShowDebugMessages)
     ElseIf (option == debugPlayerDecisionToggleId)
         DebugSendPlayerDecision(DebugPlayerResponseType, DebugPlayerDecisionType)

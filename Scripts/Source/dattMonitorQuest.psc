@@ -141,6 +141,18 @@ Function Maintenance(bool isInit = false)
 	If(onMaintenanceEventId) 
 		ModEvent.Send(onMaintenanceEventId)
 	Endif
+
+	If(Config.ShowDebugMessages)
+		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 1)
+	Else
+		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 0)
+	EndIf
+
+    If(Config.IsRunningRefresh)
+        StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 1)
+    Else
+        StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 0)
+    EndIf 
 EndFunction
 
 Function DoVersionMigrationIfNeeded()
@@ -194,8 +206,17 @@ Function DoVersionMigrationIfNeeded()
 	If(ModVersion == "0.6.0")
 		Debug.Notification("Devious Attributes - upgrading 0.6.0 -> 0.6.1")
 		ModVersion = "0.6.1"
-		Config.GagPrideReduceTick = Config.DefaultGagPrideReduceTick ;just to make sure
+		Config.GagPrideReduceTick = Config.DefaultGagPrideReduceTick
+		Config.BaseDDTick = Config.DefaultBaseDDTick ;devious devices tick
+		Config.CollarSelfEsteemChangeTick = Config.DefaultCollarSelfEsteemChangeTick
 		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.GagPrideReduceTickId, Config.DefaultGagPrideReduceTick)
+		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.BaseDDTickId, Config.DefaultBaseDDTick)
+		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.CollarSelfEsteemChangeTickId, Config.DefaultCollarSelfEsteemChangeTick)
+		If(Config.ShowDebugMessages)
+			StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 1)
+		Else
+			StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 0)
+		EndIf
 	EndIf
 	;
 EndFunction

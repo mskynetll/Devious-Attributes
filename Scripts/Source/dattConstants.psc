@@ -74,3 +74,5 @@ String Property RapeTraumaDurationId = "Datt_RapeTraumaDurationId" AutoReadonly 
 String Property GagPrideReduceTickId = "Datt_GagPrideReduceTick" AutoReadonly Hidden
 String Property BaseDDTickId = "Datt_BaseDDTick" AutoReadonly Hidden
 String Property IsRunningRefreshId = "Datt_IsRunningRefresh" AutoReadonly Hidden
+String Property ShowDebugMessagesId = "Datt_ShowDebugMessages" AutoReadonly Hidden
+String Property CollarSelfEsteemChangeTickId = "Datt_CollarSelfEsteemChangeTick" AutoReadonly Hidden
