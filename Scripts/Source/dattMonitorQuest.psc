@@ -218,7 +218,14 @@ Function DoVersionMigrationIfNeeded()
 			StorageUtil.SetIntValue(Libs.PlayerRef, Constants.ShowDebugMessagesId, 0)
 		EndIf
 	EndIf
-	;
+	If(ModVersion == "0.6.1" || ModVersion == "0.6.2")
+		Debug.Notification("Devious Attributes - upgrading 0.6.1 -> 0.6.3")
+		ModVersion = "0.6.3"
+		StorageUtil.SetIntValue(Libs.PlayerRef, "_Datt_SlutCollar", 0)
+
+		Config.SlutCollarPrideHitTick = Config.DefaultSlutCollarPrideHitTick
+		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.SlutCollarPrideHitTickId, Config.DefaultSlutCollarPrideHitTick)
+	EndIf
 EndFunction
 
 Function CheckReferenceFillings()
@@ -281,7 +288,12 @@ Function RegisterForEvents()
 
 	RegisterForModEvent(Constants.SetAttributeEventName, "OnSetAttribute")
 	RegisterForModEvent(Constants.ModAttributeEventName, "OnModAttribute")
+	RegisterForModEvent(Constants.ModFetishAttributeEventName, "OnModFetishAttribute")
 EndFunction
+
+Event OnModFetishAttribute(string attributeId, float value)
+	Attributes.IncrementPlayerFetish(attributeId,value)
+EndEvent
 
 Event OnSetAttribute(string attributeId, float value)
 	Attributes.SetPlayerAttribute(attributeId,value)

@@ -67,6 +67,7 @@ int removeArmbinderRemovedDebuffToggleId
 int gagPrideReduceTickSliderId
 int baseDDTickSliderId
 int collarSelfEsteemChangeTickSliderId
+int slutCollarPrideHitTickSliderId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -81,7 +82,8 @@ Bool Property ShowDebugMessages Auto
 Int Property RapeTraumaDurationHours Auto Hidden
 Int Property DefaultRapeTraumaDurationHours = 12 AutoReadonly Hidden
 
-;gagPrideReduceTickSliderId
+Float Property SlutCollarPrideHitTick Auto Hidden
+Float Property DefaultSlutCollarPrideHitTick = 1.0 AutoReadonly Hidden
 
 Float Property BaseDDTick Auto Hidden
 Float Property DefaultBaseDDTick = 1.0 AutoReadonly Hidden
@@ -251,6 +253,9 @@ Function VerifyConfigDefaults()
     If(BaseDDTick == 0.0)
         BaseDDTick = DefaultBaseDDTick
     EndIf
+    If(SlutCollarPrideHitTick == 0.0)
+        SlutCollarPrideHitTick = DefaultSlutCollarPrideHitTick
+    EndIf
 EndFunction
 
 Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
@@ -332,7 +337,7 @@ Event OnPageReset(string page)
 
         AddHeaderOption("Buffs/Debuffs")        
         rapeTraumaDurationHoursSliderId = AddSliderOption("Rape trauma duration", RapeTraumaDurationHours, "{0} hours")
-        attributeBuffsEnabledToggleId = AddToggleOption("Enable Attribute Buffs",AttributeBuffsEnabled)
+        attributeBuffsEnabledToggleId = AddToggleOption("Enable Buffs/Debuffs",AttributeBuffsEnabled)
         prideEffectMagnitudeSliderId = AddSliderOption("Pride Buff", PrideEffectMagnitude, "Magnitude x{1}")
 
         AddHeaderOption("Negative Stat Changes")
@@ -342,6 +347,7 @@ Event OnPageReset(string page)
         willpowerDecreasePerOrgasmPercentageSliderId = AddSliderOption("On orgasm - willpower", WillpowerDecreasePerOrgasmPercentage, "Decrease {1}%")
         gagPrideReduceTickSliderId = AddSliderOption("Gag worn - pride", GagPrideReduceTick, "Decrease per hour {1}")
         collarSelfEsteemChangeTickSliderId = AddSliderOption("Collar worn - self-esteem", CollarSelfEsteemChangeTick, "Change per hour {1}")
+        slutCollarPrideHitTickSliderId = AddSliderOption("Slut Collar - pride", SlutCollarPrideHitTick, "Decrease per hour {1}")
         baseDDTickSliderId = AddSliderOption("Base tick/each DD", BaseDDTick, "{1} change per hour")
 
         AddHeaderOption("Positive Stat Changes")
@@ -600,9 +606,14 @@ Event OnOptionSliderOpen(int option)
     ElseIf (option == collarSelfEsteemChangeTickSliderId)
         SetSliderDialogStartValue(CollarSelfEsteemChangeTick)
         SetSliderDialogDefaultValue(DefaultCollarSelfEsteemChangeTick)
-        SetSliderDialogRange(0.1, 10.0) 
+        SetSliderDialogRange(0.1, 15.0) 
         SetSliderDialogInterval(0.1)
-    EndIf 
+    ElseIf (option == slutCollarPrideHitTickSliderId)
+        SetSliderDialogStartValue(SlutCollarPrideHitTick)
+        SetSliderDialogDefaultValue(DefaultSlutCollarPrideHitTick)
+        SetSliderDialogRange(0.1, 15.0) 
+        SetSliderDialogInterval(0.1)
+    EndIf
 
 EndEvent
 
@@ -709,6 +720,10 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf (option == collarSelfEsteemChangeTickSliderId)
         CollarSelfEsteemChangeTick = value
         StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.CollarSelfEsteemChangeTickId, value)
+        SetSliderOptionValue(collarSelfEsteemChangeTickSliderId, value,"Change per hour {1}")                
+   ElseIf (option == slutCollarPrideHitTickSliderId)
+        SlutCollarPrideHitTick = value
+        StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.SlutCollarPrideHitTickId, value)
         SetSliderOptionValue(collarSelfEsteemChangeTickSliderId, value,"Change per hour {1}")                
     EndIf
 
