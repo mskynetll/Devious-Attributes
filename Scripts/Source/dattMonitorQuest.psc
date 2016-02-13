@@ -225,6 +225,9 @@ Function DoVersionMigrationIfNeeded()
 
 		Config.SlutCollarPrideHitTick = Config.DefaultSlutCollarPrideHitTick
 		StorageUtil.SetFloatValue(Libs.PlayerRef, Constants.SlutCollarPrideHitTickId, Config.DefaultSlutCollarPrideHitTick)
+
+		Config.DeviceBuffsEnabled = true
+        StorageUtil.SetIntValue(Libs.PlayerRef, Constants.DeviceBuffsEnabledId, 1)
 	EndIf
 EndFunction
 

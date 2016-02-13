@@ -48,6 +48,9 @@ String Property RapeTraumaEffectEndEventName = "Datt_RapeTraumaEffectEnd" AutoRe
 String Property EnableAllBuffsEventName = "Datt_EnableAllBuffsEventName" AutoReadonly Hidden
 String Property DisableAllBuffsEventName = "Datt_DisableAllBuffsEventName" AutoReadonly Hidden
 
+String Property EnableDeviceBuffsEventName = "Datt_EnableDeviceBuffs" AutoReadonly Hidden
+String Property DisableDeviceBuffsEventName = "Datt_DisableDeviceBuffs" AutoReadonly Hidden
+
 String Property MaintenanceEventName = "Datt_MaintenanceEventName" AutoReadonly Hidden
 String Property SetAttributeEventName = "Datt_SetAttribute" AutoReadonly Hidden
 String Property ModAttributeEventName = "Datt_ModAttribute" AutoReadonly Hidden
@@ -78,3 +81,4 @@ String Property IsRunningRefreshId = "Datt_IsRunningRefresh" AutoReadonly Hidden
 String Property ShowDebugMessagesId = "Datt_ShowDebugMessages" AutoReadonly Hidden
 String Property CollarSelfEsteemChangeTickId = "Datt_CollarSelfEsteemChangeTick" AutoReadonly Hidden
 String Property SlutCollarPrideHitTickId = "Datt_SlutCollarPrideHitTick" AutoReadonly Hidden
+String Property DeviceBuffsEnabledId = "Datt_DeviceBuffsEnabled" AutoReadonly Hidden

@@ -68,6 +68,7 @@ int gagPrideReduceTickSliderId
 int baseDDTickSliderId
 int collarSelfEsteemChangeTickSliderId
 int slutCollarPrideHitTickSliderId
+int enableDeviceBuffsToggleId
 
 ;Settings
 Int Property DebugPlayerDecisionType Auto
@@ -155,6 +156,7 @@ Float Property PrideEffectMagnitude Auto Hidden
 Float Property DefaultPrideEffectMagnitude = 1.0 AutoReadonly Hidden
 
 Bool Property AttributeBuffsEnabled Auto Hidden
+Bool Property DeviceBuffsEnabled Auto Hidden
 
 ;Soft dependency flags
 Bool Property IsRealisticNeedsInstalled Auto
@@ -337,7 +339,8 @@ Event OnPageReset(string page)
 
         AddHeaderOption("Buffs/Debuffs")        
         rapeTraumaDurationHoursSliderId = AddSliderOption("Rape trauma duration", RapeTraumaDurationHours, "{0} hours")
-        attributeBuffsEnabledToggleId = AddToggleOption("Enable Buffs/Debuffs",AttributeBuffsEnabled)
+        attributeBuffsEnabledToggleId = AddToggleOption("Enable Attribute Effects",AttributeBuffsEnabled)
+        enableDeviceBuffsToggleId = AddToggleOption("Enable Device Effects", DeviceBuffsEnabled)
         prideEffectMagnitudeSliderId = AddSliderOption("Pride Buff", PrideEffectMagnitude, "Magnitude x{1}")
 
         AddHeaderOption("Negative Stat Changes")
@@ -779,7 +782,19 @@ Event OnOptionSelect(int option)
     ElseIf (option == removeArmbinderRemovedDebuffToggleId)
         int eventId = ModEvent.Create(Constants.RemoveArmbinderRemovedDebuffEventName)
         ModEvent.Send(eventId)
+    ElseIf (option == enableDeviceBuffsToggleId)
+        DeviceBuffsEnabled = !DeviceBuffsEnabled
+        SetToggleOptionValue(enableDeviceBuffsToggleId, DeviceBuffsEnabled)
+
+        If(DeviceBuffsEnabled)
+            int eventId = ModEvent.Create(Constants.EnableDeviceBuffsEventName)
+            ModEvent.Send(eventId)
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.DeviceBuffsEnabledId, 1)
+        Else
+            int eventId = ModEvent.Create(Constants.DisableDeviceBuffsEventName)
+            ModEvent.Send(eventId)
+            StorageUtil.SetIntValue(Libs.PlayerRef, Constants.DeviceBuffsEnabledId, 0)
+        EndIf
     EndIf
     
-
 EndEvent
