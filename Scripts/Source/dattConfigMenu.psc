@@ -264,7 +264,7 @@ Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
     debugPlayerDecisionEventId = ModEvent.Create(Constants.PlayerDecisionEventName1)    
     If(debugPlayerDecisionEventId)
         If(ShowDebugMessages)
-            Debug.Notification("Devious Attributes -> debug.SendPlayerDecision()")
+            Debug.Trace("Devious Attributes -> debug.SendPlayerDecision()")
         EndIf
 
         ModEvent.PushInt(debugPlayerDecisionEventId, playerResponseType)
@@ -272,7 +272,7 @@ Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
         ModEvent.Send(debugPlayerDecisionEventId)
     Else
         If(ShowDebugMessages)
-            Debug.Notification("Devious Attributes -> debug.SendPlayerDecision() -> debugPlayerDecisionEventId not initialized!")
+            Debug.Trace("Devious Attributes -> debug.SendPlayerDecision() -> debugPlayerDecisionEventId not initialized!")
         EndIf
     EndIf
 EndFunction
@@ -281,7 +281,7 @@ Function DebugSendPlayerDecisionWithExtraChanges(int playerResponseType, int dec
     debugPlayerDecisionWithExtraEventId = ModEvent.Create(Constants.PlayerDecisionWithExtraEventName1)    
     If(debugPlayerDecisionWithExtraEventId)
         If(ShowDebugMessages)
-            Debug.Notification("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges()")
+            Debug.Trace("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges()")
         EndIf
 
         ModEvent.PushInt(debugPlayerDecisionWithExtraEventId, playerResponseType)
@@ -291,14 +291,14 @@ Function DebugSendPlayerDecisionWithExtraChanges(int playerResponseType, int dec
         ModEvent.Send(debugPlayerDecisionWithExtraEventId)
     Else
         If(ShowDebugMessages)
-            Debug.Notification("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges() -> debugPlayerDecisionWithExtraEventId not initialized!")
+            Debug.Trace("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges() -> debugPlayerDecisionWithExtraEventId not initialized!")
         EndIf
     EndIf
 EndFunction
 
 Function CheckSoftDependencies()
     If(ShowDebugMessages)
-            Debug.Notification("Devious Attributes -> checking soft dependencies")
+            Debug.Trace("Devious Attributes -> checking soft dependencies")
     EndIf
     If Game.GetModByName("RealisticNeedsandDiseases.esp") == 255
         IsRealisticNeedsInstalled = false       
@@ -773,27 +773,32 @@ Event OnOptionSelect(int option)
             int eventId = ModEvent.Create(Constants.DisableAllBuffsEventName)
             AttributeBuffsEnabled = false            
             ModEvent.Send(eventId)
+            Debug.MessageBox("Enabled attribute buffs.. Please exit menu to apply") 
         Else
             int eventId = ModEvent.Create(Constants.EnableAllBuffsEventName)
             AttributeBuffsEnabled = true            
             ModEvent.Send(eventId)
+            Debug.MessageBox("Disabled attribute buffs.. Please exit menu to apply") 
         EndIf
         SetToggleOptionValue(attributeBuffsEnabledToggleId, AttributeBuffsEnabled)
     ElseIf (option == removeArmbinderRemovedDebuffToggleId)
         int eventId = ModEvent.Create(Constants.RemoveArmbinderRemovedDebuffEventName)
         ModEvent.Send(eventId)
+        Debug.MessageBox("Removed armbinder debuff.. Please exit menu to apply") 
     ElseIf (option == enableDeviceBuffsToggleId)
         DeviceBuffsEnabled = !DeviceBuffsEnabled
         SetToggleOptionValue(enableDeviceBuffsToggleId, DeviceBuffsEnabled)
 
-        If(DeviceBuffsEnabled)
+        If(DeviceBuffsEnabled == true)
             int eventId = ModEvent.Create(Constants.EnableDeviceBuffsEventName)
             ModEvent.Send(eventId)
             StorageUtil.SetIntValue(Libs.PlayerRef, Constants.DeviceBuffsEnabledId, 1)
+            Debug.MessageBox("Enabled device effects.. Please exit menu to apply") 
         Else
             int eventId = ModEvent.Create(Constants.DisableDeviceBuffsEventName)
             ModEvent.Send(eventId)
             StorageUtil.SetIntValue(Libs.PlayerRef, Constants.DeviceBuffsEnabledId, 0)
+            Debug.MessageBox("Disabled device effects.. Please exit menu to apply") 
         EndIf
     EndIf
     

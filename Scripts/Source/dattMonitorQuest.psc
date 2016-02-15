@@ -65,14 +65,14 @@ EndEvent
 Function ToggleRefreshRunningState()
 	If Libs.Config.IsRunningRefresh
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("Devious Attributes -> periodic stat refresh stopped")
+			Debug.Trace("Devious Attributes -> periodic stat refresh stopped")
 		EndIf
 		Libs.Config.IsRunningRefresh = !Libs.Config.IsRunningRefresh		
 		UnregisterForSleep()
 		StorageUtil.SetIntValue(Libs.PlayerRef, Constants.IsRunningRefreshId, 0)
 	Else
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("Devious Attributes -> periodic stat refresh started")
+			Debug.Trace("Devious Attributes -> periodic stat refresh started")
 		EndIf
 		Libs.Config.IsRunningRefresh = !Libs.Config.IsRunningRefresh
 		RegisterForSingleUpdate(1.0)
@@ -90,7 +90,7 @@ EndFunction
 ;this runs on init and on game load
 Function Maintenance(bool isInit = false)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> running maintenance...")
+		Debug.Trace("Devious Attributes -> running maintenance...")
 	EndIf
 
 	DoVersionMigrationIfNeeded()
@@ -281,7 +281,7 @@ EndFunction
 
 Function RegisterForEvents()
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> registering events")
+		Debug.Trace("Devious Attributes -> registering events")
 	EndIf
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd")	
 	RegisterForModEvent("OrgasmEnd", "OnOrgasmEnd")
@@ -308,7 +308,7 @@ EndEvent
 
 Event OnEnableAllBuffs()
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnEnableAllBuffs()")
+		Debug.Trace("Devious Attributes -> OnEnableAllBuffs()")
 	EndIf
 	float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId)
 	SetRelevantWillpowerSpell(willpower)
@@ -322,7 +322,7 @@ EndEvent
 
 Event OnDisableAllBuffs()
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnDisableAllBuffs()")
+		Debug.Trace("Devious Attributes -> OnDisableAllBuffs()")
 	EndIf
 	RemovePrideSpellIfNeeded()
 	RemoveSelfesteemSpellIfNeeded()
@@ -331,7 +331,7 @@ EndEvent
 
 Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnOrgasmEnd()")
+		Debug.Trace("Devious Attributes -> OnOrgasmEnd()")
 	EndIf	
    float willpower = Attributes.GetPlayerAttribute(Constants.WillpowerAttributeId) 
    Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower * (1.0 - (Libs.Config.WillpowerDecreasePerOrgasmPercentage / 100.0)))
@@ -340,7 +340,7 @@ EndEvent
 float lastWillpowerValue
 Event OnAttributeChanged(Form akActor, string attributeId, float oldValue, float newValue)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + newValue)
+		Debug.Trace("Devious Attributes -> OnAttributeChanged(), attributeId=" + attributeId + ",value=" + newValue)
 	EndIf
 
 	DisplayAttributeChangeMessageIfNeeded(attributeId, oldValue, newValue)
@@ -381,7 +381,7 @@ Function DisplayAttributeChangeMessageIfNeeded(string attributeId, float oldValu
 	EndIf
 
 	If(msg != "")
-		Debug.Notification(msg)
+		Debug.Trace(msg)
 	EndIf
 EndFunction
 
@@ -513,7 +513,7 @@ EndEvent
 
 Event OnSleepStop(bool abInterrupted)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnSleepStop()")
+		Debug.Trace("Devious Attributes -> OnSleepStop()")
 	EndIf
 
 	float hoursPassed = Math.abs((sleepStartTime - Utility.GetCurrentGameTime()) * 24)
@@ -530,7 +530,7 @@ EndEvent
 ;if one would be sleeping 
 Event OnUpdateGameTime()
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Devious Attributes -> OnUpdateGameTime()")
+		Debug.Trace("Devious Attributes -> OnUpdateGameTime()")
 	EndIf
 	Float hoursPassed = (Utility.GetCurrentGameTime() - periodicUpdatesRefreshLastUpdateTime) * 24
 	OnPeriodicStatsUpdate(hoursPassed)
@@ -554,7 +554,7 @@ Function UpdateRapeTraumaLevelIfNeeded()
 	float hoursPassed = Math.abs(Utility.GetCurrentGameTime() - LastRapeTraumaChange) * 24.0
 	float rapeTraumaLevel = Libs.PlayerRef.GetFactionRank(DattRapeTraumaFaction)
 	If(hoursPassed >= LastRapeTraumaDurationDelta && rapeTraumaLevel > 0)
-		Debug.Notification("Recent traumatic experience fades away, becoming more distant...")
+		Debug.Trace("Recent traumatic experience fades away, becoming more distant...")
 		Libs.PlayerRef.ModFactionRank(DattRapeTraumaFaction, -1)
 
 		Libs.PlayerRef.RemoveSpell(NewRapeTraumaSpell)	
@@ -589,12 +589,12 @@ Event OnUpdate()
 	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
 	if (willpower < Constants.MinStatValue)
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("Event -> OnUpdate(), Willpower < MinStatValue")
+			Debug.Trace("Event -> OnUpdate(), Willpower < MinStatValue")
 		EndIf
 		willpower = Constants.MinStatValue		
 	ElseIf (willpower > selfEsteem)
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("Event -> OnUpdate(), Willpower > SelfEsteem")
+			Debug.Trace("Event -> OnUpdate(), Willpower > SelfEsteem")
 		EndIf
 		willpower = selfEsteem		
 	Else
@@ -605,7 +605,7 @@ Event OnUpdate()
 			float hoursSinceLastUpdate = (Utility.GetCurrentGameTime() - shortRefreshLastUpdateTime) * 24
 			willpower = Min(Constants.MaxStatValue,willpower + ((tickBonus + Libs.Config.WillpowerBaseTickPerTimeUnit) * hoursSinceLastUpdate))
 			If(Libs.Config.ShowDebugMessages)
-				Debug.Notification("Event -> OnUpdate(), Willpower =" + Willpower)
+				Debug.Trace("Event -> OnUpdate(), Willpower =" + Willpower)
 			EndIf
 		EndIf
 	EndIf
@@ -622,7 +622,7 @@ Function OnPeriodicStatsUpdate(Float hoursPassed)
 	int playerSoulState = Attributes.GetPlayerSoulState()
 	If(periodicUpdatesRefreshLastUpdateTime == 0 || hoursPassed >= 12)
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("OnPeriodicStatsUpdate(), hoursPassed >= 12")
+			Debug.Trace("OnPeriodicStatsUpdate(), hoursPassed >= 12")
 		EndIf
 
 		;self-esteem can't go up if player is not free
@@ -638,7 +638,7 @@ Function OnPeriodicStatsUpdate(Float hoursPassed)
 		Attributes.SetPlayerAttribute(Constants.ObedienceAttributeId, obedience - Libs.Config.ObedienceDailyDecrease)
 	Else
 		If(Libs.Config.ShowDebugMessages)
-			Debug.Notification("OnPeriodicStatsUpdate(), hoursPassed < 12")
+			Debug.Trace("OnPeriodicStatsUpdate(), hoursPassed < 12")
 		EndIf
 	EndIf	
 
@@ -650,7 +650,7 @@ Function OnPeriodicStatsUpdate(Float hoursPassed)
 	willpower = Min(Constants.MaxStatValue,willpower + ((tickBonus + Libs.Config.WillpowerBaseTickPerTimeUnit) * hoursPassed))
 	Attributes.SetPlayerAttribute(Constants.WillpowerAttributeId, willpower)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Event -> OnPeriodicStatsUpdate(), Willpower =" + Willpower)
+		Debug.Trace("Event -> OnPeriodicStatsUpdate(), Willpower =" + Willpower)
 	EndIf
 	periodicUpdatesRefreshLastUpdateTime = Utility.GetCurrentGameTime()
 EndFunction
@@ -658,7 +658,7 @@ EndFunction
 float lastSpellCastTime
 Function OnPlayerCastMagic(Form spell)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("OnPlayerCastMagic()")
+		Debug.Trace("OnPlayerCastMagic()")
 	EndIf
 
 	float hoursPassed = (Utility.GetCurrentGameTime() - lastSpellCastTime) * 24.0
@@ -681,7 +681,7 @@ EndFunction
 
 Function OnPlayerKill(Actor victim, int relationshipRank)	
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("OnPlayerKill -> victim lvl=" + victim.GetLevel() + ",player lvl=" + Libs.PlayerRef.GetLevel())
+		Debug.Trace("OnPlayerKill -> victim lvl=" + victim.GetLevel() + ",player lvl=" + Libs.PlayerRef.GetLevel())
 	EndIf
 
 	float bonusMultiplier = 1.0
@@ -701,7 +701,7 @@ EndFunction
 
 Event OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Event -> OnSexAnimationEnd()")
+		Debug.Trace("Event -> OnSexAnimationEnd()")
 	EndIf
     sslThreadController controller = Libs.SexLab.HookController(argString)
     If (controller.IsVictim(Libs.PlayerRef))
@@ -717,7 +717,7 @@ EndEvent
 ;helpers
 Function OnPlayerStealOrPickpocket(int goldAmount)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("OnPlayerStealOrPickpocket(), goldAmount = " + goldAmount)
+		Debug.Trace("OnPlayerStealOrPickpocket(), goldAmount = " + goldAmount)
 	EndIf
 	float selfEsteem = Attributes.GetPlayerAttribute(Constants.SelfEsteemAttributeId)
 	float pride = Attributes.GetPlayerAttribute(Constants.PrideAttributeId)
@@ -755,7 +755,7 @@ EndFunction
 
 Function OnPlayerRape(int actorCount)
 	If(Libs.Config.ShowDebugMessages)
-		Debug.Notification("Mod Event -> OnPlayerRape(), actorCount = " + actorCount)
+		Debug.Trace("Mod Event -> OnPlayerRape(), actorCount = " + actorCount)
 	EndIf
 
    	float humiliationMultiplier = 1.0
