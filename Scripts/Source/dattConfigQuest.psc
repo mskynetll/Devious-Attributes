@@ -83,6 +83,17 @@ Function PrintTrackedNPCs()
         Return
     EndIf
 
+    int index = 0
+    While index < npcCount
+        Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
+        If(npc != None) ;precaution
+            AddTextOption(npc.GetBaseObject().GetName(), "",1)
+        Else
+            Debug.MessageBox("Very weird, found non-actor in _datt_tracked_npcs list. This is definitely a bug!")
+        EndIf
+        index += 1
+    EndWhile
+
     ;just in case
     StorageUtil.IntListClear(None, "_datt_tracked_npcs_mcm_id_list")
     StorageUtil.FormListClear(None, "_datt_tracked_npcs_mcm_actor_list")   

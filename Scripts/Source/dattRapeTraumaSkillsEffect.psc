@@ -3,14 +3,16 @@ Scriptname dattRapeTraumaSkillsEffect extends ActiveMagicEffect
 Actor Property PlayerRef Auto
 dattAttributesAPIQuest Property AttributesAPI Auto
 dattConfigQuest Property Config Auto
+Actor Property EffectTarget Auto Hidden
 
-Float Property Magnitude Auto
-Float Property LessTraumaMultiplier Auto
-Float Property OriginalMagickaRate Auto
+Float Property Magnitude Auto Hidden
+Float Property LessTraumaMultiplier Auto Hidden 
+Float Property OriginalMagickaRate Auto Hidden
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
-	float masochism = AttributesAPI.GetAttribute(PlayerRef, Config.MasochistAttributeId) as float
-	float nympho = AttributesAPI.GetAttribute(PlayerRef, Config.NymphomaniacAttributeId) as float
+	EffectTarget = akTarget	
+	float masochism = AttributesAPI.GetAttribute(EffectTarget, Config.MasochistAttributeId) as float
+	float nympho = AttributesAPI.GetAttribute(EffectTarget, Config.NymphomaniacAttributeId) as float
 
 	If(masochism >= 95.0 || nympho >= 95.0)
 		;even if the fetishes are at max, there is still minimum damage from rape
@@ -20,41 +22,45 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 	Endif
 
 	Magnitude = GetMagnitude() / 100.0
-	OriginalMagickaRate = PlayerRef.GetAV("MagickaRate")
+	OriginalMagickaRate = EffectTarget.GetAV("MagickaRate")
 	float debuffModifier = -1 * Magnitude * LessTraumaMultiplier
 
-    PlayerRef.ModAV("OneHanded", debuffModifier)
-	PlayerRef.ModAV("TwoHanded", debuffModifier)
-	PlayerRef.ModAV("Marksman", debuffModifier)
+    EffectTarget.ModAV("OneHanded", debuffModifier)
+	EffectTarget.ModAV("TwoHanded", debuffModifier)
+	EffectTarget.ModAV("Marksman", debuffModifier)
 
-	PlayerRef.ModAV("Alteration", debuffModifier)
-	PlayerRef.ModAV("Conjuration", debuffModifier)
-	PlayerRef.ModAV("Destruction", debuffModifier)
-	PlayerRef.ModAV("Illusion", debuffModifier)
-	PlayerRef.ModAV("Restoration", debuffModifier)
-	PlayerRef.ModAV("Enchanting", debuffModifier)
+	EffectTarget.ModAV("Alteration", debuffModifier)
+	EffectTarget.ModAV("Conjuration", debuffModifier)
+	EffectTarget.ModAV("Destruction", debuffModifier)
+	EffectTarget.ModAV("Illusion", debuffModifier)
+	EffectTarget.ModAV("Restoration", debuffModifier)
+	EffectTarget.ModAV("Enchanting", debuffModifier)
 
-	PlayerRef.ModAV("Magicka", (-1 * Magnitude) * LessTraumaMultiplier)
-	PlayerRef.ModAV("MagickaRate", (-1 * OriginalMagickaRate) * LessTraumaMultiplier)	
+	EffectTarget.ModAV("Magicka", (-1 * Magnitude) * LessTraumaMultiplier)
+	EffectTarget.ModAV("MagickaRate", (-1 * OriginalMagickaRate) * LessTraumaMultiplier)	
 
-	StorageUtil.SetIntValue(PlayerRef, "_datt_PC_has_rape_trauma", 1)
+	If(EffectTarget == PlayerRef)
+		StorageUtil.SetIntValue(PlayerRef, "_datt_PC_has_rape_trauma", 1)
+	Endif
 EndEvent
 
 Event OnEffectFinish(Actor akTarget, Actor akCaster)
 	float buffModifier = Magnitude * LessTraumaMultiplier
-    PlayerRef.ModAV("OneHanded", buffModifier)
-	PlayerRef.ModAV("TwoHanded", buffModifier)
-	PlayerRef.ModAV("Marksman", buffModifier)
+    EffectTarget.ModAV("OneHanded", buffModifier)
+	EffectTarget.ModAV("TwoHanded", buffModifier)
+	EffectTarget.ModAV("Marksman", buffModifier)
 
-	PlayerRef.ModAV("Alteration", buffModifier)
-	PlayerRef.ModAV("Conjuration", buffModifier)
-	PlayerRef.ModAV("Destruction", buffModifier)
-	PlayerRef.ModAV("Illusion", buffModifier)
-	PlayerRef.ModAV("Restoration", buffModifier)
-	PlayerRef.ModAV("Enchanting", buffModifier)
+	EffectTarget.ModAV("Alteration", buffModifier)
+	EffectTarget.ModAV("Conjuration", buffModifier)
+	EffectTarget.ModAV("Destruction", buffModifier)
+	EffectTarget.ModAV("Illusion", buffModifier)
+	EffectTarget.ModAV("Restoration", buffModifier)
+	EffectTarget.ModAV("Enchanting", buffModifier)
 
-	PlayerRef.ModAV("Magicka", Magnitude * LessTraumaMultiplier)
-	PlayerRef.ModAV("MagickaRate", OriginalMagickaRate * LessTraumaMultiplier)	
+	EffectTarget.ModAV("Magicka", Magnitude * LessTraumaMultiplier)
+	EffectTarget.ModAV("MagickaRate", OriginalMagickaRate * LessTraumaMultiplier)	
 
-	StorageUtil.SetIntValue(PlayerRef, "_datt_PC_has_rape_trauma", 0)
+	If(EffectTarget == PlayerRef)
+		StorageUtil.SetIntValue(PlayerRef, "_datt_PC_has_rape_trauma", 0)
+	Endif
 EndEvent

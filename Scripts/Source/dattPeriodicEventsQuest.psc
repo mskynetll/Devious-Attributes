@@ -13,9 +13,22 @@ Event OnUpdate()
 EndEvent
 
 Event OnUpdateGameTime()
-	dattPeriodicEventsHelper.AdjustTrauma("Rape",Config.PlayerRef,dattRapeTraumaFaction)
+	AdjustTraumaForPCandTrackedNPCs()
 	RegisterForSingleUpdateGameTime(Config.PeriodicEventUpdateLatencyHours)
 EndEvent
+
+Function AdjustTraumaForPCandTrackedNPCs()
+	dattPeriodicEventsHelper.AdjustTrauma("Rape",Config.PlayerRef,dattRapeTraumaFaction)
+	int npcCount = StorageUtil.FormListCount(None, "_datt_tracked_npcs")
+	int index = 0
+    While index < npcCount
+        Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
+        If(npc != None) ;precaution
+            dattPeriodicEventsHelper.AdjustTrauma("Rape",npc,dattRapeTraumaFaction)
+        EndIf
+        index += 1
+    EndWhile	
+EndFunction
 
 Int Property WillpowerBaseChange
 	Int Function Get()

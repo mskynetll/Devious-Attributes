@@ -7,6 +7,8 @@ SexLabFramework Property SexLab Auto
 dattAttributesAPIQuest Property AttributesAPI Auto
 slaFrameworkScr Property SexLabAroused Auto
 
+Faction Property dattRapeTraumaFaction Auto
+
 Actor Property PlayerRef Auto
 
 Bool Property OneTimeInitialize Auto Hidden
@@ -106,6 +108,7 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 EndEvent
 
 Event OnRapeSex(Actor victim, int agressorCount)
+	dattPeriodicEventsHelper.SetTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
    	int wornDeviceCount = dattUtility.MaxInt(1,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
 	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniacAttributeId) / (wornDeviceCount * 10)
 

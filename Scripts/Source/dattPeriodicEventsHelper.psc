@@ -22,7 +22,7 @@ Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFaction) 
 		return
 	EndIf
 
-	float lastUpdateTime = StorageUtil.GetFloatValue(akActor as Form, lastUpdateEntryKey)
+	float lastUpdateTime = StorageUtil.GetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
 	float stageDecreaseTime = StorageUtil.GetFloatValue(None, "_datt_traumaStageDecreaseTime", 12.0)
 
 	If Math.abs(lastUpdateTime - currentTime) * 24.0 >= stageDecreaseTime
