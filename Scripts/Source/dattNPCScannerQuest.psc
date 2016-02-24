@@ -25,8 +25,7 @@ Event OnCancellationRequest()
 EndEvent
 
 Event OnPlayerCellChange(Form newCell)	
-	Log("[Datt] dattNPCScannerQuest -> OnPlayerCellChange")
-	;StorageUtil.FormListClear(None, "_datt_tracked_npcs")		
-	SendParameterlessEvent("Datt_ForceNPCScan")
+	Log("[Datt] dattNPCScannerQuest -> OnPlayerCellChange")	
+	dattUtility.SendParameterlessEvent("Datt_ForceNPCScan")
 EndEvent
 

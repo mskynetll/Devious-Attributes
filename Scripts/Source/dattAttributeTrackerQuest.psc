@@ -22,7 +22,8 @@ Function Maintenance()
 	RegisterForModEvent("Datt_SetAttribute", "OnSetAttribute")
 	RegisterForModEvent("Datt_ModAttribute", "OnModAttribute")
 	RegisterForModEvent("Datt_SetDefaults", "OnSetDefaults")
-
+	RegisterForModEvent("Datt_SetSoulState", "OnSetSoulState")
+	RegisterForModEvent("Datt_ClearChangeQueue", "OnClearChangeQueue")
 	RegisterForSingleUpdate(15)
 EndFunction
 
@@ -34,10 +35,10 @@ Event OnSetSoulState(Form acTargetActor, int value)
 	EndIf
 	string attributeId = "_Datt_Soul_State"
 
-	;If Mutex.TryLock() == false
-	;	QueueForChange(acTargetActor,attributeId,value, 0)
-	;	return
-	;EndIf
+	If Mutex.TryLock() == false
+		QueueForChange(acTargetActor,attributeId,value, 0)
+		return
+	EndIf
 
 	Log("[Datt] OnSetSoulState() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = dattSoulState
@@ -54,7 +55,7 @@ Event OnSetSoulState(Form acTargetActor, int value)
 	  		Debug.MessageBox("[Datt] OnSetSoulState() failed to send event. EventName = Datt_SoulStateChanged")
 	 	EndIf
 	EndIf
-	;Mutex.Unlock()
+	Mutex.Unlock()
 EndEvent
 
 Event OnSetAttribute(Form acTargetActor, string attributeId, int value)
@@ -64,10 +65,10 @@ Event OnSetAttribute(Form acTargetActor, string attributeId, int value)
 		Return
 	EndIf
 
-	;If Mutex.TryLock() == false
-	;	QueueForChange(acTargetActor,attributeId,value, 0)
-	;	return
-	;EndIf
+	If Mutex.TryLock() == false
+		QueueForChange(acTargetActor,attributeId,value, 0)
+		return
+	EndIf
 
 	Log("[Datt] OnSetAttribute() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = FactionByAttributeId(attributeId)
@@ -80,7 +81,7 @@ Event OnSetAttribute(Form acTargetActor, string attributeId, int value)
 	StorageUtil.SetIntValue(acTargetActor, attributeId, value)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,value)
 
-	;Mutex.Unlock()
+	Mutex.Unlock()
 EndEvent
 
 Event OnModAttribute(Form acTargetActor, string attributeId, int value)
@@ -90,10 +91,10 @@ Event OnModAttribute(Form acTargetActor, string attributeId, int value)
 		Return
 	EndIf
 
-	;If Mutex.TryLock() == false
-	;	QueueForChange(acTargetActor,attributeId, value, 1)
-	;	return
-	;EndIf
+	If Mutex.TryLock() == false
+		QueueForChange(acTargetActor,attributeId, value, 1)
+		return
+	EndIf
 
 	Log("[Datt] OnModAttribute() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = FactionByAttributeId(attributeId)
@@ -104,10 +105,10 @@ Event OnModAttribute(Form acTargetActor, string attributeId, int value)
 	acActor.AddToFaction(attributeFaction) ;if actor already in the faction this does nothing
 	acActor.ModFactionRank(attributeFaction, value)
 	int newValue = StorageUtil.GetIntValue(acTargetActor, attributeId) + value
-	StorageUtil.SetIntValue(acTargetActor, attributeId, newValue)
+	StorageUtil.AdjustIntValue(acTargetActor, attributeId, value)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,newValue)
 
-	;Mutex.Unlock()
+	Mutex.Unlock()
 EndEvent
 
 Event OnSetDefaults(Form acTargetActor)
@@ -131,12 +132,35 @@ Event OnSetDefaults(Form acTargetActor)
 EndEvent
 
 Function QueueForChange(Form akActor, string attributeId, int newValue,int isMod)
+	MiscUtil.PrintConsole("[Datt] QueueForChange -> " + akActor.GetName() + ", " + attributeId + ":" + newValue)
 	StorageUtil.StringListAdd(akActor, "_datt_queued_attributeId", attributeId)
 	StorageUtil.IntListAdd(akActor, "_datt_queued_value", newValue)
 	StorageUtil.IntListAdd(akActor, "_datt_queued_isMod", isMod)
 	StorageUtil.FormListAdd(None, "_datt_queued_actors", akActor)
 	HasQueuedChanges = true
 EndFunction
+
+Event OnClearChangeQueue()
+	If Mutex.TryLock() == false
+		string msg = "[Datt] OnClearChangeQueue -> Failed to acquire lock in 15 seconds...aborting"
+		Debug.Notification(msg)
+		Warning(msg)
+		return
+	EndIf
+	int actorsInChangeQueue = StorageUtil.FormListCount(None, "_datt_queued_actors")
+	int index = 0
+
+	While index < actorsInChangeQueue
+		Form akActor = StorageUtil.FormListPop(None, "_datt_queued_actors")
+		StorageUtil.StringListClear(akActor, "_datt_queued_attributeId")
+		StorageUtil.IntListClear(akActor, "_datt_queued_value")
+		StorageUtil.IntListClear(akActor, "_datt_queued_isMod")
+		index += 1
+	EndWhile
+	
+	HasQueuedChanges = false
+	Mutex.Unlock()	
+EndEvent
 
 Event OnUpdate()
 	If HasQueuedChanges == false

@@ -1,6 +1,7 @@
 Scriptname dattPeriodicEventsQuest extends dattQuestBase
 
 dattAttributesAPIQuest Property AttribtesAPI Auto
+Faction Property dattRapeTraumaFaction Auto
 
 Function Maintenance()
 	RegisterForSingleUpdate(Config.FrequentEventUpdateLatencySec)
@@ -12,6 +13,7 @@ Event OnUpdate()
 EndEvent
 
 Event OnUpdateGameTime()
+	dattPeriodicEventsHelper.AdjustTrauma("Rape",Config.PlayerRef,dattRapeTraumaFaction)
 	RegisterForSingleUpdateGameTime(Config.PeriodicEventUpdateLatencyHours)
 EndEvent
 

@@ -4,6 +4,7 @@ Actor Property PlayerRef Auto
 
 String Property SettingsPageName = "Settings" AutoReadonly Hidden
 String Property AttributesPageName = "Attributes" AutoReadonly Hidden
+String Property TrackedNPCsPageName = "Tracked NPCs" AutoReadonly Hidden
 String Property DebugPageName = "Debug" AutoReadonly Hidden
 
 Bool Property IsLogging Auto
@@ -11,10 +12,11 @@ Bool Property IsLogging Auto
 dattMutex Property NpcScannerMutex Auto
 
 Event OnConfigInit()
-	Pages = new string[3]
+	Pages = new string[4]
     Pages[0] = SettingsPageName
     Pages[1] = AttributesPageName
-    Pages[2] = DebugPageName  
+    Pages[2] = TrackedNPCsPageName  
+    Pages[3] = DebugPageName  
 EndEvent
 
 Event OnPageReset(string page)
@@ -26,6 +28,14 @@ Event OnPageReset(string page)
         frequentEventUpdateLatencySliderId = AddSliderOption("Frequent Attr. Changes", FrequentEventUpdateLatencySec as float, "Update each {0} sec")
         periodicEventUpdateLatencySliderId = AddSliderOption("Periodic Attr. Changes", PeriodicEventUpdateLatencyHours as float, "Update each {0} hours")
         npcScannerTickSliderId = AddSliderOption("NPC Scanning Tick", NPCScannerTickSec, "Each {0} sec.")
+        traumaStageDecreaseTimeSliderId = AddSliderOption("Trauma Stage Decrease", TraumaStageDecreaseTime, "Each {1} hours")
+        willpowerChangePerOrgasmSliderId = AddSliderOption("Willpower/orgasm", WillpowerChangePerOrgasm, "{0} per orgasm")
+        willpowerChangePerRapeSliderId = AddSliderOption("Willpower/rape", WillpowerChangePerRape, "{0} per rape")
+        prideChangePerRapeSliderId= AddSliderOption("Pride/rape", PrideChangePerRape, "{0} per rape")
+        selfEsteemChangePerRapeSliderId= AddSliderOption("Self-Esteem/rape", SelfEsteemChangePerRape, "{0} per rape")        
+        intervalBetweenSexToIncreaseNymphoHoursSliderId = AddSliderOption("Interval/increase nympho", IntervalBetweenSexToIncreaseNymphoHours, "Less than {0} hours")
+        nymphoIncreasePerConsensualSliderId = AddSliderOption("Nympho incr/consensual", NymphoIncreasePerConsensual, "{0}")
+    ElseIf (page == TrackedNPCsPageName)
         PrintTrackedNPCs()
     ElseIf (page == AttributesPageName)
         AddHeaderOption("Player Attributes")
@@ -34,7 +44,6 @@ Event OnPageReset(string page)
         float pride = StorageUtil.GetIntValue(PlayerRef as Form, PrideAttributeId) as float / 10
         float obedience = StorageUtil.GetIntValue(PlayerRef as Form, ObedienceAttributeId) as float / 10
         float submissiveness = StorageUtil.GetIntValue(PlayerRef as Form, SubmissivenessAttributeId) as float / 10
-
 
         AddTextOption("Willpower", willpower, 1)
         AddTextOption("Self-Esteem", selfEsteem, 1)
@@ -61,7 +70,8 @@ Event OnPageReset(string page)
 
         AddHeaderOption("Internal Stuff")
         int queuedChangeCount = StorageUtil.FormListCount(None, "_datt_queued_actors")
-        AddTextOption("Queued Attribute Changes", queuedChangeCount, 1)
+        queuedAttributeChangesTextId = AddTextOption("Queued Attribute Changes", queuedChangeCount, 1)
+        clearChangeQueueToggleId = AddToggleOption("Clean Attribute Change Queue", false)
     EndIf
 EndEvent
 
@@ -73,16 +83,9 @@ Function PrintTrackedNPCs()
         Return
     EndIf
 
-    int index = 0
-    While index < npcCount
-        Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
-        If(npc != None) ;precaution
-            AddTextOption(npc.GetBaseObject().GetName(), "",1)
-        Else
-            Debug.MessageBox("Very weird, found non-actor in _datt_tracked_npcs list. This is definitely a bug!")
-        EndIf
-        index += 1
-    EndWhile
+    ;just in case
+    StorageUtil.IntListClear(None, "_datt_tracked_npcs_mcm_id_list")
+    StorageUtil.FormListClear(None, "_datt_tracked_npcs_mcm_actor_list")   
 
     NpcScannerMutex.Unlock()
 EndFunction
@@ -106,7 +109,51 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogRange(1.0, 30.0) 
         SetSliderDialogInterval(1.0)
     EndIf
+    If option == traumaStageDecreaseTimeSliderId
+        SetSliderDialogStartValue(TraumaStageDecreaseTime)
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(1.0, 24.0) 
+        SetSliderDialogInterval(0.5)
+    EndIf
 
+    If option == willpowerChangePerOrgasmSliderId
+        SetSliderDialogStartValue(WillpowerChangePerOrgasm)
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(0.0, 1000.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf
+
+    If option == willpowerChangePerRapeSliderId
+        SetSliderDialogStartValue(WillpowerChangePerRape)
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 1000.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf
+    If option == prideChangePerRapeSliderId
+        SetSliderDialogStartValue(PrideChangePerRape)
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(0.0, 1000.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf
+    If option == selfEsteemChangePerRapeSliderId
+        SetSliderDialogStartValue(SelfEsteemChangePerRape)
+        SetSliderDialogDefaultValue(25.0)
+        SetSliderDialogRange(0.0, 1000.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf                
+    If option == intervalBetweenSexToIncreaseNymphoHoursSliderId
+        SetSliderDialogStartValue(IntervalBetweenSexToIncreaseNymphoHours)
+        SetSliderDialogDefaultValue(6.0)
+        SetSliderDialogRange(1.0, 24.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf
+
+    If option == nymphoIncreasePerConsensualSliderId
+        SetSliderDialogStartValue(NymphoIncreasePerConsensual)
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(1.0, 250.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf    
 EndEvent
 
 Event OnOptionSliderAccept(int option, float value)
@@ -119,6 +166,24 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf option == npcScannerTickSliderId 
         NPCScannerTickSec = value as int
         SetSliderOptionValue(npcScannerTickSliderId, value, "Each {0} sec.")
+    ElseIf option == traumaStageDecreaseTimeSliderId 
+        TraumaStageDecreaseTime = value
+        SetSliderOptionValue(traumaStageDecreaseTimeSliderId, value, "Each {1} hours")
+    ElseIf option == willpowerChangePerRapeSliderId 
+        WillpowerChangePerRape = value as int
+        SetSliderOptionValue(willpowerChangePerRapeSliderId, value, "{0} per rape")
+    ElseIf option == prideChangePerRapeSliderId 
+        PrideChangePerRape = value as int
+        SetSliderOptionValue(prideChangePerRapeSliderId, value, "{0} per rape")
+    ElseIf option == selfEsteemChangePerRapeSliderId 
+        SelfEsteemChangePerRape = value as int
+        SetSliderOptionValue(selfEsteemChangePerRapeSliderId, value, "{0} per rape")
+    ElseIf option == intervalBetweenSexToIncreaseNymphoHoursSliderId 
+        IntervalBetweenSexToIncreaseNymphoHours = value
+        SetSliderOptionValue(intervalBetweenSexToIncreaseNymphoHoursSliderId, value, "Less than {0} hours")
+    ElseIf option == nymphoIncreasePerConsensualSliderId 
+        NymphoIncreasePerConsensual = value as int
+        SetSliderOptionValue(nymphoIncreasePerConsensualSliderId, value, "{0}")
     EndIf
 
 EndEvent
@@ -140,8 +205,21 @@ Event OnOptionSelect(int option)
         Else
             ModEvent.Release(resetToDefaultsEventId)
             Debug.MessageBox("Player attributes reset to defaults failed, ModEvent didn't create the event properly")
+        EndIf        
+    EndIf
+    If clearChangeQueueToggleId == option
+        int cleanChangeQueueEventId = ModEvent.Create("Datt_ClearChangeQueue")
+        If cleanChangeQueueEventId
+            If ModEvent.Send(cleanChangeQueueEventId) == true
+                Debug.MessageBox("Player change queue cleared..")
+                Utility.Wait(0.5)
+                SetTextOptionValue(queuedAttributeChangesTextId, StorageUtil.FormListCount(None, "_datt_queued_actors"))
+            Else
+                Debug.MessageBox("Player change queue was not cleared, sending the event failed. Please try again. (Do you have script lag?)")
+            EndIf
+        Else
+            Debug.MessageBox("Player change queue was not cleared, ModEvent didn't create the event properly")
         EndIf
-        
     EndIf
 EndEvent
 
@@ -151,6 +229,79 @@ int frequentEventUpdateLatencySliderId
 int periodicEventUpdateLatencySliderId
 int maxNPCsToScanSliderId
 int npcScannerTickSliderId
+int clearChangeQueueToggleId
+int queuedAttributeChangesTextId
+int traumaStageDecreaseTimeSliderId
+int willpowerChangePerRapeSliderId
+int prideChangePerRapeSliderId
+int selfEsteemChangePerRapeSliderId
+int willpowerChangePerOrgasmSliderId
+int intervalBetweenSexToIncreaseNymphoHoursSliderId
+int nymphoIncreasePerConsensualSliderId
+
+Int Property NymphoIncreasePerConsensual
+    Int Function Get()
+        return StorageUtil.GetIntValue(None, "_datt_NymphoIncreasePerConsensual", 10)
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_NymphoIncreasePerConsensual", value)
+    EndFunction
+EndProperty
+
+Float Property IntervalBetweenSexToIncreaseNymphoHours
+    Float Function Get()
+        return StorageUtil.GetFloatValue(None, "_datt_IntervalBetweenSexToIncreaseNymphoHours", 6)
+    EndFunction
+    Function Set(Float value)
+        StorageUtil.SetFloatValue(None, "_datt_IntervalBetweenSexToIncreaseNymphoHours", value)
+    EndFunction
+EndProperty
+
+Int Property WillpowerChangePerOrgasm
+    Int Function Get()
+        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerOrgasm", 100)
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_willpowerChangePerOrgasm", value)
+    EndFunction
+EndProperty
+
+Int Property WillpowerChangePerRape
+    Int Function Get()
+        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerRape", 250)
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_willpowerChangePerRape", value)
+    EndFunction
+EndProperty
+
+Int Property PrideChangePerRape
+    Int Function Get()
+        return StorageUtil.GetIntValue(None, "_datt_prideChangePerRape", 50)
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_prideChangePerRape", value)
+    EndFunction
+EndProperty
+
+Int Property SelfEsteemChangePerRape
+    Int Function Get()
+        return StorageUtil.GetIntValue(None, "_datt_SelfEsteemChangePerRape", 25)
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_SelfEsteemChangePerRape", value)
+    EndFunction
+EndProperty
+
+float Property TraumaStageDecreaseTime ;in hame hours
+    Float Function Get()
+        return StorageUtil.GetFloatValue(None, "_datt_traumaStageDecreaseTime", 12.0)
+    EndFunction
+
+    Function Set(float value)
+        StorageUtil.SetFloatValue(None, "_datt_traumaStageDecreaseTime", value)
+    EndFunction
+EndProperty
 
 Int Property FrequentEventUpdateLatencySec
     Int Function Get()
@@ -210,3 +361,18 @@ String Property ExhibitionistAttributeId = "_Datt_Exhibitionist" AutoReadonly Hi
 String Property MasochistAttributeId = "_Datt_Masochist" AutoReadonly Hidden
 String Property SadistAttributeId = "_Datt_Sadist" AutoReadonly Hidden
 String Property NymphomaniacAttributeId = "_Datt_Nymphomaniac" AutoReadonly Hidden
+
+dattMonitorQuest Property MonitorQuest Auto 
+Faction Property dattWillpower Auto
+Faction Property dattPride Auto
+Faction Property dattSelfEsteem Auto
+Faction Property dattObedience Auto
+Faction Property dattSubmissive Auto
+
+Faction Property dattSadist Auto
+Faction Property dattMasochist Auto
+Faction Property dattNympho Auto
+Faction Property dattHumiliationLover Auto
+Faction Property dattExhibitionist Auto
+
+Faction Property dattSoulState Auto

@@ -22,24 +22,6 @@ Event ScanForNPCs()
 EndEvent
 
 Event OnLocationChange(Location akOldLoc, Location akNewLoc)
-	SendParameterlessEvent("Datt_ForceRemoveNPCMonitor")
+	dattUtility.SendParameterlessEvent("Datt_ForceRemoveNPCMonitor")
 	ScanForNPCs()
 endEvent
-
-Function SendParameterlessEvent(string eventName)
-	int retries = 3
-	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
-		If eventId
-			If(ModEvent.Send(eventId) == true)
-				retries = 0
-			Else
-				Utility.WaitMenuMode(0.05)
-				retries -= 1
-			EndIf
-		Else
-			Utility.WaitMenuMode(0.05)
-			retries -= 1
-		EndIf
-	EndWhile
-EndFunction
