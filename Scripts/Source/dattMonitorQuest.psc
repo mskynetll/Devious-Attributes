@@ -29,6 +29,7 @@ Function Maintenance()
 	RegisterForModEvent("AnimationStart", "OnSexAnimationStart") 
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd") 
 	RegisterForModEvent("OrgasmEnd", "OnOrgasmEnd")
+	RegisterForModEvent("Datt_Simulate_Rape", "OnSimulateRapeSex")
 	Debug.Notification("Devious Attributes is loaded and tracking stuff...")	
 EndFunction
 
@@ -72,26 +73,28 @@ Function ForceNPCScan()
 EndFunction
 
 Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)
-	Log("[Datt] OnPlayerKill, victim : " + victimActor.GetBaseObject().GetName())
+	Log("OnPlayerKill, victim : " + victimActor.GetBaseObject().GetName())
 	dattUtility.SendEventWithFormParam("Datt_PlayerKill", victimActor as Form)
 EndFunction
 
 Function OnPlayerStealOrPickpocket(int goldAmount)
-	Log("[Datt] OnPlayerStealOrPickpocket, gold amount : " + goldAmount)
+	Log("OnPlayerStealOrPickpocket, gold amount : " + goldAmount)
 	dattUtility.SendEventWithIntParam("Datt_PlayerSteal",goldAmount)
 EndFunction
 
 Function OnPlayerCastMagic(Form castSpell)
-	Log("[Datt] OnPlayerCastMagic, spell that was cast : " + castSpell.GetName())
+	Log("OnPlayerCastMagic, spell that was cast : " + castSpell.GetName())
 	dattUtility.SendEventWithFormParam("Datt_PlayerCastSpell",castSpell)
 EndFunction
 
-Event OnSexAnimationStart(string eventName, string argString, float argNum, form sender)	    
+Event OnSexAnimationStart(string eventName, string argString, float argNum, form sender)		
     Actor[] participants = Sexlab.HookActors(argString)
     int index = 0
 	While index < participants.Length
 		Actor currentParticipant = participants[index]
-		StorageUtil.SetIntValue(currentParticipant, "_datt_last_arousal", SexLabAroused.GetActorArousal(currentParticipant))
+		int arousal = SexLabAroused.GetActorArousal(currentParticipant)
+		Log("OnSexAnimationStart for " + currentParticipant.GetBaseObject().GetName() + ", arousal = " + arousal)    
+		StorageUtil.SetIntValue(currentParticipant, "_datt_last_arousal", arousal)
 		index += 1
 	EndWhile
 EndEvent
@@ -107,18 +110,24 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 	EndIf 
 EndEvent
 
+Event OnSimulateRapeSex(Form victim, int agressorCount)
+	OnRapeSex(victim as Actor, agressorCount)
+EndEvent
+
 Event OnRapeSex(Actor victim, int agressorCount)
+	Log("OnRapeSex, victim is " + victim.GetBaseObject().GetName() + ", agressors count = " + agressorCount)
 	dattPeriodicEventsHelper.SetTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
    	int wornDeviceCount = dattUtility.MaxInt(1,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
 	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniacAttributeId) / (wornDeviceCount * 10)
 
-   	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (10 * (agressorCount - 1)) + nymphoBonus)
-	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - (5 * (agressorCount - 1)) + (nymphoBonus / 2))
-	AttributesAPI.ModAttribute(victim,Config.SelfEsteemAttributeId, (-1 * Config.SelfEsteemChangePerRape) - (2 * (agressorCount - 1)))
+   	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (10 * (agressorCount)) + nymphoBonus)
+	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - (5 * (agressorCount)) + (nymphoBonus / 2))
+	AttributesAPI.ModAttribute(victim,Config.SelfEsteemAttributeId, (-1 * Config.SelfEsteemChangePerRape) - (2 * (agressorCount)))
 EndEvent
 
 Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 	int index = 0
+	Log("OnConsensualSex, participant count =" + participants.Length)
 	While index < participants.Length
 		Actor currentParticipant = participants[index]
 	   	float lastTimeHadSex = StorageUtil.GetFloatValue(currentParticipant, "_datt_last_time_had_sex", 0.0)
@@ -126,12 +135,14 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 	   	If(lastTimeHadSex > 0.0)	   		
 	   		int arousal = StorageUtil.GetIntValue(currentParticipant, "_datt_last_arousal")
 	   		If arousal >= 75 && Math.abs(Utility.GetCurrentGameTime() - lastTimeHadSex) * 24.0 >= Config.IntervalBetweenSexToIncreaseNymphoHours
+	   			Log("Adjusting nympho value for " + currentParticipant.GetBaseObject().GetName() + ", adjusted by " + Config.NymphoIncreasePerConsensual)
 	   			AttributesAPI.ModAttribute(currentParticipant,Config.NymphomaniacAttributeId, Config.NymphoIncreasePerConsensual)
 	   		EndIf
 	   	EndIf		
 		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniacAttributeId) / 10)
 
 		AttributesAPI.ModAttribute(currentParticipant,Config.SelfEsteemAttributeId, 25 + nymphoBonus)
+		Log("Adjusting self-esteem value for " + currentParticipant.GetBaseObject().GetName() + ", adjusted by " + (25 + nymphoBonus))
 		If currentParticipant == PlayerRef
 			ApplyChangesToPlayer(animationUsed)
 		EndIf
@@ -171,8 +182,14 @@ Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
 			If currentParticipant == PlayerRef			 
 				int purity = dattUtility.LimitValueInt(SexLab.GetPlayerPurityLevel(),-6,6)
 				AttributesAPI.ModAttribute(PlayerRef,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerOrgasm) - (10 * purity))
+				Log("OnOrgasmEnd, Adjusting willpower value for " + currentParticipant.GetBaseObject().GetName() + ",purity = " +purity + " , adjusted by " + ((-1 * Config.WillpowerChangePerOrgasm) - (10 * purity)))
 			Else
-				AttributesAPI.ModAttribute(currentParticipant,Config.WillpowerAttributeId, -1 * Config.WillpowerChangePerOrgasm)			
+				int direction = -1
+				If controller.IsAggressor(currentParticipant)
+					direction = 1
+				Endif
+				Log("OnOrgasmEnd, Adjusting willpower value for " + currentParticipant.GetBaseObject().GetName()  + " , adjusted by " + (direction * Config.WillpowerChangePerOrgasm))
+				AttributesAPI.ModAttribute(currentParticipant,Config.WillpowerAttributeId, direction * Config.WillpowerChangePerOrgasm)			
 			EndIf
 		EndIf
 		index += 1

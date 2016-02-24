@@ -67,6 +67,7 @@ Event OnPageReset(string page)
     	AddHeaderOption("Misc")
     	showDebugMessagesToggleId = AddToggleOption("Turn on/off logging", IsLogging)
         resetPlayerAttribtesToggleId = AddToggleOption("Reset player attributes", false)
+        simulateRapeToggleId = AddToggleOption("Simulate Rape (2 actors)", false)
 
         AddHeaderOption("Internal Stuff")
         int queuedChangeCount = StorageUtil.FormListCount(None, "_datt_queued_actors")
@@ -232,6 +233,10 @@ Event OnOptionSelect(int option)
             Debug.MessageBox("Player change queue was not cleared, ModEvent didn't create the event properly")
         EndIf
     EndIf
+    If simulateRapeToggleId == option
+        dattUtility.SendEventWithFormAndIntParam("Datt_Simulate_Rape",PlayerRef as Form,2)
+        Debug.MessageBox("Datt_Simulate_Rape event sent for PC")
+    EndIf
 EndEvent
 
 int showDebugMessagesToggleId
@@ -249,6 +254,7 @@ int selfEsteemChangePerRapeSliderId
 int willpowerChangePerOrgasmSliderId
 int intervalBetweenSexToIncreaseNymphoHoursSliderId
 int nymphoIncreasePerConsensualSliderId
+int simulateRapeToggleId
 
 Int Property NymphoIncreasePerConsensual
     Int Function Get()

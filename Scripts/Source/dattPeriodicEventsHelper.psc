@@ -13,19 +13,26 @@ Function SetTrauma(string traumaName, Actor akActor, Faction fTraumaFaction, int
 	akActor.SetFactionRank(fTraumaFaction, traumaLevel)
 EndFunction
 
-Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFaction) global
+int Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFaction) global
 	akActor.AddToFaction(fTraumaFaction)
 	string lastUpdateEntryKey = "_datt_last_" + traumaName +"_trauma_update_time"
 	float currentTime = Utility.GetCurrentGameTime()
-	StorageUtil.SetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
 	If akActor.GetFactionRank(fTraumaFaction) <= 0 ;we are at the minimum, nothing to do
-		return
+		akActor.SetFactionRank(fTraumaFaction, 0)
+		return 0
 	EndIf
 
-	float lastUpdateTime = StorageUtil.GetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
-	float stageDecreaseTime = StorageUtil.GetFloatValue(None, "_datt_traumaStageDecreaseTime", 12.0)
-
-	If Math.abs(lastUpdateTime - currentTime) * 24.0 >= stageDecreaseTime
+	float lastUpdateTime = StorageUtil.GetFloatValue(akActor as Form, lastUpdateEntryKey)	
+	If lastUpdateTime == 0.0
 		akActor.ModFactionRank(fTraumaFaction, -10)
+	Else
+		float stageDecreaseTime = StorageUtil.GetFloatValue(None, "_datt_traumaStageDecreaseTime", 12.0)
+		float hoursPassed = Math.abs(lastUpdateTime - currentTime) * 24.0
+		MiscUtil.PrintConsole("[Datt] Adjust trauma for " + akActor.GetBaseObject().GetName() + ", hoursPassed = " + hoursPassed + ", will adjust trauma level by " + (-10 * Math.floor(hoursPassed)))
+		If hoursPassed >= stageDecreaseTime
+			akActor.ModFactionRank(fTraumaFaction, -10 * Math.floor(hoursPassed / stageDecreaseTime))
+		EndIf
 	EndIf
+	StorageUtil.SetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
+	return akActor.GetFactionRank(fTraumaFaction)
 EndFunction
