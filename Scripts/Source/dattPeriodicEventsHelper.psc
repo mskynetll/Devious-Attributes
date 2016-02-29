@@ -19,6 +19,9 @@ int Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFacti
 	float currentTime = Utility.GetCurrentGameTime()
 	If akActor.GetFactionRank(fTraumaFaction) <= 0 ;we are at the minimum, nothing to do
 		akActor.SetFactionRank(fTraumaFaction, 0)
+
+		;set the last update entry anyway
+		StorageUtil.SetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
 		return 0
 	EndIf
 

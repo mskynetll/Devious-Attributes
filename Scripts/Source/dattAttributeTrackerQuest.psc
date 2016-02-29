@@ -24,23 +24,23 @@ Function Maintenance()
 	RegisterForModEvent("Datt_SetDefaults", "OnSetDefaults")
 	RegisterForModEvent("Datt_SetSoulState", "OnSetSoulState")
 	RegisterForModEvent("Datt_ClearChangeQueue", "OnClearChangeQueue")
-	RegisterForSingleUpdate(15)
+	;RegisterForSingleUpdate(15)
 EndFunction
 
 Event OnSetSoulState(Form acTargetActor, int value)
 	Actor acActor = acTargetActor as Actor
 	If acTargetActor == None || acActor == None
-		Error("[Datt] OnSetSoulState() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
+		Error("OnSetSoulState() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
 		Return
 	EndIf
 	string attributeId = "_Datt_Soul_State"
 
-	If Mutex.TryLock() == false
-		QueueForChange(acTargetActor,attributeId,value, 0)
-		return
-	EndIf
+	;If Mutex.TryLock() == false
+	;	QueueForChange(acTargetActor,attributeId,value, 0)
+	;	return
+	;EndIf
 
-	Log("[Datt] OnSetSoulState() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
+	Log("OnSetSoulState() for actor = " + (acTargetActor as Actor).GetBaseObject().GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = dattSoulState
 	
 	acActor.AddToFaction(attributeFaction) ;if actor already there this does nothing
@@ -51,76 +51,91 @@ Event OnSetSoulState(Form acTargetActor, int value)
   		ModEvent.PushForm(soulStateChangedEventId, acActor)
   		ModEvent.PushInt(soulStateChangedEventId, value)
  		If ModEvent.Send(soulStateChangedEventId) == false
-	  		Warning("[Datt] OnSetSoulState() failed to send event. EventName = Datt_SoulStateChanged")
-	  		Debug.MessageBox("[Datt] OnSetSoulState() failed to send event. EventName = Datt_SoulStateChanged")
+	  		Warning("OnSetSoulState() failed to send event. EventName = Datt_SoulStateChanged")
+	  		Debug.MessageBox("OnSetSoulState() failed to send event. EventName = Datt_SoulStateChanged")
 	 	EndIf
 	EndIf
-	Mutex.Unlock()
+	;Mutex.Unlock()
 EndEvent
 
 Event OnSetAttribute(Form acTargetActor, string attributeId, int value)
 	Actor acActor = acTargetActor as Actor
 	If acTargetActor == None || acActor == None
-		Error("[Datt] OnSetAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
+		Error("OnSetAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
 		Return
 	EndIf
 
-	If Mutex.TryLock() == false
-		QueueForChange(acTargetActor,attributeId,value, 0)
-		return
-	EndIf
+	;If Mutex.TryLock() == false
+	;	QueueForChange(acTargetActor,attributeId,value, 0)
+	;	return
+	;EndIf
 
-	Log("[Datt] OnSetAttribute() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
+	Log("OnSetAttribute() for actor = " + (acTargetActor as Actor).GetBaseObject().GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = FactionByAttributeId(attributeId)
 	If attributeFaction == None
 		Return
 	EndIf	
 
-	acActor.AddToFaction(attributeFaction) ;if actor already there this does nothing
+	acActor.AddToFaction(attributeFaction) ;if actor already there this does nothing	
+	If value >= Config.MaxAttributeValue ;already at max value, nothing to do
+		acActor.SetFactionRank(attributeFaction, Config.MaxAttributeValue)
+		StorageUtil.SetIntValue(acTargetActor, attributeId, Config.MaxAttributeValue)
+		Log("OnSetAttribute() for actor = " + (acTargetActor as Actor).GetBaseObject().GetName() +", attributeId = " + attributeId + ",	nothing to do - reached max value")
+		return
+	EndIf
+
 	acActor.SetFactionRank(attributeFaction, value)
 	StorageUtil.SetIntValue(acTargetActor, attributeId, value)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,value)
 
-	Mutex.Unlock()
+	;Mutex.Unlock()
 EndEvent
 
 Event OnModAttribute(Form acTargetActor, string attributeId, int value)
 	Actor acActor = acTargetActor as Actor
 	If acTargetActor == None || acActor == None
-		Error("[Datt] OnModAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
+		Error("OnModAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
 		Return
 	EndIf
 
-	If Mutex.TryLock() == false
-		QueueForChange(acTargetActor,attributeId, value, 1)
-		return
-	EndIf
+	;If Mutex.TryLock() == false
+	;	QueueForChange(acTargetActor,attributeId, value, 1)
+	;	return
+	;EndIf
 
-	Log("[Datt] OnModAttribute() for actor = " + acTargetActor.GetName() +", attributeId = " + attributeId + ", value = " + value)	
+	Log("OnModAttribute() for actor = " + (acTargetActor as Actor).GetBaseObject().GetName() +", attributeId = " + attributeId + ", value = " + value)	
 	Faction attributeFaction = FactionByAttributeId(attributeId)
 	If attributeFaction == None
 		Return ;loggin about this will happen in FactionByAttributeId()
 	EndIf	
 
 	acActor.AddToFaction(attributeFaction) ;if actor already in the faction this does nothing
-	acActor.ModFactionRank(attributeFaction, value)
+
 	int newValue = StorageUtil.GetIntValue(acTargetActor, attributeId) + value
+	If newValue > Config.MaxAttributeValue
+		acActor.SetFactionRank(attributeFaction, 100)	
+		StorageUtil.SetIntValue(acTargetActor, attributeId, 100)
+		NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,100)
+		return
+	EndIf
+
+	acActor.ModFactionRank(attributeFaction, value)	
 	StorageUtil.AdjustIntValue(acTargetActor, attributeId, value)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,newValue)
 
-	Mutex.Unlock()
+	;Mutex.Unlock()
 EndEvent
 
 Event OnSetDefaults(Form acTargetActor)
 	Actor acActor = acTargetActor as Actor
 	If acTargetActor == None || acActor == None
-		Error("[Datt] OnSetAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
+		Error("OnSetAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
 		Return
 	EndIf
 	
-	OnSetAttribute(acActor, Config.PrideAttributeId, 1000)
-	OnSetAttribute(acActor, Config.SelfEsteemAttributeId, 1000)
-	OnSetAttribute(acActor, Config.WillpowerAttributeId, 1000)
+	OnSetAttribute(acActor, Config.PrideAttributeId, 100)
+	OnSetAttribute(acActor, Config.SelfEsteemAttributeId, 100)
+	OnSetAttribute(acActor, Config.WillpowerAttributeId, 100)
 	OnSetAttribute(acActor, Config.ObedienceAttributeId, 0)
 	OnSetAttribute(acActor, Config.SubmissivenessAttributeId, 0)
 
@@ -132,7 +147,7 @@ Event OnSetDefaults(Form acTargetActor)
 EndEvent
 
 Function QueueForChange(Form akActor, string attributeId, int newValue,int isMod)
-	MiscUtil.PrintConsole("[Datt] QueueForChange -> " + akActor.GetName() + ", " + attributeId + ":" + newValue)
+	MiscUtil.PrintConsole("QueueForChange -> " + (akActor as Actor).GetBaseObject().GetName() + ", " + attributeId + ":" + newValue)
 	StorageUtil.StringListAdd(akActor, "_datt_queued_attributeId", attributeId)
 	StorageUtil.IntListAdd(akActor, "_datt_queued_value", newValue)
 	StorageUtil.IntListAdd(akActor, "_datt_queued_isMod", isMod)
@@ -142,7 +157,7 @@ EndFunction
 
 Event OnClearChangeQueue()
 	If Mutex.TryLock() == false
-		string msg = "[Datt] OnClearChangeQueue -> Failed to acquire lock in 15 seconds...aborting"
+		string msg = "OnClearChangeQueue -> Failed to acquire lock in 15 seconds...aborting"
 		Debug.Notification(msg)
 		Warning(msg)
 		return
@@ -169,7 +184,7 @@ Event OnUpdate()
 
 	int actorsCount = StorageUtil.FormListCount(None, "_datt_queued_actors")
 	int actorIndex = 0
-	Log("[Datt] OnUpdate of attribute tracker. Processing " + actorsCount + " actor changes...")
+	Log("OnUpdate of attribute tracker. Processing " + actorsCount + " actor changes...")
 	While actorIndex < actorsCount
 		int changeIndex = 0
 		Form currentActor = StorageUtil.FormListGet(None, "_datt_queued_actors",actorIndex)
@@ -194,7 +209,7 @@ Event OnUpdate()
 
 	HasQueuedChanges = false
 	RegisterForSingleUpdate(15)
-	Log("[Datt] OnUpdate of attribute tracker. Done processing...")
+	Log("OnUpdate of attribute tracker. Done processing...")
 EndEvent
 
 Function NotifyOfChange(string eventName, Form akActor, string attributeId, int value)
@@ -204,8 +219,8 @@ Function NotifyOfChange(string eventName, Form akActor, string attributeId, int 
 	  ModEvent.PushString(eventId, attributeId)
 	  ModEvent.PushInt(eventId, value)
 	  If ModEvent.Send(eventId) == false
-	  	Warning("[Datt] NotifyOfChange() failed to send event. EventName = " + eventName)
-	  	Debug.MessageBox("[Datt] NotifyOfChange() failed to send event. EventName = " + eventName)
+	  	Warning("NotifyOfChange() failed to send event. EventName = " + eventName)
+	  	Debug.MessageBox("NotifyOfChange() failed to send event. EventName = " + eventName)
 	  EndIf
 	EndIf	
 EndFunction
@@ -251,8 +266,11 @@ Faction Function FactionByAttributeId(string attributeId)
 		return dattSoulState
 	EndIf
 
+	If attributeId == config.SubmissivenessAttributeId
+		return dattSubmissive
+	EndIf
 
-	Warning("[Datt] Couldn't find proper attribute faction, got attributeId = " + attributeId)
+	Warning("Couldn't find proper attribute faction, got attributeId = " + attributeId)
 
 	return None
 EndFunction
