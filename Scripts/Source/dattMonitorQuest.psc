@@ -202,11 +202,13 @@ Event OnRapeSex(Actor victim, int agressorCount, string argString)
    	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (2*agressorCount) + nymphoBonus)
 	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - agressorCount + (nymphoBonus / 2))
 	AttributesAPI.ModAttribute(victim,Config.SelfEsteemAttributeId, (-1 * Config.SelfEsteemChangePerRape) - agressorCount)
-
+		
+	
 	int arousal = StorageUtil.GetIntValue(victim, "_datt_last_arousal")
 	sslBaseAnimation animationUsed = None
 	If argString != ""
 		animationUsed = SexLab.HookAnimation(argString)
+		DecreasePrideByAnalSkillsIfRelevant(animationUsed)
 	EndIf	
 
 	If arousal > 50 && arousal <= 75
@@ -227,13 +229,14 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 	Log("OnConsensualSex, participant count =" + participants.Length)
 	While index < participants.Length
 		Actor currentParticipant = participants[index]
-
+				
 		float hoursPassedSinceHadSex = UpdateNymphoValue(currentParticipant)		
 
 		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniacAttributeId) / 10)
-		If currentParticipant == PlayerRef
-			int soulState = AttributesAPI.GetAttribute(currentParticipant,Config.SoulStateAttributeId)
+		If currentParticipant == PlayerRef		
+			DecreasePrideByAnalSkillsIfRelevant(animationUsed)
 
+			int soulState = AttributesAPI.GetAttribute(currentParticipant,Config.SoulStateAttributeId)
 			;if forced slave, no self-esteem gains from sex
 			If soulState != 1 && hoursPassedSinceHadSex >= 6.0
 				ApplyChangesToPlayer(animationUsed)
@@ -249,6 +252,16 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 		index += 1
 	EndWhile	
 EndEvent
+
+Function DecreasePrideByAnalSkillsIfRelevant(sslBaseAnimation animationUsed)
+	;applicable only to player since Sexlab stores proficiency only for PC
+	;the idea here is that the less anal experince of PC, the more pride hit it will take
+	; --> more anal sex, less hurtful 
+	int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)
+	If animationUsed.HasTag("Anal") && analLevel < 6
+		AttributesAPI.ModAttribute(PlayerRef,Config.PrideAttributeId, -1 * (6 - analLevel))
+	EndIf
+EndFunction
 
 float Function UpdateNymphoValue(Actor akActor)
 	float lastTimeHadSex = StorageUtil.GetFloatValue(akActor, "_datt_last_time_had_sex", 0.0)
@@ -287,11 +300,10 @@ Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
 			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, vaginalLevel / 2)
 		EndIf
 	ElseIf animationUsed.HasTag("Anal")
-		int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)
-
+		int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)		
 		If analLevel > 0
 			Log("Animation with 'Anal' tag detected, Anal proficiency = " + analLevel + ",adjusting PC self-esteem by " + (analLevel / 2))
-			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, analLevel / 2)
+			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, analLevel / 2)			
 		EndIf
 	EndIf	
 EndFunction
