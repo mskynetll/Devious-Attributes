@@ -167,7 +167,22 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
     Actor[] participants = Sexlab.HookActors(argString)
     Actor victim = Sexlab.HookVictim(argString)
 	If victim != None ;non-consensual
-		OnRapeSex(victim,participants.Length - 1)
+		OnRapeSex(victim,participants.Length - 1, argString)		
+		UpdateNymphoValue(victim)
+		int index = 0
+		While index < participants.Length
+			If participants[index] != victim
+				int arousal = StorageUtil.GetIntValue(participants[index], "_datt_last_arousal")
+
+				If arousal > 50 && arousal <= 75
+					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,2)
+				ElseIf arousal > 75
+					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,4)
+				EndIf
+				UpdateNymphoValue(participants[index])
+			EndIf
+			index += 1
+		EndWhile
 	Else
 		sslBaseAnimation animationUsed = SexLab.HookAnimation(argString)
 		OnConsensualSex(participants, animationUsed)
@@ -175,10 +190,10 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 EndEvent
 
 Event OnSimulateRapeSex(Form victim, int agressorCount)
-	OnRapeSex(victim as Actor, agressorCount)
+	OnRapeSex(victim as Actor, agressorCount, "")
 EndEvent
 
-Event OnRapeSex(Actor victim, int agressorCount)
+Event OnRapeSex(Actor victim, int agressorCount, string argString)
 	Log("OnRapeSex, victim is " + victim.GetBaseObject().GetName() + ", agressors count = " + agressorCount)
 	dattPeriodicEventsHelper.SetTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
    	int wornDeviceCount = dattUtility.MaxInt(1,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
@@ -187,6 +202,24 @@ Event OnRapeSex(Actor victim, int agressorCount)
    	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (2*agressorCount) + nymphoBonus)
 	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - agressorCount + (nymphoBonus / 2))
 	AttributesAPI.ModAttribute(victim,Config.SelfEsteemAttributeId, (-1 * Config.SelfEsteemChangePerRape) - agressorCount)
+
+	int arousal = StorageUtil.GetIntValue(victim, "_datt_last_arousal")
+	sslBaseAnimation animationUsed = None
+	If argString != ""
+		animationUsed = SexLab.HookAnimation(argString)
+	EndIf	
+
+	If arousal > 50 && arousal <= 75
+		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,2)
+		If animationUsed != None && (animationUsed.HasTag("Dirty") || animationUsed.HasTag("Rough"))
+			AttributesAPI.ModAttribute(victim,Config.HumiliationLoverAttributeId,1)
+		EndIf		
+	ElseIf arousal > 75
+		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,4)
+		If animationUsed != None && (animationUsed.HasTag("Dirty") || animationUsed.HasTag("Rough"))
+			AttributesAPI.ModAttribute(victim,Config.HumiliationLoverAttributeId,2)
+		EndIf			
+	EndIf
 EndEvent
 
 Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
@@ -195,23 +228,7 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 	While index < participants.Length
 		Actor currentParticipant = participants[index]
 
-	   	float lastTimeHadSex = StorageUtil.GetFloatValue(currentParticipant, "_datt_last_time_had_sex", 0.0)
-	   	StorageUtil.SetFloatValue(currentParticipant, "_datt_last_time_had_sex", Utility.GetCurrentGameTime())
-	   	float hoursPassedSinceHadSex
-
-	   	If lastTimeHadSex == 0.0
-	   		hoursPassedSinceHadSex = 6.0
-	   	Else
-	   		hoursPassedSinceHadSex = Math.abs(Utility.GetCurrentGameTime() - lastTimeHadSex) * 24.0
-	   	EndIf
-
-	   	If lastTimeHadSex > 0.0
-	   		int arousal = StorageUtil.GetIntValue(currentParticipant, "_datt_last_arousal")
-	   		If arousal >= 75 && hoursPassedSinceHadSex >= Config.IntervalBetweenSexToIncreaseNymphoHours
-	   			Log("Adjusting nympho value for " + currentParticipant.GetBaseObject().GetName() + ", adjusted by " + Config.NymphoIncreasePerConsensual)
-	   			AttributesAPI.ModAttribute(currentParticipant,Config.NymphomaniacAttributeId, Config.NymphoIncreasePerConsensual)
-	   		EndIf
-	   	EndIf		
+		float hoursPassedSinceHadSex = UpdateNymphoValue(currentParticipant)		
 
 		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniacAttributeId) / 10)
 		If currentParticipant == PlayerRef
@@ -232,6 +249,28 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 		index += 1
 	EndWhile	
 EndEvent
+
+float Function UpdateNymphoValue(Actor akActor)
+	float lastTimeHadSex = StorageUtil.GetFloatValue(akActor, "_datt_last_time_had_sex", 0.0)
+	StorageUtil.SetFloatValue(akActor, "_datt_last_time_had_sex", Utility.GetCurrentGameTime())
+	float hoursPassedSinceHadSex
+
+	If lastTimeHadSex == 0.0
+		hoursPassedSinceHadSex = 6.0
+	Else
+		hoursPassedSinceHadSex = Math.abs(Utility.GetCurrentGameTime() - lastTimeHadSex) * 24.0
+	EndIf
+
+	If lastTimeHadSex > 0.0
+		int arousal = StorageUtil.GetIntValue(akActor, "_datt_last_arousal")
+		If arousal >= 75 && hoursPassedSinceHadSex >= Config.IntervalBetweenSexToIncreaseNymphoHours
+			Log("Adjusting nympho value for " + akActor.GetBaseObject().GetName() + ", adjusted by " + Config.NymphoIncreasePerConsensual)
+			AttributesAPI.ModAttribute(akActor,Config.NymphomaniacAttributeId, Config.NymphoIncreasePerConsensual)
+		EndIf
+	EndIf	
+
+	return hoursPassedSinceHadSex
+EndFunction
 
 Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
 	If animationUsed.HasTag("Oral")
