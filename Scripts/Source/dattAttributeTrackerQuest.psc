@@ -84,8 +84,9 @@ Event OnSetAttribute(Form acTargetActor, string attributeId, int value)
 		return
 	EndIf
 
-	acActor.SetFactionRank(attributeFaction, value)
+	acActor.SetFactionRank(attributeFaction, value)	
 	StorageUtil.SetIntValue(acTargetActor, attributeId, value)
+	RecalculateSubmissivenessIfNeededOnAttributeChange(acActor, attributeFaction)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,value)
 
 	;Mutex.Unlock()
@@ -121,10 +122,23 @@ Event OnModAttribute(Form acTargetActor, string attributeId, int value)
 
 	acActor.ModFactionRank(attributeFaction, value)	
 	StorageUtil.AdjustIntValue(acTargetActor, attributeId, value)
+	
+	RecalculateSubmissivenessIfNeededOnAttributeChange(acActor, attributeFaction)
 	NotifyOfChange("Datt_AttributeChanged",acTargetActor,attributeId,newValue)
 
 	;Mutex.Unlock()
 EndEvent
+
+Function RecalculateSubmissivenessIfNeededOnAttributeChange(Actor acActor, Faction attributeFaction)
+	If(attributeFaction == dattObedience || attributeFaction == dattPride || attributeFaction == dattSelfEsteem)
+		int obedience = acActor.GetFactionRank(dattObedience)
+		int pride = acActor.GetFactionRank(dattPride)
+		int selfEsteem = acActor.GetFactionRank(dattSelfEsteem)
+
+		int submissiveness = dattUtility.MaxInt(100 - ((pride + selfEsteem) / 2), obedience)
+		acActor.SetFactionRank(dattSubmissive, submissiveness)	
+	EndIf
+EndFunction
 
 Event OnSetDefaults(Form acTargetActor)
 	Actor acActor = acTargetActor as Actor

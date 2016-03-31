@@ -38,15 +38,54 @@ Event OnUpdateGameTime()
 
 	If LastPeriodicUpdateTime == 0.0 || hoursSincePeriodicUpdate >= Config.PeriodicEventUpdateLatencyHours
 		AdjustTraumaForPCandTrackedNPCs()
+		AdjustSelfEsteemPeriodic(hoursSincePeriodicUpdate)		
 		LastPeriodicUpdateTime = currentTime
 	EndIf
 
 	If hoursSinceFrequentUpdate == 0.0 || hoursSinceFrequentUpdate >= Config.FrequentEventUpdateLatency		
-		AdjustWillpower(dattUtility.Max(hoursSinceFrequentUpdate, 1.0))
+		AdjustWillpower(dattUtility.Max(hoursSinceFrequentUpdate, 1.0))		
+		AdjustArousalForPCandTrackedNPCs(hoursSinceFrequentUpdate)
 		LastFrequentUpdateTime = currentTime
 	EndIf	
 	RegisterForSingleUpdateGameTime(Config.FrequentEventUpdateLatency)
 EndEvent
+
+Function AdjustArousalForPCandTrackedNPCs(float hoursPassed)
+	int playerNympho = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniacAttributeId)
+	If playerNympho > 0
+		Log("Sending arousal increase for PC, nymphoValue = " + playerNympho)
+		dattUtility.SendIncreaseArousal(Config.PlayerRef, (AdjustNymphoValueForArousalIncrease(playerNympho) * dattUtility.MinInt(1,Math.floor(hoursPassed))) as float)
+	EndIf
+
+	int npcCount = StorageUtil.FormListCount(None, "_datt_tracked_npcs")
+	int index = 0
+    While index < npcCount
+        Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
+        If(npc != None) ;precaution
+        	int nympho = AttribtesAPI.GetAttribute(npc,Config.NymphomaniacAttributeId)
+        	If nympho > 0
+        		Log("Sending arousal increase for " + npc.GetBaseObject().GetName() +", nymphoValue = " + nympho)
+				dattUtility.SendIncreaseArousal(npc, (AdjustNymphoValueForArousalIncrease(nympho) * dattUtility.MinInt(1,Math.floor(hoursPassed))) as float)
+			EndIf
+        EndIf
+        index += 1
+    EndWhile		
+EndFunction
+
+int Function AdjustNymphoValueForArousalIncrease(int nymphoValue)
+	if nymphoValue <= 10
+		return 1
+	ElseIf nymphoValue > 10 && nymphoValue <= 25
+		return 2
+	ElseIf nymphoValue > 25 && nymphoValue <= 50
+		return 3
+	ElseIf nymphoValue > 50 && nymphoValue <= 75
+		return 4
+	ElseIf nymphoValue > 75
+		return 5
+	EndIf
+
+EndFunction
 
 Function ReapplyRapeTrauma(Actor target)
 	If !target.HasSpell(RapeTraumaAbility)
@@ -54,6 +93,13 @@ Function ReapplyRapeTrauma(Actor target)
 	ElseIf target.HasSpell(RapeTraumaAbility)
 		target.RemoveSpell(RapeTraumaAbility)
 		target.AddSpell(RapeTraumaAbility, false)
+	EndIf
+EndFunction
+
+Function AdjustSelfEsteemPeriodic(float hoursPassed)
+	int soulState = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.SoulStateAttributeId)
+	If soulState == 0 ;only free in spirit get periodic self-esteem increase
+		AttribtesAPI.ModAttribute(Config.PlayerRef,Config.SelfEsteemAttributeId,Config.PeriodicSelfEsteemIncrease)
 	EndIf
 EndFunction
 
@@ -130,3 +176,11 @@ Float Property LastSleepStart
 		StorageUtil.SetFloatValue(None, "_datt_periodic_event_LastSleepStart", value)
 	EndFunction
 EndProperty
+
+Float Function GetLastTimeHadSex(Actor akActor)
+	return StorageUtil.GetFloatValue(akActor, "_datt_periodic_event_LastTimeHadSex", 0.0)
+EndFunction
+
+Function SetLastTimeHadSex(Actor akActor,float fTime)
+	StorageUtil.SetFloatValue(akActor, "_datt_periodic_event_LastTimeHadSex", fTime)
+EndFunction

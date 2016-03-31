@@ -1,4 +1,4 @@
-﻿Scriptname dattMonitorQuest Extends dattQuestBase
+Scriptname dattMonitorQuest Extends dattQuestBase
 
 dattAttributeTrackerQuest Property AttributeTracker Auto
 dattPeriodicEventsQuest Property PeriodicEvents Auto 
@@ -6,6 +6,8 @@ dattNPCScannerQuest Property NPCScanner Auto
 SexLabFramework Property SexLab Auto
 dattAttributesAPIQuest Property AttributesAPI Auto
 slaFrameworkScr Property SexLabAroused Auto
+dattChoiceTrackerQuest Property ChoiceTracker Auto
+
 Spell Property AfterOrgasmSpell Auto
 Faction Property dattRapeTraumaFaction Auto
 Faction Property ThievesGuildFaction Auto
@@ -25,6 +27,7 @@ Function Maintenance()
 	AttributeTracker.Maintenance()
 	PeriodicEvents.Maintenance()
 	NPCScanner.Maintenance()
+	ChoiceTracker.Maintenance()
 	 
 	RegisterForModEvent("AnimationStart", "OnSexAnimationStart") 
 	RegisterForModEvent("AnimationEnd", "OnSexAnimationEnd") 
@@ -39,25 +42,14 @@ EndFunction
 Function DoVersionUpgrade()
 	If ModVersion == "" || ModVersion == "0.6.3"
 		If !OneTimeInitialize
-			int resetToDefaultsEventId = ModEvent.Create("Datt_SetDefaults")
-		    If resetToDefaultsEventId
-		        ModEvent.PushForm(resetToDefaultsEventId, PlayerRef as Form)
-		        ModEvent.Send(resetToDefaultsEventId)
-		    Else
-		        ModEvent.Release(resetToDefaultsEventId)
-		    EndIf	
+			Debug.Notification("Devious Attributes initializes stuff... this should happen only once.")
+			dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)			
 		    OneTimeInitialize = true
 		EndIf
 		ModVersion = "0.7.0"	
 	EndIf
 	If ModVersion == "0.7.0"
-		int resetToDefaultsEventId = ModEvent.Create("Datt_SetDefaults")
-		If resetToDefaultsEventId
-		    ModEvent.PushForm(resetToDefaultsEventId, PlayerRef as Form)
-		    ModEvent.Send(resetToDefaultsEventId)
-		Else
-		    ModEvent.Release(resetToDefaultsEventId)
-		EndIf	
+		dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)
 		OneTimeInitialize = true
 		Config.FrequentEventUpdateLatency = 30
 		Config.PeriodicEventUpdateLatencyHours = 12
@@ -69,29 +61,35 @@ Function DoVersionUpgrade()
 	EndIf
 
 	If ModVersion == "0.7.2"
-		int resetToDefaultsEventId = ModEvent.Create("Datt_SetDefaults")
-        If resetToDefaultsEventId
-            ModEvent.PushForm(resetToDefaultsEventId, PlayerRef as Form)
-            If ModEvent.Send(resetToDefaultsEventId) == true
-                Log("Sending Datt_SetDefaults -> attributes reset to defaults..")
-            Else
-                Log("Sending Datt_SetDefaults, sending the event failed. Please try again. (Do you have script lag?)")
-            EndIf
-        Else
-            ModEvent.Release(resetToDefaultsEventId)
-            Log("Sending Datt_SetDefaults, ModEvent didn't create the event properly")
-        EndIf         
+		dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)   
         ModVersion = "0.7.3"        
 	EndIf
 	If ModVersion == "0.7.3"
 		Config.WillpowerBaseChange = 10
-		Config.FrequentEventUpdateLatency = 1
+		Config.FrequentEventUpdateLatency = 1;hours
 		Config.WillpowerChangePerOrgasm = 5
 		Config.WillpowerChangePerRape = 20
 		StorageUtil.SetFloatValue(None, "_datt_periodic_event_last_frequent_update", Utility.GetCurrentGameTime())
 		StorageUtil.SetFloatValue(None, "_datt_periodic_event_last_periodic_update", Utility.GetCurrentGameTime())
 		ModVersion = "0.7.4"        
 	EndIf
+	If ModVersion == "0.7.4"
+		;some more tweaks to defaults
+		Config.WillpowerBaseChange = 10
+		Config.WillpowerChangePerOrgasm = 8
+		Config.WillpowerChangePerRape = 25
+		Config.SelfEsteemChangePerRape = 2
+		Config.PrideChangePerRape = 5
+		StorageUtil.SetFloatValue(None, "_datt_periodic_event_last_frequent_update", Utility.GetCurrentGameTime())
+		StorageUtil.SetFloatValue(None, "_datt_periodic_event_last_periodic_update", Utility.GetCurrentGameTime())
+		ModVersion = "0.7.5"        
+	EndIf	
+
+	If ModVersion == "0.7.5"
+		dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)
+		ModVersion = "0.7.51"
+	EndIf
+
 	Debug.Notification("Devious Attributes is running version " + ModVersion)
 EndFunction
 
@@ -163,7 +161,7 @@ Event OnSexAnimationStart(string eventName, string argString, float argNum, form
 	EndWhile
 EndEvent
 
-Event OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)	    
+Event OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)	   
     Actor[] participants = Sexlab.HookActors(argString)
     Actor victim = Sexlab.HookVictim(argString)
 	If victim != None ;non-consensual
@@ -174,7 +172,9 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 			If participants[index] != victim
 				int arousal = StorageUtil.GetIntValue(participants[index], "_datt_last_arousal")
 
-				If arousal > 50 && arousal <= 75
+				If arousal > 25 && arousal <= 50
+					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,1)
+				ElseIf arousal > 50 && arousal <= 75
 					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,2)
 				ElseIf arousal > 75
 					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,4)
@@ -189,14 +189,23 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 	EndIf 
 EndEvent
 
+Function SetLastTimeHadSex(Actor[] participants)
+		int index = 0
+		float now = Utility.GetCurrentGameTime()
+		While index < participants.Length
+			PeriodicEvents.SetLastTimeHadSex(participants[index],now)
+			index += 1
+		EndWhile	
+EndFunction
+
 Event OnSimulateRapeSex(Form victim, int agressorCount)
 	OnRapeSex(victim as Actor, agressorCount, "")
 EndEvent
 
 Event OnRapeSex(Actor victim, int agressorCount, string argString)
 	Log("OnRapeSex, victim is " + victim.GetBaseObject().GetName() + ", agressors count = " + agressorCount)
-	dattPeriodicEventsHelper.SetTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
-   	int wornDeviceCount = dattUtility.MaxInt(1,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
+	dattPeriodicEventsHelper.ModTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
+   	int wornDeviceCount = dattUtility.MaxInt(0,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
 	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniacAttributeId) / (wornDeviceCount * 10)
 
    	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (2*agressorCount) + nymphoBonus)
@@ -211,7 +220,9 @@ Event OnRapeSex(Actor victim, int agressorCount, string argString)
 		DecreasePrideByAnalSkillsIfRelevant(animationUsed)
 	EndIf	
 
-	If arousal > 50 && arousal <= 75
+	If arousal > 25 && arousal <= 50
+		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,1)
+	ElseIf arousal > 50 && arousal <= 75
 		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,2)
 		If animationUsed != None && (animationUsed.HasTag("Dirty") || animationUsed.HasTag("Rough"))
 			AttributesAPI.ModAttribute(victim,Config.HumiliationLoverAttributeId,1)
@@ -233,7 +244,7 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 		float hoursPassedSinceHadSex = UpdateNymphoValue(currentParticipant)		
 
 		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniacAttributeId) / 10)
-		If currentParticipant == PlayerRef		
+		If currentParticipant == PlayerRef
 			DecreasePrideByAnalSkillsIfRelevant(animationUsed)
 
 			int soulState = AttributesAPI.GetAttribute(currentParticipant,Config.SoulStateAttributeId)

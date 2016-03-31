@@ -7,6 +7,8 @@ String Property AttributesPageName = "Attributes" AutoReadonly Hidden
 String Property TrackedNPCsPageName = "Tracked NPCs" AutoReadonly Hidden
 String Property DebugPageName = "Debug" AutoReadonly Hidden
 
+GlobalVariable Property dattEnableAttributeEffects Auto
+
 Bool Property IsLogging Auto
 
 dattMutex Property NpcScannerMutex Auto
@@ -25,6 +27,7 @@ Event OnPageReset(string page)
 
     If (page == SettingsPageName)
         AddHeaderOption("General")
+        enableAttributeEffectsToggleId = AddToggleOption("Enable Attribute Effects", EnableAttributeEffects)
         frequentEventUpdateLatencySliderId = AddSliderOption("Frequent Attr. Changes", FrequentEventUpdateLatency as float, "Each {0} hours")
         periodicEventUpdateLatencySliderId = AddSliderOption("Periodic Attr. Changes", PeriodicEventUpdateLatencyHours as float, "Each {0} hours")
         npcScannerTickSliderId = AddSliderOption("NPC Scanning Tick", NPCScannerTickSec, "Each {0} sec.")
@@ -38,6 +41,7 @@ Event OnPageReset(string page)
         nymphoIncreasePerConsensualSliderId = AddSliderOption("Nympho incr/consensual", NymphoIncreasePerConsensual, "{0}")
         prideChangePerPlayerKillSliderId = AddSliderOption("Pride/kill", PrideChangePerPlayerKill, "{0}")
         attributeChangePerStealOrPickpocketSliderId = AddSliderOption("Pride,Self-Esteem/theft", AttributeChangePerStealOrPickpocket, "{0}")
+        periodicSelfEsteemIncreaseSliderId = AddSliderOption("Self-esteem/periodic", PeriodicSelfEsteemIncrease, "Increase by {0}")
     ElseIf (page == TrackedNPCsPageName)
         PrintTrackedNPCs()
     ElseIf (page == AttributesPageName)
@@ -68,7 +72,7 @@ Event OnPageReset(string page)
         AddTextOption("Nympho", nympho, 1)
 
         AddHeaderOption("Trauma")
-        AddTextOption("Rape Trauma", PlayerRef.GetFactionRank(dattRapeTraumaFaction), 1)
+        AddTextOption("Rape Trauma Level", PlayerRef.GetFactionRank(dattRapeTraumaFaction) / 10, 1)
 
     ElseIf (page == DebugPageName)
     	AddHeaderOption("Misc")
@@ -117,9 +121,10 @@ Function PrintTrackedNPCs()
 
             string attributeValues = "w:" + willpower + ",p:" + pride + ",se:" + selfEsteem + ",o:" + obedience + ",sub:" + submissiveness
 
-            AddTextOption(npc.GetBaseObject().GetName(), attributeValues,1)
-        Else
-            Debug.MessageBox("Very weird, found non-actor in _datt_tracked_npcs list. This should be reported!")
+            AddHeaderOption(npc.GetBaseObject().GetName())
+            AddTextOption("Attr:", attributeValues,1)
+        Else            
+            MiscUtil.PrintConsole("[Datt - Warning] Very weird, found non-actor in _datt_tracked_npcs list. This should be reported! (npc.GetName() ==" + npc.GetName() + ")")
             StorageUtil.FormListRemoveAt(None, "_datt_tracked_npcs", index)
         EndIf
         index += 1
@@ -217,6 +222,13 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogRange(0.0, 100.0) 
         SetSliderDialogInterval(1.0)
     EndIf  
+
+    If option == periodicSelfEsteemIncreaseSliderId
+        SetSliderDialogStartValue(PeriodicSelfEsteemIncrease)
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    EndIf
     
 EndEvent
 
@@ -257,11 +269,19 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf option == attributeChangePerStealOrPickpocketSliderId 
         AttributeChangePerStealOrPickpocket = value as int
         SetSliderOptionValue(attributeChangePerStealOrPickpocketSliderId, value, "{0}")
+    ElseIf option == periodicSelfEsteemIncreaseSliderId 
+        PeriodicSelfEsteemIncrease = value as int
+        SetSliderOptionValue(periodicSelfEsteemIncreaseSliderId, value, "Increase by {0}")
     EndIf
 
 EndEvent
 
 Event OnOptionSelect(int option)
+    if enableAttributeEffectsToggleId == option
+        EnableAttributeEffects = !EnableAttributeEffects
+        SetToggleOptionValue(enableAttributeEffectsToggleId, EnableAttributeEffects)
+    EndIf
+
     if forceNPCScanToggleId == option
         dattUtility.SendParameterlessEvent("Datt_ForceRemoveNPCMonitor")
         Utility.WaitMenuMode(1)        
@@ -313,6 +333,7 @@ Event OnOptionSelect(int option)
     EndIf
 EndEvent
 
+int enableAttributeEffectsToggleId
 int showDebugMessagesToggleId
 int resetPlayerAttribtesToggleId
 int frequentEventUpdateLatencySliderId
@@ -334,10 +355,11 @@ int resetTrackedNPCStatsToggleId
 int prideChangePerPlayerKillSliderId
 int attributeChangePerStealOrPickpocketSliderId
 int forceNPCScanToggleId
+int periodicSelfEsteemIncreaseSliderId
 
 Int Property WillpowerBaseChange
     Int Function Get()
-        Return StorageUtil.GetIntValue(None, "_datt_willpower_base_change",15)
+        Return StorageUtil.GetIntValue(None, "_datt_willpower_base_change",10)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_willpower_base_change",value)
@@ -364,7 +386,7 @@ EndProperty
 
 Int Property WillpowerChangePerOrgasm
     Int Function Get()
-        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerOrgasm", 5)
+        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerOrgasm", 8)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_willpowerChangePerOrgasm", value)
@@ -373,7 +395,7 @@ EndProperty
 
 Int Property WillpowerChangePerRape
     Int Function Get()
-        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerRape", 10)
+        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerRape", 25)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_willpowerChangePerRape", value)
@@ -382,7 +404,7 @@ EndProperty
 
 Int Property PrideChangePerRape
     Int Function Get()
-        return StorageUtil.GetIntValue(None, "_datt_prideChangePerRape", 2)
+        return StorageUtil.GetIntValue(None, "_datt_prideChangePerRape", 5)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_prideChangePerRape", value)
@@ -391,7 +413,7 @@ EndProperty
 
 Int Property SelfEsteemChangePerRape
     Int Function Get()
-        return StorageUtil.GetIntValue(None, "_datt_SelfEsteemChangePerRape", 1)
+        return StorageUtil.GetIntValue(None, "_datt_SelfEsteemChangePerRape", 2)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_SelfEsteemChangePerRape", value)
@@ -467,6 +489,32 @@ Int Property NPCScannerTickSec
 EndProperty
 
 
+Int Property PeriodicSelfEsteemIncrease
+    Int Function Get()
+        int value = StorageUtil.GetIntValue(None, "_datt_PeriodicSelfEsteemIncrease")
+        If value == 0
+            value = 5
+        EndIf
+        return value
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_PeriodicSelfEsteemIncrease",value)
+    EndFunction
+EndProperty
+
+Bool Property EnableAttributeEffects
+    Bool Function Get()
+        int value = dattEnableAttributeEffects.GetValueInt()
+        return value == 1
+    EndFunction
+    Function Set(bool value)
+        if(value == true)
+            dattEnableAttributeEffects.SetValueInt(1)
+        Else
+            dattEnableAttributeEffects.SetValueInt(0)
+        EndIf
+    EndFunction
+EndProperty
 Int Property MaxAttributeValue = 100 AutoReadonly Hidden
 
 String Property SoulStateAttributeId = "_Datt_Soul_State" AutoReadonly Hidden
@@ -484,6 +532,20 @@ String Property ExhibitionistAttributeId = "_Datt_Exhibitionist" AutoReadonly Hi
 String Property MasochistAttributeId = "_Datt_Masochist" AutoReadonly Hidden
 String Property SadistAttributeId = "_Datt_Sadist" AutoReadonly Hidden
 String Property NymphomaniacAttributeId = "_Datt_Nymphomaniac" AutoReadonly Hidden
+
+;player decision/choice event names
+String Property PlayerDecisionEventName1 = "Datt_PlayerDecision1" AutoReadonly Hidden
+String Property PlayerDecisionEventName2 = "Datt_PlayerDecision2" AutoReadonly Hidden
+String Property PlayerDecisionEventName3 = "Datt_PlayerDecision3" AutoReadonly Hidden
+String Property PlayerDecisionEventName4 = "Datt_PlayerDecision4" AutoReadonly Hidden
+
+String Property PlayerDecisionWithExtraEventName1 = "Datt_PlayerDecision1WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName2 = "Datt_PlayerDecision2WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName3 = "Datt_PlayerDecision3WithExtra" AutoReadonly Hidden
+String Property PlayerDecisionWithExtraEventName4 = "Datt_PlayerDecision4WithExtra" AutoReadonly Hidden
+
+String Property PlayerSoulStateChangeEventName = "Datt_PlayerSoulStateChange" AutoReadonly Hidden
+
 
 dattMonitorQuest Property MonitorQuest Auto 
 Faction Property dattWillpower Auto

@@ -13,6 +13,19 @@ Function SetTrauma(string traumaName, Actor akActor, Faction fTraumaFaction, int
 	akActor.SetFactionRank(fTraumaFaction, traumaLevel)
 EndFunction
 
+Function ModTrauma(string traumaName, Actor akActor, Faction fTraumaFaction, int traumaLevel) global
+	If traumaLevel != 10 && traumaLevel != 20 && traumaLevel != 30 &&  traumaLevel != 40 &&  traumaLevel != 50
+		Debug.MessageBox("SetTrauma() for traumaName = " + traumaName +", received invalid trauma level (must be 10-50), traumaLevel=" + traumaLevel)
+		Return
+	EndIf
+
+	akActor.AddToFaction(fTraumaFaction)
+	string lastUpdateEntryKey = "_datt_last_" + traumaName +"_trauma_update_time"
+	float currentTime = Utility.GetCurrentGameTime()
+	StorageUtil.SetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)
+	akActor.ModFactionRank(fTraumaFaction, traumaLevel)
+EndFunction
+
 int Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFaction) global
 	akActor.AddToFaction(fTraumaFaction)
 	string lastUpdateEntryKey = "_datt_last_" + traumaName +"_trauma_update_time"
@@ -31,9 +44,9 @@ int Function AdjustTrauma(string traumaName, Actor akActor, Faction fTraumaFacti
 	Else
 		float stageDecreaseTime = StorageUtil.GetFloatValue(None, "_datt_traumaStageDecreaseTime", 12.0)
 		float hoursPassed = Math.abs(lastUpdateTime - currentTime) * 24.0
-		MiscUtil.PrintConsole("[Datt] Adjust trauma for " + akActor.GetBaseObject().GetName() + ", hoursPassed = " + hoursPassed + ", will adjust trauma level by " + (-10 * Math.floor(hoursPassed)))
 		If hoursPassed >= stageDecreaseTime
-			akActor.ModFactionRank(fTraumaFaction, -10 * Math.floor(hoursPassed / stageDecreaseTime))
+			MiscUtil.PrintConsole("[Datt] Adjust trauma for " + akActor.GetBaseObject().GetName() + ", hoursPassed = " + hoursPassed + ", will adjust trauma level by " + (-10 * ((hoursPassed / stageDecreaseTime) as int)))
+			akActor.ModFactionRank(fTraumaFaction, -10 * ((hoursPassed / stageDecreaseTime) as int))
 		EndIf
 	EndIf
 	StorageUtil.SetFloatValue(akActor as Form, lastUpdateEntryKey, currentTime)

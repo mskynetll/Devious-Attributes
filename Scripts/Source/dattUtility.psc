@@ -79,6 +79,30 @@ Function SendEventWithFormParam(string eventName,Form fParam) global
 	EndWhile
 EndFunction
 
+Function SendEventWithFormAndFloatParam(string eventName,Form fParam, float fNum) global
+	int retries = 3
+	While(retries > 0)
+		int eventId = ModEvent.Create(eventName)
+		If eventId
+			ModEvent.PushForm(eventId, fParam)
+			ModEvent.PushFloat(eventId, fNum)
+			If(ModEvent.Send(eventId) == true)
+				retries = 0
+			Else
+				Utility.WaitMenuMode(0.05)
+				retries -= 1
+			EndIf
+		Else
+			Utility.WaitMenuMode(0.05)
+			retries -= 1
+		EndIf
+	EndWhile
+EndFunction
+
+Function SendIncreaseArousal(Actor akActor,float fAmount) global
+	SendEventWithFormAndFloatParam("slaUpdateExposure",akActor as Form, fAmount)
+EndFunction
+
 Function SendEventWithIntParam(string eventName,int iParam) global
 	int retries = 3
 	While(retries > 0)
