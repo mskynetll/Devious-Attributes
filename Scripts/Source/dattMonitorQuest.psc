@@ -103,17 +103,24 @@ Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)
 		bonusMultiplier = 1.5
 	EndIf
 
+	If aiRelationshipRank < 0 ;if we killed a hostile npc
+		bonusMultiplier += 0.5
+	EndIf
+
 	;increase pride only if you kill you own or one level below at minimum
 	;this is in case the player has mods that modify/stop scaling installed
-	If(PlayerRef.GetLevel() >= victimActor.GetLevel() - 1 && aiRelationshipRank <= 0)		
+	If(PlayerRef.GetLevel() <= victimActor.GetLevel() && aiRelationshipRank <= 0)		
 		float sadismLevel = AttributesAPI.GetAttribute(PlayerRef,Config.SadistAttributeId)
 		int modPride = Math.floor(bonusMultiplier * Config.PrideChangePerPlayerKill * (1.0 + (sadismLevel * 0.1)))
-		Log("OnPlayerKill - mod pride by " + modPride + ", Player lvl = " + PlayerRef.GetLevel() + ", victim lvl = " + victimActor.GetLevel() + ", relationship rank = " + aiRelationshipRank)
+		Log("OnPlayerKill - will mod pride by " + modPride + ", Player lvl = " + PlayerRef.GetLevel() + ", victim lvl = " + victimActor.GetLevel() + ", relationship rank = " + aiRelationshipRank)
 		AttributesAPI.ModAttribute(PlayerRef,Config.PrideAttributeId, modPride)
 		float currentTime = Utility.GetCurrentGameTime()
 		If LastSelfEsteemForKillUpdateTime == 0.0 || Math.abs(currentTime - LastSelfEsteemForKillUpdateTime) * 24.0 >= 24.0
 			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, 2)
+			Log("OnPlayerKill - self esteem bonus, value changed by 2")
 			LastSelfEsteemForKillUpdateTime = currentTime
+		Else
+			Log("OnPlayerKill - self esteem bonus for killing is still on the cooldown, self esteem attribute hasn't changed")
 		EndIf
 	Else
 		Log("OnPlayerKill, victim is " + victimActor.GetBaseObject().GetName())
