@@ -205,7 +205,7 @@ Event OnOptionSliderOpen(int option)
     If option == willpowerBaseChangeSliderId
         SetSliderDialogStartValue(WillpowerBaseChange)
         SetSliderDialogDefaultValue(10.0)
-        SetSliderDialogRange(1.0, 50.0) 
+        SetSliderDialogRange(2.0, 50.0) 
         SetSliderDialogInterval(1.0)
     EndIf 
 

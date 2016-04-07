@@ -54,7 +54,7 @@ Function AdjustArousalForPCandTrackedNPCs(float hoursPassed)
 	int playerNympho = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniacAttributeId)
 	If playerNympho > 0
 		Log("Sending arousal increase for PC, nymphoValue = " + playerNympho)
-		dattUtility.SendIncreaseArousal(Config.PlayerRef, (AdjustNymphoValueForArousalIncrease(playerNympho) * dattUtility.MinInt(1,Math.floor(hoursPassed))) as float)
+		dattUtility.SendIncreaseArousal(Config.PlayerRef, AdjustNymphoValueForArousalIncrease(playerNympho) * dattUtility.Min(0.1,hoursPassed))
 	EndIf
 
 	int npcCount = StorageUtil.FormListCount(None, "_datt_tracked_npcs")
@@ -65,24 +65,24 @@ Function AdjustArousalForPCandTrackedNPCs(float hoursPassed)
         	int nympho = AttribtesAPI.GetAttribute(npc,Config.NymphomaniacAttributeId)
         	If nympho > 0
         		Log("Sending arousal increase for " + npc.GetBaseObject().GetName() +", nymphoValue = " + nympho)
-				dattUtility.SendIncreaseArousal(npc, (AdjustNymphoValueForArousalIncrease(nympho) * dattUtility.MinInt(1,Math.floor(hoursPassed))) as float)
+				dattUtility.SendIncreaseArousal(npc, AdjustNymphoValueForArousalIncrease(nympho) * dattUtility.Min(0.1,hoursPassed))
 			EndIf
         EndIf
         index += 1
     EndWhile		
 EndFunction
 
-int Function AdjustNymphoValueForArousalIncrease(int nymphoValue)
+float Function AdjustNymphoValueForArousalIncrease(int nymphoValue)
 	if nymphoValue <= 10
-		return 1
+		return 0.1
 	ElseIf nymphoValue > 10 && nymphoValue <= 25
-		return 2
+		return 0.15
 	ElseIf nymphoValue > 25 && nymphoValue <= 50
-		return 3
+		return 0.2
 	ElseIf nymphoValue > 50 && nymphoValue <= 75
-		return 4
+		return 0.25
 	ElseIf nymphoValue > 75
-		return 5
+		return 0.5
 	EndIf
 
 EndFunction
@@ -107,13 +107,17 @@ Function AdjustWillpower(float hoursPassed, bool wasSleeping = false)
 	Log("dattPeriodicEventsQuest - AdjustWillpower for PC and tracked NPCs")
 	
 	int modMagnitude
+	int intHoursPassed = Math.floor(hoursPassed)
 	If(wasSleeping == false)
-		modMagnitude = Config.WillpowerBaseChange * Math.floor(hoursPassed)
+		modMagnitude = Config.WillpowerBaseChange * intHoursPassed
 	Else
 		modMagnitude = Math.floor((Config.WillpowerBaseChange as float) * hoursPassed * 1.5)
-	EndIf
+	EndIf	
 
-	Log("Adjusting willpower for player, modMagnitude = " + modMagnitude)
+	int playerTraumaLevel = Config.PlayerRef.GetFactionRank(dattRapeTraumaFaction)
+	modMagnitude = DebuffWillpowerModBasedOnTrauma(modMagnitude, playerTraumaLevel)
+
+	Log("Adjusting willpower for player, modMagnitude -> modMagnitude/trauma level = " + modMagnitude + ", player trauma level = " + playerTraumaLevel)
 	AttribtesAPI.ModAttribute(Config.PlayerRef,Config.WillpowerAttributeId, modMagnitude)
 
 	int npcCount = StorageUtil.FormListCount(None, "_datt_tracked_npcs")
@@ -121,11 +125,34 @@ Function AdjustWillpower(float hoursPassed, bool wasSleeping = false)
     While index < npcCount
         Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
         If(npc != None) ;precaution
-        	Log("Adjusting willpower for " + npc.GetBaseObject().GetName() +", modMagnitude = " + Config.WillpowerBaseChange * Math.floor(hoursPassed))
-            AttribtesAPI.ModAttribute(npc,Config.WillpowerAttributeId, Config.WillpowerBaseChange * Math.floor(hoursPassed))
+        	int npcTraumaLevel = npc.GetFactionRank(dattRapeTraumaFaction)
+        	int npcModMagnitude = DebuffWillpowerModBasedOnTrauma(Config.WillpowerBaseChange * intHoursPassed, npcTraumaLevel)
+
+        	Log("Adjusting willpower for " + npc.GetBaseObject().GetName() +", modMagnitude = " + npcModMagnitude + " , trauma level = " + npcTraumaLevel)
+            AttribtesAPI.ModAttribute(npc,Config.WillpowerAttributeId, npcModMagnitude)
         EndIf
         index += 1
     EndWhile	
+EndFunction
+
+Int Function DebuffWillpowerModBasedOnTrauma(int mod,int trauma)
+	If trauma == 0
+		return mod
+	EndIf
+
+	If trauma <= 10
+		Return mod - dattUtility.MaxInt(1, mod / 5)
+	EndIf
+
+	If trauma > 10 && trauma <= 30
+		Return mod - dattUtility.MaxInt(1, mod / 2)
+	EndIf
+
+	If trauma > 30 && trauma <= 40
+		Return mod - dattUtility.MaxInt(1, mod - 1)
+	EndIf
+
+	Return 0
 EndFunction
 
 Function AdjustTraumaForPCandTrackedNPCs()

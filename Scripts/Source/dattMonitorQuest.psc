@@ -175,21 +175,24 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 		OnRapeSex(victim,participants.Length - 1, argString)		
 		UpdateNymphoValue(victim)
 		int index = 0
-		While index < participants.Length
-			If participants[index] != victim
-				int arousal = StorageUtil.GetIntValue(participants[index], "_datt_last_arousal")
 
-				If arousal > 25 && arousal <= 50
-					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,1)
-				ElseIf arousal > 50 && arousal <= 75
-					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,2)
-				ElseIf arousal > 75
-					AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,4)
+		If participants.Length > 0 
+			While index < participants.Length
+				If participants[index] != victim
+					int arousal = StorageUtil.GetIntValue(participants[index], "_datt_last_arousal")
+
+					If arousal > 25 && arousal <= 50
+						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,1)
+					ElseIf arousal > 50 && arousal <= 75
+						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,2)
+					ElseIf arousal > 75
+						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,4)
+					EndIf
+					UpdateNymphoValue(participants[index])
 				EndIf
-				UpdateNymphoValue(participants[index])
-			EndIf
-			index += 1
-		EndWhile
+				index += 1
+			EndWhile
+		EndIf
 	Else
 		sslBaseAnimation animationUsed = SexLab.HookAnimation(argString)
 		OnConsensualSex(participants, animationUsed)
@@ -210,7 +213,13 @@ Event OnSimulateRapeSex(Form victim, int agressorCount)
 EndEvent
 
 Event OnRapeSex(Actor victim, int agressorCount, string argString)
+		;precaution for unusual events like Estrus
+	If agressorCount <= 0
+		agressorCount = 1
+	EndIf
+
 	Log("OnRapeSex, victim is " + victim.GetBaseObject().GetName() + ", agressors count = " + agressorCount)
+
 	dattPeriodicEventsHelper.ModTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
    	int wornDeviceCount = dattUtility.MaxInt(0,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
 	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniacAttributeId) / (wornDeviceCount * 10)
@@ -218,7 +227,6 @@ Event OnRapeSex(Actor victim, int agressorCount, string argString)
    	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (2*agressorCount) + nymphoBonus)
 	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - agressorCount + (nymphoBonus / 2))
 	AttributesAPI.ModAttribute(victim,Config.SelfEsteemAttributeId, (-1 * Config.SelfEsteemChangePerRape) - agressorCount)
-		
 	
 	int arousal = StorageUtil.GetIntValue(victim, "_datt_last_arousal")
 	sslBaseAnimation animationUsed = None
