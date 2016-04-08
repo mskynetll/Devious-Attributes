@@ -90,6 +90,22 @@ Function DoVersionUpgrade()
 		ModVersion = "0.7.51"
 	EndIf
 
+	If ModVersion == "0.7.51"
+		Config.WillpowerChangePerOrgasm = 10
+		ForceNPCScan()
+		ModVersion = "0.7.6"
+	EndIf
+
+	If ModVersion == "0.7.61" || ModVersion == "0.7.6"
+		Config.WillpowerBaseDecisionCost = 10
+		Config.PrideChangePerDecision = 2
+		Config.SelfEsteemChangePerDecision = 1
+		Config.ObedienceChangePerDecision = 2
+		Config.FetishIncrementPerDecision = 2
+		Config.ArousalThresholdToIncreaseFetish = 80
+		ModVersion = "0.7.62"
+	EndIf
+
 	Debug.Notification("Devious Attributes is running version " + ModVersion)
 EndFunction
 
@@ -98,18 +114,22 @@ Function ForceNPCScan()
 EndFunction
 
 Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)		
-	float bonusMultiplier = 1.0
-	If PlayerRef.IsInFaction(DarkBrotherhoodFaction)
-		bonusMultiplier = 1.5
-	EndIf
-
-	If aiRelationshipRank < 0 ;if we killed a hostile npc
-		bonusMultiplier += 0.5
+	If StorageUtil.FormListHas(None, "_datt_tracked_npcs", victimActor)
+		StorageUtil.FormListRemove(None, "_datt_tracked_npcs", victimActor)
 	EndIf
 
 	;increase pride only if you kill you own or one level below at minimum
 	;this is in case the player has mods that modify/stop scaling installed
 	If(PlayerRef.GetLevel() <= victimActor.GetLevel() && aiRelationshipRank <= 0)		
+		float bonusMultiplier = 1.0
+		If PlayerRef.IsInFaction(DarkBrotherhoodFaction)
+			bonusMultiplier = 1.5
+		EndIf
+
+		If aiRelationshipRank < 0 ;if we killed a hostile npc
+			bonusMultiplier += 0.5
+		EndIf
+
 		float sadismLevel = AttributesAPI.GetAttribute(PlayerRef,Config.SadistAttributeId)
 		int modPride = Math.floor(bonusMultiplier * Config.PrideChangePerPlayerKill * (1.0 + (sadismLevel * 0.1)))
 		Log("OnPlayerKill - will mod pride by " + modPride + ", Player lvl = " + PlayerRef.GetLevel() + ", victim lvl = " + victimActor.GetLevel() + ", relationship rank = " + aiRelationshipRank)
@@ -123,7 +143,11 @@ Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)
 			Log("OnPlayerKill - self esteem bonus for killing is still on the cooldown, self esteem attribute hasn't changed")
 		EndIf
 	Else
-		Log("OnPlayerKill, victim is " + victimActor.GetBaseObject().GetName())
+		string victimName = victimActor.GetBaseObject().GetName()
+		If victimName == ""
+			victimName = "[Generic Actor (non-unique)]"
+		EndIf
+		Log("OnPlayerKill, victim is " + victimName)
 		Log("OnPlayerKill - nothing to do, Player lvl = " + PlayerRef.GetLevel() + ", victim lvl = " + victimActor.GetLevel() + ", relationship rank = " + aiRelationshipRank)
 	EndIf
 	
@@ -264,15 +288,16 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 
 			int soulState = AttributesAPI.GetAttribute(currentParticipant,Config.SoulStateAttributeId)
 			;if forced slave, no self-esteem gains from sex
-			If soulState != 1 && hoursPassedSinceHadSex >= 6.0
+			If soulState != 2 && hoursPassedSinceHadSex >= 6.0
 				ApplyChangesToPlayer(animationUsed)
 			EndIf
 	   	ElseIf hoursPassedSinceHadSex >= 6.0 ;perhaps make it configurable?
 			AttributesAPI.ModAttribute(currentParticipant,Config.SelfEsteemAttributeId, 5 + nymphoBonus)
 		EndIf
 
-		If nymphoBonus / 2 > 0
-			AttributesAPI.ModAttribute(currentParticipant,Config.PrideAttributeId, nymphoBonus / 2)
+		int nymphoPrideBoost = nymphoBonus / 5
+		If nymphoPrideBoost > 0
+			AttributesAPI.ModAttribute(currentParticipant,Config.PrideAttributeId, nymphoPrideBoost)
 		EndIf
 
 		index += 1
@@ -312,24 +337,45 @@ float Function UpdateNymphoValue(Actor akActor)
 EndFunction
 
 Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
+	int modLevel
 	If animationUsed.HasTag("Oral")
 		int oralLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Oral"),0,6)
 		If oralLevel > 0
-			Log("Animation with 'Oral' tag detected, oral proficiency = " + oralLevel + ",adjusting PC self-esteem by " + (oralLevel / 2))
-			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, oralLevel / 2)
+			If oralLevel > 1
+				modLevel = oralLevel / 2			
+			ElseIf oralLevel == 1
+				modLevel = 1
+			EndIf
+
+			Log("Animation with 'Oral' tag detected, oral proficiency = " + oralLevel + ",adjusting PC self-esteem by " + modLevel)		
+
+			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)
 		EndIf
 	ElseIf animationUsed.HasTag("Vaginal")
 		int vaginalLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Vaginal"),0,6)
 
 		If vaginalLevel > 0
-			Log("Animation with 'Vaginal' tag detected, Vaginal proficiency = " + vaginalLevel + ",adjusting PC self-esteem by " + (vaginalLevel / 2))
-			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, vaginalLevel / 2)
+			If vaginalLevel > 1
+				modLevel = vaginalLevel / 2			
+			ElseIf vaginalLevel == 1
+				modLevel = 1
+			EndIf
+
+			Log("Animation with 'Vaginal' tag detected, Vaginal proficiency = " + vaginalLevel + ",adjusting PC self-esteem by " + modLevel)
+
+			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)
 		EndIf
 	ElseIf animationUsed.HasTag("Anal")
 		int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)		
 		If analLevel > 0
-			Log("Animation with 'Anal' tag detected, Anal proficiency = " + analLevel + ",adjusting PC self-esteem by " + (analLevel / 2))
-			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, analLevel / 2)			
+			If analLevel > 1
+				modLevel = analLevel / 2			
+			ElseIf analLevel == 1
+				modLevel = 1
+			EndIf			
+			Log("Animation with 'Anal' tag detected, Anal proficiency = " + analLevel + ",adjusting PC self-esteem by " + modLevel)
+
+			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)			
 		EndIf
 	EndIf	
 EndFunction

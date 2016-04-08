@@ -100,8 +100,12 @@ bool Function VerifyAttributeId(string attributeId)
 		return true
 	ElseIf(attributeId == Config.NymphomaniacAttributeId)
 		return true
+	ElseIf(attributeId == Config.SoulStateAttributeId)
+		return true
 	ElseIf(attributeId == Config.SadistAttributeId)
 		return true
+	ElseIf(attributeId == Config.SubmissivenessAttributeId)
+		return true		
 	Else
 		return false
 	EndIf

@@ -9,7 +9,17 @@ Spell Property WillpowerAbility Auto
 Function Maintenance()
 	RegisterForSingleUpdateGameTime(Config.FrequentEventUpdateLatency)
 	RegisterForSleep()
+	RegisterForModEvent("Datt_SetDefaults", "OnSetDefaults")
 EndFunction
+
+Event OnSetDefaults(Form acTargetActor)
+	Actor acActor = acTargetActor as Actor
+	If acTargetActor == None || acActor == None
+		Error("OnSetAttribute() was passed a form parameter, thats was empty or not an actor. Aborting change... ")
+		Return
+	EndIf
+	dattPeriodicEventsHelper.SetTrauma("Rape",Config.PlayerRef,dattRapeTraumaFaction, 0)
+EndEvent
 
 Event OnSleepStart(float afSleepStartTime, float afDesiredSleepEndTime)
 	LastSleepStart = Utility.GetCurrentGameTime()
@@ -38,7 +48,8 @@ Event OnUpdateGameTime()
 
 	If LastPeriodicUpdateTime == 0.0 || hoursSincePeriodicUpdate >= Config.PeriodicEventUpdateLatencyHours
 		AdjustTraumaForPCandTrackedNPCs()
-		AdjustSelfEsteemPeriodic(hoursSincePeriodicUpdate)		
+		AdjustSelfEsteemPeriodic(hoursSincePeriodicUpdate)
+		AdjustObediencePeriodic(hoursSincePeriodicUpdate)	
 		LastPeriodicUpdateTime = currentTime
 	EndIf
 
@@ -74,15 +85,15 @@ EndFunction
 
 float Function AdjustNymphoValueForArousalIncrease(int nymphoValue)
 	if nymphoValue <= 10
-		return 0.1
-	ElseIf nymphoValue > 10 && nymphoValue <= 25
 		return 0.15
+	ElseIf nymphoValue > 10 && nymphoValue <= 25
+		return 0.3
 	ElseIf nymphoValue > 25 && nymphoValue <= 50
-		return 0.2
+		return 0.45
 	ElseIf nymphoValue > 50 && nymphoValue <= 75
-		return 0.25
+		return 0.6
 	ElseIf nymphoValue > 75
-		return 0.5
+		return 0.85
 	EndIf
 
 EndFunction
@@ -100,6 +111,13 @@ Function AdjustSelfEsteemPeriodic(float hoursPassed)
 	int soulState = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.SoulStateAttributeId)
 	If soulState == 0 ;only free in spirit get periodic self-esteem increase
 		AttribtesAPI.ModAttribute(Config.PlayerRef,Config.SelfEsteemAttributeId,Config.PeriodicSelfEsteemIncrease)
+	EndIf
+EndFunction
+
+Function AdjustObediencePeriodic(float hoursPassed)
+	int soulState = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.SoulStateAttributeId)
+	If soulState == 0 ;only free in spirit get periodic obedience decrease
+		AttribtesAPI.ModAttribute(Config.PlayerRef,Config.SelfEsteemAttributeId,2)
 	EndIf
 EndFunction
 
@@ -135,6 +153,7 @@ Function AdjustWillpower(float hoursPassed, bool wasSleeping = false)
     EndWhile	
 EndFunction
 
+;trauma level can be {10,20,30,40,50}
 Int Function DebuffWillpowerModBasedOnTrauma(int mod,int trauma)
 	If trauma == 0
 		return mod

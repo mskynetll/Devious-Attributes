@@ -8,7 +8,7 @@ String Property TrackedNPCsPageName = "Tracked NPCs" AutoReadonly Hidden
 String Property DebugPageName = "Debug" AutoReadonly Hidden
 
 GlobalVariable Property dattEnableAttributeEffects Auto
-
+dattAttributesAPIQuest Property AttributesAPI Auto
 Bool Property IsLogging Auto
 
 dattMutex Property NpcScannerMutex Auto
@@ -42,6 +42,15 @@ Event OnPageReset(string page)
         prideChangePerPlayerKillSliderId = AddSliderOption("Pride/kill", PrideChangePerPlayerKill, "{0}")
         attributeChangePerStealOrPickpocketSliderId = AddSliderOption("Pride,Self-Esteem/theft", AttributeChangePerStealOrPickpocket, "{0}")
         periodicSelfEsteemIncreaseSliderId = AddSliderOption("Self-esteem/periodic", PeriodicSelfEsteemIncrease, "Increase by {0}")
+
+        AddHeaderOption("Decisions")
+        willpowerBaseDecisionCostSliderId  = AddSliderOption("Willpower base cost", WillpowerBaseDecisionCost, "{0}")
+        prideChangePerDecisionSliderId = AddSliderOption("Pride change", PrideChangePerDecision,"{0}")
+        selfEsteemChangePerDecisionSliderId = AddSliderOption("Self-Esteem change", SelfEsteemChangePerDecision,"{0}")
+        obedienceChangePerDecisionSliderId = AddSliderOption("Obedience change", ObedienceChangePerDecision,"{0}")
+        fetishIncrementPerDecisionSliderId  = AddSliderOption("Fetish increment", FetishIncrementPerDecision, "{0}")
+        arousalThresholdToIncreaseFetishSliderId = AddSliderOption("Arousal threshold - fetishes", ArousalThresholdToIncreaseFetish) 
+
     ElseIf (page == TrackedNPCsPageName)
         PrintTrackedNPCs()
     ElseIf (page == AttributesPageName)
@@ -57,6 +66,15 @@ Event OnPageReset(string page)
         AddTextOption("Pride", PlayerRef.GetFactionRank(dattPride), 1)
         AddTextOption("Obedience", PlayerRef.GetFactionRank(dattObedience), 1)
         AddTextOption("Submissiveness", PlayerRef.GetFactionRank(dattSubmissive), 1)
+
+        int soulState = AttributesAPI.GetAttribute(PlayerRef,SoulStateAttributeId)
+        If(soulState == 0)
+            AddTextOption("Soul State", "Free(0)",1)
+        ElseIf(soulState == 1)
+            AddTextOption("Soul State", "Willing Sub(1)",1)
+        ElseIf(soulState == 2)
+            AddTextOption("Soul State", "Forced Slave(2)",1)
+        EndIf
 
         AddHeaderOption("Player Traits")
         float humiliation = StorageUtil.GetIntValue(PlayerRef as Form, HumiliationLoverAttributeId) as float 
@@ -79,6 +97,15 @@ Event OnPageReset(string page)
     	showDebugMessagesToggleId = AddToggleOption("Turn on/off logging", IsLogging)
         resetPlayerAttribtesToggleId = AddToggleOption("Reset player attributes", false)
         simulateRapeToggleId = AddToggleOption("Simulate Rape (2 actors)", false)
+        manualSoulStateSliderId = AddSliderOption("Soul State", AttributesAPI.GetAttribute(PlayerRef,SoulStateAttributeId) as float, "{0}")
+
+        AddHeaderOption("Player Decisions")
+        debugPlayerResponseTypeSliderId = AddSliderOption("Response type", DebugPlayerResponseType, "{0}")
+        debugPlayerDecisionTypeSliderId = AddSliderOption("Decision type", DebugPlayerDecisionType, "{0}")
+        debugExtraPrideChangeSliderId = AddSliderOption("Extra pride change", DebugExtraPrideChange, "{0}")
+        debugExtraSelfEsteemChangeSliderId = AddSliderOption("Extra self-esteem change", DebugExtraSelfEsteemChange, "{0}")
+        debugPlayerDecisionToggleId = AddToggleOption("Simulate player decision", false)
+        debugPlayerDecisionWithExtraChangesToggleId = AddToggleOption("Simulate player decision(extra changes)", false)
 
         AddHeaderOption("Internal Stuff")
         int queuedChangeCount = StorageUtil.FormListCount(None, "_datt_queued_actors")
@@ -165,8 +192,8 @@ Event OnOptionSliderOpen(int option)
 
     If option == willpowerChangePerOrgasmSliderId
         SetSliderDialogStartValue(WillpowerChangePerOrgasm)
-        SetSliderDialogDefaultValue(5.0)
-        SetSliderDialogRange(0.0, 100.0) 
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(7.0, 100.0) 
         SetSliderDialogInterval(1.0)
     EndIf
 
@@ -228,14 +255,72 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(5.0)
         SetSliderDialogRange(0.0, 100.0) 
         SetSliderDialogInterval(1.0)
+    ElseIf (option == manualSoulStateSliderId)
+        SetSliderDialogStartValue(AttributesAPI.GetAttribute(PlayerRef,SoulStateAttributeId))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0, 2.0) 
+        SetSliderDialogInterval(1.0)        
+    ElseIf (option == debugPlayerResponseTypeSliderId)
+        SetSliderDialogStartValue(DebugPlayerResponseType)
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(-2.0, 2.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == debugPlayerDecisionTypeSliderId)
+        SetSliderDialogStartValue(DebugPlayerDecisionType)
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0, 4.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == debugExtraPrideChangeSliderId)
+        SetSliderDialogStartValue(DebugExtraPrideChange)
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(-100.0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == debugExtraSelfEsteemChangeSliderId)
+        SetSliderDialogStartValue(DebugExtraSelfEsteemChange)
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(-100.0, 100.0) 
+        SetSliderDialogInterval(1.0)     
+    ElseIf (option == fetishIncrementPerDecisionSliderId)
+        SetSliderDialogStartValue(FetishIncrementPerDecision)
+        SetSliderDialogDefaultValue(2.0)
+        SetSliderDialogRange(0, 100.0) 
+        SetSliderDialogInterval(1.0)
+    ElseIf (option == willpowerBaseDecisionCostSliderId)
+        SetSliderDialogStartValue(WillpowerBaseDecisionCost)
+        SetSliderDialogDefaultValue(15.0)
+        SetSliderDialogRange(0, 100.0) 
+        SetSliderDialogInterval(1.0)           
+    ElseIf (option == obedienceChangePerDecisionSliderId)
+        SetSliderDialogStartValue(ObedienceChangePerDecision)
+        SetSliderDialogDefaultValue(2.0)
+        SetSliderDialogRange(1, 100.0) 
+        SetSliderDialogInterval(1.0)   
+    ElseIf (option == prideChangePerDecisionSliderId)
+        SetSliderDialogStartValue(PrideChangePerDecision)
+        SetSliderDialogDefaultValue(2.0)
+        SetSliderDialogRange(1, 100.0) 
+        SetSliderDialogInterval(1.0)  
+    ElseIf (option == selfEsteemChangePerDecisionSliderId)
+        SetSliderDialogStartValue(SelfEsteemChangePerDecision)
+        SetSliderDialogDefaultValue(1.0)
+        SetSliderDialogRange(1, 100.0) 
+        SetSliderDialogInterval(1.0)            
+    ElseIf (option == arousalThresholdToIncreaseFetishSliderId)
+        SetSliderDialogStartValue(ArousalThresholdToIncreaseFetish)
+        SetSliderDialogDefaultValue(85)
+        SetSliderDialogRange(0, 100.0) 
+        SetSliderDialogInterval(1.0)              
     EndIf
     
 EndEvent
 
 Event OnOptionSliderAccept(int option, float value)
-     If option == frequentEventUpdateLatencySliderId
+    If option == frequentEventUpdateLatencySliderId
         FrequentEventUpdateLatency = value as int
         SetSliderOptionValue(frequentEventUpdateLatencySliderId, value, "Each {0} hours")
+    ElseIf (option == manualSoulStateSliderId)
+        AttributesAPI.SetAttribute(PlayerRef,SoulStateAttributeId,value as int)
+        SetSliderOptionValue(manualSoulStateSliderId, value, "{0}")        
     ElseIf option == periodicEventUpdateLatencySliderId 
         PeriodicEventUpdateLatencyHours = value as int
         SetSliderOptionValue(periodicEventUpdateLatencySliderId, value, "Each {0} hours")
@@ -272,6 +357,36 @@ Event OnOptionSliderAccept(int option, float value)
     ElseIf option == periodicSelfEsteemIncreaseSliderId 
         PeriodicSelfEsteemIncrease = value as int
         SetSliderOptionValue(periodicSelfEsteemIncreaseSliderId, value, "Increase by {0}")
+    ElseIf (option == debugPlayerResponseTypeSliderId)
+        DebugPlayerResponseType = value as int
+        SetSliderOptionValue(debugPlayerResponseTypeSliderId, value, "{0}")
+    ElseIf (option == debugPlayerDecisionTypeSliderId)
+        DebugPlayerDecisionType = value as int
+        SetSliderOptionValue(debugPlayerDecisionTypeSliderId, value, "{0}")
+    ElseIf (option == debugExtraPrideChangeSliderId)
+        DebugExtraPrideChange = value as int
+        SetSliderOptionValue(debugExtraPrideChangeSliderId, value, "{0}")
+    ElseIf (option == debugExtraSelfEsteemChangeSliderId)        
+        DebugExtraSelfEsteemChange = value as int
+        SetSliderOptionValue(debugExtraSelfEsteemChangeSliderId, value, "{0}")
+    ElseIf (option == fetishIncrementPerDecisionSliderId)
+        FetishIncrementPerDecision = value as int
+        SetSliderOptionValue(fetishIncrementPerDecisionSliderId, value, "{0}")
+    ElseIf (option == willpowerBaseDecisionCostSliderId)
+        WillpowerBaseDecisionCost = value as int
+        SetSliderOptionValue(willpowerBaseDecisionCostSliderId, value, "{0}")    
+    ElseIf (option == obedienceChangePerDecisionSliderId)
+        ObedienceChangePerDecision = value as int
+        SetSliderOptionValue(obedienceChangePerDecisionSliderId, value, "{0}")                  
+    ElseIf (option == prideChangePerDecisionSliderId)
+        PrideChangePerDecision = value as int
+        SetSliderOptionValue(prideChangePerDecisionSliderId, value, "{0}")    
+    ElseIf (option == selfEsteemChangePerDecisionSliderId)
+        SelfEsteemChangePerDecision = value as int
+        SetSliderOptionValue(selfEsteemChangePerDecisionSliderId, value, "{0}")    
+    ElseIf (option == arousalThresholdToIncreaseFetishSliderId)
+        ArousalThresholdToIncreaseFetish = value as int
+        SetSliderOptionValue(arousalThresholdToIncreaseFetishSliderId, value, "{0}")        
     EndIf
 
 EndEvent
@@ -331,7 +446,45 @@ Event OnOptionSelect(int option)
         dattUtility.SendEventWithFormAndIntParam("Datt_Simulate_Rape",PlayerRef as Form,2)
         Debug.MessageBox("Datt_Simulate_Rape event sent for PC")
     EndIf
+
+    If (option == debugPlayerDecisionToggleId)
+        DebugSendPlayerDecision(DebugPlayerResponseType, DebugPlayerDecisionType)
+        Debug.MessageBox("Sending player decision, DebugPlayerResponseType=" + DebugPlayerResponseType + ", DebugPlayerDecisionType=" + DebugPlayerDecisionType)
+    EndIf
+
+    If (option == debugPlayerDecisionWithExtraChangesToggleId)
+        DebugSendPlayerDecisionWithExtraChanges(DebugPlayerResponseType, DebugPlayerDecisionType, DebugExtraPrideChange, DebugExtraSelfEsteemChange)
+        Debug.MessageBox("Sending player decision (with extra changes), DebugPlayerResponseType=" + DebugPlayerResponseType + ", DebugPlayerDecisionType=" + DebugPlayerDecisionType)    
+    EndIf
 EndEvent
+
+Function DebugSendPlayerDecision(int playerResponseType, int decisionType)
+    int debugPlayerDecisionEventId = ModEvent.Create(PlayerDecisionEventName1)
+    If(debugPlayerDecisionEventId)
+        Debug.Notification("Devious Attributes -> debug.SendPlayerDecision()")
+
+        ModEvent.PushInt(debugPlayerDecisionEventId, playerResponseType)
+        ModEvent.PushInt(debugPlayerDecisionEventId, decisionType)
+        ModEvent.Send(debugPlayerDecisionEventId)
+    Else
+        Debug.MessageBox("Devious Attributes -> debug.SendPlayerDecision() -> debugPlayerDecisionEventId not initialized!")
+    EndIf
+EndFunction
+
+Function DebugSendPlayerDecisionWithExtraChanges(int playerResponseType, int decisionType,int prideExtraChange, int selfEsteemExtraChange)
+    int debugPlayerDecisionWithExtraEventId =  ModEvent.Create(PlayerDecisionWithExtraEventName1)
+    If(debugPlayerDecisionWithExtraEventId)
+        Debug.Notification("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges()")
+
+        ModEvent.PushInt(debugPlayerDecisionWithExtraEventId, playerResponseType)
+        ModEvent.PushInt(debugPlayerDecisionWithExtraEventId, decisionType)
+        ModEvent.PushInt(debugPlayerDecisionWithExtraEventId, prideExtraChange)
+        ModEvent.PushInt(debugPlayerDecisionWithExtraEventId, selfEsteemExtraChange)
+        ModEvent.Send(debugPlayerDecisionWithExtraEventId)
+    Else
+        Debug.MessageBox("Devious Attributes -> debug.DebugSendPlayerDecisionWithExtraChanges() -> debugPlayerDecisionWithExtraEventId not initialized!")
+    EndIf
+EndFunction
 
 int enableAttributeEffectsToggleId
 int showDebugMessagesToggleId
@@ -356,6 +509,113 @@ int prideChangePerPlayerKillSliderId
 int attributeChangePerStealOrPickpocketSliderId
 int forceNPCScanToggleId
 int periodicSelfEsteemIncreaseSliderId
+
+int debugPlayerDecisionToggleId
+int debugPlayerDecisionTypeSliderId
+int debugPlayerResponseTypeSliderId
+int debugExtraPrideChangeSliderId
+int debugExtraSelfEsteemChangeSliderId
+int debugPlayerDecisionWithExtraChangesToggleId
+
+int manualSoulStateSliderId;
+
+int obedienceChangePerDecisionSliderId
+int fetishIncrementPerDecisionSliderId
+int willpowerBaseDecisionCostSliderId
+int prideChangePerDecisionSliderId
+int selfEsteemChangePerDecisionSliderId
+
+int arousalThresholdToIncreaseFetishSliderId
+
+Int Property ArousalThresholdToIncreaseFetish
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_ArousalThresholdToIncreaseFetish")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_ArousalThresholdToIncreaseFetish",value)
+    EndFunction
+EndProperty
+
+Int Property FetishIncrementPerDecision
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_FetishIncrementPerDecision")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_FetishIncrementPerDecision",value)
+    EndFunction
+EndProperty
+
+Int Property PrideChangePerDecision
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_PrideChangePerDecision")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_PrideChangePerDecision",value)
+    EndFunction
+EndProperty
+
+Int Property SelfEsteemChangePerDecision
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_SelfEsteemChangePerDecision")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_SelfEsteemChangePerDecision",value)
+    EndFunction
+EndProperty
+
+Int Property ObedienceChangePerDecision
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_ObedienceChangePerDecision")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_ObedienceChangePerDecision",value)
+    EndFunction
+EndProperty
+
+Int Property WillpowerBaseDecisionCost
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_WillpowerBaseDecisionCost")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_WillpowerBaseDecisionCost",value)
+    EndFunction
+EndProperty    
+
+Int Property DebugPlayerDecisionType
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_DebugPlayerDecisionType")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_DebugPlayerDecisionType",value)
+    EndFunction
+EndProperty
+
+Int Property DebugPlayerResponseType
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_DebugPlayerResponseType")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_DebugPlayerResponseType",value)
+    EndFunction
+EndProperty
+
+Int Property DebugExtraPrideChange
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_DebugExtraPrideChange")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_DebugExtraPrideChange",value)
+    EndFunction
+EndProperty
+
+Int Property DebugExtraSelfEsteemChange
+    Int Function Get()
+        Return StorageUtil.GetIntValue(None, "_datt_DebugExtraSelfEsteemChange")
+    EndFunction
+    Function Set(int value)
+        StorageUtil.SetIntValue(None, "_datt_DebugExtraSelfEsteemChange",value)
+    EndFunction
+EndProperty    
 
 Int Property WillpowerBaseChange
     Int Function Get()
@@ -386,7 +646,7 @@ EndProperty
 
 Int Property WillpowerChangePerOrgasm
     Int Function Get()
-        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerOrgasm", 8)
+        return StorageUtil.GetIntValue(None, "_datt_willpowerChangePerOrgasm", 10)
     EndFunction
     Function Set(int value)
         StorageUtil.SetIntValue(None, "_datt_willpowerChangePerOrgasm", value)
