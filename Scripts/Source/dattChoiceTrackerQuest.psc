@@ -115,7 +115,7 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 	int purity = 0
 	;precaution, should never be true
 	If SexLab != None
-	 	purity = dattUtility.LimitValueInt(SexLab.GetPlayerPurityLevel(),-6,6)
+		purity = dattUtility.LimitValueInt(SexLab.GetPlayerPurityLevel(),-6,6)
 	Else
 		Warning("SexLab reference == None")
 	EndIf
@@ -168,10 +168,10 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 	EndIf
 
 	If (playerResponseType > 0)
-		int humiliationLover = AttributesAPI.GetAttribute(Config.PlayerRef,Config.HumiliationLoverAttributeId)
-		int masochist = AttributesAPI.GetAttribute(Config.PlayerRef,Config.MasochistAttributeId)
-		int exhibitionist = AttributesAPI.GetAttribute(Config.PlayerRef,Config.ExhibitionistAttributeId)
-		int nympho = AttributesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniacAttributeId)
+		int humiliationLover = AttributesAPI.GetAttribute(Config.PlayerRef,Config.HumiliationAttributeId)
+		int masochist = AttributesAPI.GetAttribute(Config.PlayerRef,Config.MasochismAttributeId)
+		int exhibitionist = AttributesAPI.GetAttribute(Config.PlayerRef,Config.ExhibitionismAttributeId)
+		int nympho = AttributesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniaAttributeId)
 
 		;for humiliating task, additional hit to pride and self-esteem
 		If(decisionTypes.Find(1) >= 0) 
@@ -205,20 +205,20 @@ Function ProcessPlayerDecision(int playerResponseType, int[] decisionTypes, int 
 
 		If(playerArousal >= Config.ArousalThresholdToIncreaseFetish)
 			If(decisionTypes.Find(1) >= 0 && humiliationLover < 100) ;there is humiliation in types
-				AttributesAPI.ModAttribute(Config.PlayerRef,Config.HumiliationLoverAttributeId,Config.FetishIncrementPerDecision)
+				AttributesAPI.ModAttribute(Config.PlayerRef,Config.HumiliationAttributeId,Config.FetishIncrementPerDecision)
 				prideMod -= absResponseType
 				selfEsteemMod -= absResponseType
 			EndIf
 			If(decisionTypes.Find(2) >= 0 && masochist < 100) ;there is pain in types
-				AttributesAPI.ModAttribute(Config.PlayerRef,Config.MasochistAttributeId,Config.FetishIncrementPerDecision)
+				AttributesAPI.ModAttribute(Config.PlayerRef,Config.MasochismAttributeId,Config.FetishIncrementPerDecision)
 				prideMod -= absResponseType
 			EndIf
 			If(decisionTypes.Find(3) >= 0 && exhibitionist < 100) ;there is exhibitionism in types
-				AttributesAPI.ModAttribute(Config.PlayerRef,Config.ExhibitionistAttributeId,Config.FetishIncrementPerDecision)
+				AttributesAPI.ModAttribute(Config.PlayerRef,Config.ExhibitionismAttributeId,Config.FetishIncrementPerDecision)
 				prideMod -= absResponseType
 			EndIf	
 			If(decisionTypes.Find(4) >= 0 && nympho < 100) ;there is sex related stuff in types
-				AttributesAPI.ModAttribute(Config.PlayerRef,Config.NymphomaniacAttributeId,Config.FetishIncrementPerDecision)
+				AttributesAPI.ModAttribute(Config.PlayerRef,Config.NymphomaniaAttributeId,Config.FetishIncrementPerDecision)
 				prideMod -= absResponseType
 				selfEsteemMod += absResponseType ;no hit to self-esteem if horny enough
 			EndIf			

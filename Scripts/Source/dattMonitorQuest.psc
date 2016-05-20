@@ -34,7 +34,7 @@ Function Maintenance()
 	RegisterForModEvent("OrgasmStart ", "OnOrgasmStart")
 	RegisterForModEvent("OrgasmEnd", "OnOrgasmEnd")
 	RegisterForModEvent("Datt_Simulate_Rape", "OnSimulateRapeSex")
-	Debug.Notification("Devious Attributes is loaded and tracking stuff...")	
+	Debug.Notification("Devious Attributes is loaded and tracking stuff...")
 
 	LastSpellCastTime = Utility.GetCurrentGameTime()
 EndFunction
@@ -43,17 +43,17 @@ Function DoVersionUpgrade()
 	If ModVersion == "" || ModVersion == "0.6.3"
 		If !OneTimeInitialize
 			Debug.Notification("Devious Attributes initializes stuff... this should happen only once.")
-			dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)			
-		    OneTimeInitialize = true
+			dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)
+			OneTimeInitialize = true
 		EndIf
-		ModVersion = "0.7.0"	
+		ModVersion = "0.7.0"
 	EndIf
 	If ModVersion == "0.7.0"
 		dattUtility.SendEventWithFormParam("Datt_SetDefaults",PlayerRef as Form)
 		OneTimeInitialize = true
 		Config.FrequentEventUpdateLatency = 30
 		Config.PeriodicEventUpdateLatencyHours = 12
-		ModVersion = "0.7.1"	
+		ModVersion = "0.7.1"
 	EndIf
 	If ModVersion == "0.7.1"
 		ModVersion = "0.7.2"
@@ -113,14 +113,14 @@ Function ForceNPCScan()
 	dattUtility.SendParameterlessEvent("Datt_ForceNPCScan")
 EndFunction
 
-Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)		
+Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)
 	If StorageUtil.FormListHas(None, "_datt_tracked_npcs", victimActor)
 		StorageUtil.FormListRemove(None, "_datt_tracked_npcs", victimActor)
 	EndIf
 
 	;increase pride only if you kill you own or one level below at minimum
 	;this is in case the player has mods that modify/stop scaling installed
-	If(PlayerRef.GetLevel() <= victimActor.GetLevel() && aiRelationshipRank <= 0)		
+	If(PlayerRef.GetLevel() <= victimActor.GetLevel() && aiRelationshipRank <= 0)
 		float bonusMultiplier = 1.0
 		If PlayerRef.IsInFaction(DarkBrotherhoodFaction)
 			bonusMultiplier = 1.5
@@ -130,7 +130,7 @@ Function OnPlayerKill(Actor victimActor,int aiRelationshipRank)
 			bonusMultiplier += 0.5
 		EndIf
 
-		float sadismLevel = AttributesAPI.GetAttribute(PlayerRef,Config.SadistAttributeId)
+		float sadismLevel = AttributesAPI.GetAttribute(PlayerRef,Config.SadismAttributeId)
 		int modPride = Math.floor(bonusMultiplier * Config.PrideChangePerPlayerKill * (1.0 + (sadismLevel * 0.1)))
 		Log("OnPlayerKill - will mod pride by " + modPride + ", Player lvl = " + PlayerRef.GetLevel() + ", victim lvl = " + victimActor.GetLevel() + ", relationship rank = " + aiRelationshipRank)
 		AttributesAPI.ModAttribute(PlayerRef,Config.PrideAttributeId, modPride)
@@ -175,12 +175,12 @@ Function OnPlayerCastMagic(Form castSpell)
 		AttributesAPI.ModAttribute(PlayerRef,Config.PrideAttributeId, 5)
 		dattUtility.SendEventWithFormParam("Datt_PlayerCastSpell",castSpell)
 	Else
-		Log("OnPlayerCastMagic in cooldown, no attributes modified..")		
+		Log("OnPlayerCastMagic in cooldown, no attributes modified..")
 	EndIf
 	LastSpellCastTime = currentTime
 EndFunction
 
-Event OnSexAnimationStart(string eventName, string argString, float argNum, form sender)		
+Event OnSexAnimationStart(string eventName, string argString, float argNum, form sender)
     Actor[] participants = Sexlab.HookActors(argString)
     int index = 0
 	While index < participants.Length
@@ -192,11 +192,11 @@ Event OnSexAnimationStart(string eventName, string argString, float argNum, form
 	EndWhile
 EndEvent
 
-Event OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)	   
+Event OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)
     Actor[] participants = Sexlab.HookActors(argString)
     Actor victim = Sexlab.HookVictim(argString)
 	If victim != None ;non-consensual
-		OnRapeSex(victim,participants.Length - 1, argString)		
+		OnRapeSex(victim,participants.Length - 1, argString)
 		UpdateNymphoValue(victim)
 		int index = 0
 
@@ -206,11 +206,11 @@ Event OnSexAnimationEnd(string eventName, string argString, float argNum, form s
 					int arousal = StorageUtil.GetIntValue(participants[index], "_datt_last_arousal")
 
 					If arousal > 25 && arousal <= 50
-						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,1)
+						AttributesAPI.ModAttribute(participants[index],Config.SadismAttributeId,1)
 					ElseIf arousal > 50 && arousal <= 75
-						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,2)
+						AttributesAPI.ModAttribute(participants[index],Config.SadismAttributeId,2)
 					ElseIf arousal > 75
-						AttributesAPI.ModAttribute(participants[index],Config.SadistAttributeId,4)
+						AttributesAPI.ModAttribute(participants[index],Config.SadismAttributeId,4)
 					EndIf
 					UpdateNymphoValue(participants[index])
 				EndIf
@@ -246,7 +246,7 @@ Event OnRapeSex(Actor victim, int agressorCount, string argString)
 
 	dattPeriodicEventsHelper.ModTrauma("Rape",victim,dattRapeTraumaFaction, agressorCount * 10)
    	int wornDeviceCount = dattUtility.MaxInt(0,StorageUtil.GetIntValue(victim, "_datt_worn_device_count"))
-	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniacAttributeId) / (wornDeviceCount * 10)
+	int nymphoBonus = AttributesAPI.GetAttribute(victim, Config.NymphomaniaAttributeId) / (wornDeviceCount * 10)
 
    	AttributesAPI.ModAttribute(victim,Config.WillpowerAttributeId, (-1 * Config.WillpowerChangePerRape) - (2*agressorCount) + nymphoBonus)
 	AttributesAPI.ModAttribute(victim,Config.PrideAttributeId, (-1 * Config.PrideChangePerRape) - agressorCount + (nymphoBonus / 2))
@@ -260,17 +260,17 @@ Event OnRapeSex(Actor victim, int agressorCount, string argString)
 	EndIf	
 
 	If arousal > 25 && arousal <= 50
-		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,1)
+		AttributesAPI.ModAttribute(victim,Config.MasochismAttributeId,1)
 	ElseIf arousal > 50 && arousal <= 75
-		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,2)
+		AttributesAPI.ModAttribute(victim,Config.MasochismAttributeId,2)
 		If animationUsed != None && (animationUsed.HasTag("Dirty") || animationUsed.HasTag("Rough"))
-			AttributesAPI.ModAttribute(victim,Config.HumiliationLoverAttributeId,1)
+			AttributesAPI.ModAttribute(victim,Config.HumiliationAttributeId,1)
 		EndIf		
 	ElseIf arousal > 75
-		AttributesAPI.ModAttribute(victim,Config.MasochistAttributeId,4)
+		AttributesAPI.ModAttribute(victim,Config.MasochismAttributeId,4)
 		If animationUsed != None && (animationUsed.HasTag("Dirty") || animationUsed.HasTag("Rough"))
-			AttributesAPI.ModAttribute(victim,Config.HumiliationLoverAttributeId,2)
-		EndIf			
+			AttributesAPI.ModAttribute(victim,Config.HumiliationAttributeId,2)
+		EndIf
 	EndIf
 EndEvent
 
@@ -280,9 +280,9 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 	While index < participants.Length
 		Actor currentParticipant = participants[index]
 				
-		float hoursPassedSinceHadSex = UpdateNymphoValue(currentParticipant)		
+		float hoursPassedSinceHadSex = UpdateNymphoValue(currentParticipant)
 
-		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniacAttributeId) / 10)
+		int nymphoBonus = Math.floor(AttributesAPI.GetAttribute(currentParticipant, Config.NymphomaniaAttributeId) / 10)
 		If currentParticipant == PlayerRef
 			DecreasePrideByAnalSkillsIfRelevant(animationUsed)
 
@@ -301,7 +301,7 @@ Event OnConsensualSex(Actor[] participants,sslBaseAnimation animationUsed)
 		EndIf
 
 		index += 1
-	EndWhile	
+	EndWhile
 EndEvent
 
 Function DecreasePrideByAnalSkillsIfRelevant(sslBaseAnimation animationUsed)
@@ -329,9 +329,9 @@ float Function UpdateNymphoValue(Actor akActor)
 		int arousal = StorageUtil.GetIntValue(akActor, "_datt_last_arousal")
 		If arousal >= 75 && hoursPassedSinceHadSex >= Config.IntervalBetweenSexToIncreaseNymphoHours
 			Log("Adjusting nympho value for " + akActor.GetBaseObject().GetName() + ", adjusted by " + Config.NymphoIncreasePerConsensual)
-			AttributesAPI.ModAttribute(akActor,Config.NymphomaniacAttributeId, Config.NymphoIncreasePerConsensual)
+			AttributesAPI.ModAttribute(akActor,Config.NymphomaniaAttributeId, Config.NymphoIncreasePerConsensual)
 		EndIf
-	EndIf	
+	EndIf
 
 	return hoursPassedSinceHadSex
 EndFunction
@@ -342,12 +342,12 @@ Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
 		int oralLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Oral"),0,6)
 		If oralLevel > 0
 			If oralLevel > 1
-				modLevel = oralLevel / 2			
+				modLevel = oralLevel / 2
 			ElseIf oralLevel == 1
 				modLevel = 1
 			EndIf
 
-			Log("Animation with 'Oral' tag detected, oral proficiency = " + oralLevel + ",adjusting PC self-esteem by " + modLevel)		
+			Log("Animation with 'Oral' tag detected, oral proficiency = " + oralLevel + ",adjusting PC self-esteem by " + modLevel)
 
 			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)
 		EndIf
@@ -356,7 +356,7 @@ Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
 
 		If vaginalLevel > 0
 			If vaginalLevel > 1
-				modLevel = vaginalLevel / 2			
+				modLevel = vaginalLevel / 2
 			ElseIf vaginalLevel == 1
 				modLevel = 1
 			EndIf
@@ -366,18 +366,18 @@ Function ApplyChangesToPlayer(sslBaseAnimation animationUsed)
 			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)
 		EndIf
 	ElseIf animationUsed.HasTag("Anal")
-		int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)		
+		int analLevel = dattUtility.LimitValueInt(SexLab.GetPlayerStatLevel("Anal"),0,6)
 		If analLevel > 0
 			If analLevel > 1
-				modLevel = analLevel / 2			
+				modLevel = analLevel / 2
 			ElseIf analLevel == 1
 				modLevel = 1
-			EndIf			
+			EndIf
 			Log("Animation with 'Anal' tag detected, Anal proficiency = " + analLevel + ",adjusting PC self-esteem by " + modLevel)
 
-			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)			
+			AttributesAPI.ModAttribute(PlayerRef,Config.SelfEsteemAttributeId, modLevel)
 		EndIf
-	EndIf	
+	EndIf
 EndFunction
 
 
@@ -398,8 +398,8 @@ Event OnOrgasmEnd(string eventName, string argString, float argNum, form sender)
 				direction = 1
 			Endif
 			Log("OnOrgasmEnd, Adjusting willpower value for " + currentParticipant.GetBaseObject().GetName()  + " , adjusted by " + (direction * Config.WillpowerChangePerOrgasm))
-			AttributesAPI.ModAttribute(currentParticipant,Config.WillpowerAttributeId, direction * Config.WillpowerChangePerOrgasm)						
-		EndIf		
+			AttributesAPI.ModAttribute(currentParticipant,Config.WillpowerAttributeId, direction * Config.WillpowerChangePerOrgasm)
+		EndIf
 		index += 1
 	EndWhile
 EndEvent

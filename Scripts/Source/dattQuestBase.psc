@@ -26,5 +26,3 @@ Function Error(string asTextToPrint)
 		MiscUtil.PrintConsole("[Datt - Error]" + asTextToPrint)
 	EndIf
 EndFunction
-
-

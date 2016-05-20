@@ -16,7 +16,7 @@ Float Function Min(Float A, Float B) global
 	EndIf
 EndFunction
 
-int Function MaxInt(int A, int B) global
+Int Function MaxInt(Int A, Int B) global
 	If (A > B)
 		Return A
 	Else
@@ -24,7 +24,7 @@ int Function MaxInt(int A, int B) global
 	EndIf
 EndFunction
 
-int Function MinInt(int A, int B) global
+Int Function MinInt(Int A, Int B) global
 	If (A < B)
 		Return A
 	Else
@@ -32,7 +32,8 @@ int Function MinInt(int A, int B) global
 	EndIf
 EndFunction
 
-int Function LimitValueInt(int value, int lowBorder, int highBorder) global
+; Checks if one value is between two others. If it exceed it's limit, returns the limit
+Int Function LimitValueInt(Int value, Int lowBorder, Int highBorder) global
 	If value < lowBorder
 		return lowBorder
 	ElseIf value > highBorder
@@ -42,10 +43,21 @@ int Function LimitValueInt(int value, int lowBorder, int highBorder) global
 	EndIf
 EndFunction
 
-Function SendParameterlessEvent(string eventName) global
-	int retries = 3
+; Checks if one value is between two values.
+Bool Function IsValueInLimitInt(Int value, Int lowBorder, Int highBorder) global
+	If value < lowBorder
+		return false
+	ElseIf value > highBorder
+		return false
+	Else
+		return true
+	EndIf
+EndFunction
+
+Function SendParameterlessEvent(String eventName) global
+	Int retries = 3
 	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
+		Int eventId = ModEvent.Create(eventName)
 		If eventId
 			If(ModEvent.Send(eventId) == true)
 				retries = 0
@@ -60,10 +72,10 @@ Function SendParameterlessEvent(string eventName) global
 	EndWhile
 EndFunction
 
-Function SendEventWithFormParam(string eventName,Form fParam) global
-	int retries = 3
+Function SendEventWithFormParam(String eventName,Form fParam) global
+	Int retries = 3
 	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
+		Int eventId = ModEvent.Create(eventName)
 		If eventId
 			ModEvent.PushForm(eventId, fParam)
 			If(ModEvent.Send(eventId) == true)
@@ -79,10 +91,10 @@ Function SendEventWithFormParam(string eventName,Form fParam) global
 	EndWhile
 EndFunction
 
-Function SendEventWithFormAndFloatParam(string eventName,Form fParam, float fNum) global
-	int retries = 3
+Function SendEventWithFormAndFloatParam(String eventName,Form fParam, float fNum) global
+	Int retries = 3
 	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
+		Int eventId = ModEvent.Create(eventName)
 		If eventId
 			ModEvent.PushForm(eventId, fParam)
 			ModEvent.PushFloat(eventId, fNum)
@@ -103,10 +115,10 @@ Function SendIncreaseArousal(Actor akActor,float fAmount) global
 	SendEventWithFormAndFloatParam("slaUpdateExposure",akActor as Form, fAmount)
 EndFunction
 
-Function SendEventWithIntParam(string eventName,int iParam) global
-	int retries = 3
+Function SendEventWithIntParam(String eventName,Int iParam) global
+	Int retries = 3
 	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
+		Int eventId = ModEvent.Create(eventName)
 		If eventId
 			ModEvent.PushInt(eventId, iParam)
 			If(ModEvent.Send(eventId) == true)
@@ -122,10 +134,10 @@ Function SendEventWithIntParam(string eventName,int iParam) global
 	EndWhile
 EndFunction
 
-Function SendEventWithFormAndIntParam(string eventName,Form fParam, int iParam) global
-	int retries = 3
+Function SendEventWithFormAndIntParam(String eventName,Form fParam, Int iParam) global
+	Int retries = 3
 	While(retries > 0)
-		int eventId = ModEvent.Create(eventName)
+		Int eventId = ModEvent.Create(eventName)
 		If eventId
 			ModEvent.PushForm(eventId, fParam)
 			ModEvent.PushInt(eventId, iParam)
