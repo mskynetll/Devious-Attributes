@@ -22,6 +22,8 @@ Function OnInit()
 	
 	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorSetState")
 	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorModState")
+	
+	RegisterForModEvent(Config.RegisterAttributeEventName, "OnAttributeRegister")
 EndFunction
 
 Int Function CreateNewMutexId()
@@ -34,6 +36,34 @@ Function IncrementMutex(Int mutex_Id)
 		CurrentMutexId++
 	Else
 		Error("IncrementMutex(): mutex_ID (" + mutex_ID + ") is different than CurrentMutexId (" + CurrentMutexId + "). Could not increment Increment CurrentMutexId!!!")
+	EndIf
+EndFunction
+
+Function OnAttributeRegister(dattAttribute attribute_faction)
+	If attribute_faction
+		If !attribute_faction.AttributeName
+			Error("OnAttributeRegister() passed in faction name is none... Couldn't register attribute.")
+		Else
+			; It's a Base Attribute
+			If attribute_faction.AttributeType = 0
+				Config.BaseAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as base attribute.")
+			; It's a Fetish Attribute
+			ElseIf attribute_faction.AttributeType = 0
+				Config.FetishAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as fetish attribute.")
+			; It's a State Attribute
+			ElseIf attribute_faction.AttributeType = 0
+				Config.StateAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as state attribute.")
+			EndIf
+			; TODO Calculated Stats
+		EndIf
+	Else
+		Error("OnAttributeRegister() passed in faction is none... Couldn't register attribute.")
 	EndIf
 EndFunction
 

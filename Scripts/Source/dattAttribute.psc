@@ -32,6 +32,10 @@ EndEvent
 ; ==============================
 ; API Functions
 ; ==============================
+; These function are used for calculating stat changes. Other scripts will most likely rely on these most of the time (or at least they should)
+; Please do not do any direct changes to any of the stats during calculations. Instead return the value, by which the current one sould be modifyied with.
+; If, for some cases, other stats should be modified along with this one, it should be saved into a different variable, which will then later be calculated by the dattAttributesAPIQuest function that is responsible for it.
+
 
 ; Only calculate the new faction rank and return the value. No changes to are being made to the current faction rank.
 ; This is mainly used if you modify multiple attributes at the same time, but do want all calculations use the same values.
