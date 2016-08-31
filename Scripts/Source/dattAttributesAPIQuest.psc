@@ -1,87 +1,107 @@
 Scriptname dattAttributesAPIQuest Extends dattAttributesBaseQuest
 
-; Returns the current value for the given attribute.
-; Returns 0 if there is an error.
-; If actor is not part of the faction, it either returns 0 or add him to the faction and return default values
-Int Function GetAttribute(Actor target_actor, String attribute_string, bool set_defaults_on_missing = true, Int on_error_value = 0)
-	If target_actor == None
-		Warning("GetAttribute() received null actor reference. Return on_error_value of " + on_error_value + "...")
-		Return on_error_value
-	EndIf
-	
-	; I hate magic strings, so check validity
-	If !VerifyAttributeId(attribute_string)
-		Warning("GetAttribute() received invalid attribute_string \"" + attribute_string + "\". Return on_error_value of " + on_error_value + "...")
-		Return on_error_value
-	EndIf
+dattConfigQuest Property Config Auto
+Int Property CurrentMutexId = 1 Auto
+Int Property NewestMutexId = 0 Auto
 
-	;return StorageUtil.GetIntValue(target_actor as Form, attributeId)
-	Faction attributeFaction = FactionByAttributeId(attribute_string)
-	If attributeFaction == None
-		Warning("GetAttribute() could not find corresponding faction for passed attribute. Return on_error_value of " + on_error_value + "...")
-		Return on_error_value
-	EndIf
+Function OnInit()
+	; New Events
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
 	
-	If CheckAttributeExistence(target_actor, attribute_string, set_defaults_on_missing) == -1
-		Warning("GetAttribute() attribute \"" + attribute_string + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Return on_error_value = " + on_error_value + "...")
-		Return on_error_value
-	EndIf
+	RegisterForModEvent(Config.ActorAffectedEventName1, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName2, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName3, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName4, "OnActorAffected1")
 	
-	; Change attribute value if it somehow does exceed the min/max limits and fire events for statchanges
-	Int m_attribute_value = target_actor.GetFactionRank(attributeFaction)
-	Int m_attribute_value_new = dattUtility.LimitValueInt(m_attribute_value, GetMinAttributeValue(attribute_string, target_actor), GetMaxBaseAttributeValue(attribute_string, target_actor))
-	If m_attribute_value != m_attribute_value_new
-		Log("GetAttribute() attribute \"" + attribute_string + "\" exceeding the limits for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set value to " + m_attribute_value_new + "...")
-		target_actor.SetFactionRank(attributeFaction, m_attribute_value_new)
-		StorageUtil.SetIntValue(target_actor, attribute_string, m_attribute_value_new)
-		; Attribute State
-		Int m_attribute_state_new = GetAttributeStateOfValue(attribute_string, m_attribute_value_new)
-		If m_attribute_state_new != StorageUtil.GetIntValue(target_actor, attribute_string + "_State")
-			StorageUtil.SetIntValue(target_actor, attribute_string + "_State", m_attribute_state_new)
-			NotifyOfChange(target_actor, attribute_string, m_attribute_state_new)
-		EndIf
-		return m_attribute_value_new
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorModAttribute")
+	RegisterForModEvent(Config.ActorSetAttributeEventName, "OnActorSetAttribute")
+	RegisterForModEvent(Config.ActorSetAttributeDefaultsEventName, "OnActorSetAttributeDefaults")
+	
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorSetState")
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorModState")
+EndFunction
+
+Int Function CreateNewMutexId()
+	NewestMutexId++
+	return NewestMutexId
+EndFunction
+
+Function IncrementMutex(Int mutex_Id)
+	If CurrentMutexId == mutex_ID
+		CurrentMutexId++
 	Else
-		Return m_attribute_value
+		Error("IncrementMutex(): mutex_ID (" + mutex_ID + ") is different than CurrentMutexId (" + CurrentMutexId + "). Could not increment Increment CurrentMutexId!!!")
 	EndIf
 EndFunction
 
-; Returns the state of the passed attribute
-Int Function GetAttributeState(Actor target_actor, String attribute_string, bool set_defaults_on_missing = true, Int on_error_value = 0)
-	return GetAttributeStateOfValue(attribute_string, GetAttribute(target_actor, attribute_string, set_defaults_on_missing, on_error_value))
-EndFunction
-
-; Set the specified attribute to the passed value.
-Function SetAttribute(Actor target_actor, String attribute_string, Int attribute_value)
-	ChangeAttribute(target_actor, attribute_string, attribute_value)
-EndFunction
-
-; Modifies the specified attribute by the passed value.
-Function ModAttribute(Actor target_actor, String attribute_string, Int attribute_value)
-	ChangeAttribute(target_actor, attribute_string, attribute_value, true)
-EndFunction
-
-; Set the Soul State to the passed value.
-Function SetSoulState(Actor target_actor, Int soul_state_value)
-	ChangeAttribute(target_actor, Config.SoulStateAttributeId, soul_state_value)
-EndFunction
-
-; Set all attributes to defaults.
-Function SetDefaults(Actor target_actor)
-	If target_actor == None
-		Error("SetDefaults() was passed a form parameter, that was empty or not an actor. Aborting change...")
-		Return
-	EndIf
+Event onActorDecision(Actor target_actor, Actor master_actor, Int response_type, String[] attribute_string, Int[] attribute_magnitude)
+	; Add this call to the current cue and increment the counter.
+	Int m_mutex_ID = CreateNewMutexId()
 	
-	SetAttribute(target_actor, Config.PrideAttributeId, Config.MaxBaseAttributeValue)
-	SetAttribute(target_actor, Config.SelfEsteemAttributeId, Config.MaxBaseAttributeValue)
-	SetAttribute(target_actor, Config.WillpowerAttributeId, Config.MaxBaseAttributeValue)
-	SetAttribute(target_actor, Config.ObedienceAttributeId, 0)
-	SetAttribute(target_actor, Config.SubmissivenessAttributeId, 0)
-
-	SetAttribute(target_actor, Config.HumiliationAttributeId, Config.HumiliationAttributeDefault)
-	SetAttribute(target_actor, Config.MasochismAttributeId, Config.MasochismAttributeDefault)
-	SetAttribute(target_actor, Config.ExhibitionismAttributeId, Config.ExhibitionismAttributeDefault)
-	SetAttribute(target_actor, Config.NymphomaniaAttributeId, Config.NymphomaniaAttributeDefault)
-	SetAttribute(target_actor, Config.SadismAttributeId, Config.SadismAttributeDefault)
-EndFunction
+	; Only run this function if a target_actor was defined... otherwise print an error message.
+	If !target_actor
+		Error("onActorDecision() target_actor is null... aborting.")
+	Else
+		; Make sure that response_type is not exceeding its limits.
+		If response_type < -3
+			response_type = -3
+		ElseIf response_type > 3
+			response_type = 3
+		EndIf
+		
+		int m_attribute_index = 0
+		int m_attribute_count = attribute_magnitude.length
+		
+		; Make sure that attribute_magnitude is not exceeding their limits.
+		While m_attribute_index < m_attribute_count
+			If attribute_magnitude[m_attribute_index] < -3
+				attribute_magnitude[m_attribute_index] = -3
+			ElseIf attribute_magnitude[m_attribute_index] > 3
+				attribute_magnitude[m_attribute_index] = 3
+			EndIf
+		EndWhile
+		
+		; Execute onActorDecision() function on every Base attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.BaseAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.BaseAttributeList.GetAt(m_attribute_index) as dattAttribute).onActorDecision(target_actor, master_actor, response_type, attribute_string, attribute_magnitude)
+		EndWhile
+		
+		; Execute onActorDecision() function on every Fetish attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.FetishAttributeLust.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.FetishAttributeList.GetAt(m_attribute_index) as dattAttribute).onActorDecision(target_actor, master_actor, response_type, attribute_string, attribute_magnitude)
+		EndWhile
+		
+		; Process value changes on every Base attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.BaseAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.BaseAttributeList.GetAt(m_attribute_index) as dattAttribute).ProcessAttributeChanges()
+		EndWhile
+		
+		; Process value changes on every Fetish attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.FetishAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.FetishAttributeList.GetAt(m_attribute_index) as dattAttribute).ProcessAttributeChanges()
+		EndWhile
+		
+		
+		; TODO
+		; Process stored mod values
+		
+		; TODO
+		; Process new attribute types (automatic calculated ones such as submissiveness
+		
+		; TODO
+		; Process states
+	EndIf
+	; Function finished executing... increment the current mutex ID so the next one can proceed.
+	IncrementMutex(m_mutex_ID)
+EndEvent

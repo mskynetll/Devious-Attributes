@@ -8,6 +8,10 @@ String Property TrackedNPCsPageName = "Tracked NPCs" AutoReadonly Hidden
 String Property DebugPageName = "Debug" AutoReadonly Hidden
 String Property AdvancedPageName = "Advanced Options" AutoReadonly Hidden
 
+FormList Property BaseAttributeList Auto
+FormList Property FetishAttributeList Auto
+FormList Property StateAttributeList Auto
+
 GlobalVariable Property dattEnableAttributeEffects Auto
 dattAttributesAPIQuest Property AttributesAPI Auto
 Bool Property IsLogging Auto Hidden
@@ -21,20 +25,6 @@ Event OnConfigInit()
 	Pages[2] = TrackedNPCsPageName
 	Pages[3] = DebugPageName
 	Pages[4] = AdvancedPageName
-	
-	DebugAttributesBase = new String[5]
-	DebugAttributesBase[0] = WillpowerAttributeId
-	DebugAttributesBase[1] = PrideAttributeId
-	DebugAttributesBase[2] = SelfEsteemAttributeId
-	DebugAttributesBase[3] = ObedienceAttributeId
-	DebugAttributesBase[4] = SubmissivenessAttributeId
-	
-	DebugAttributesFetish = new String[5]
-	DebugAttributesFetish[0] = NymphomaniaAttributeId 
-	DebugAttributesFetish[1] = MasochismAttributeId
-	DebugAttributesFetish[2] = SadismAttributeId
-	DebugAttributesFetish[3] = HumiliationAttributeId
-	DebugAttributesFetish[4] = ExhibitionismAttributeId
 EndEvent
 
 Event OnPageReset(String page)
@@ -132,9 +122,9 @@ Event OnPageReset(String page)
 		AddHeaderOption("Change Attribute")
 		String AttributeString
 		If DebugAttributeTypeIsFetish
-			AttributeString = DebugAttributesFetish[DebugAttributeStringIndex]
+			AttributeString = (FetishAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName
 		Else
-			AttributeString = DebugAttributesBase[DebugAttributeStringIndex]
+			AttributeString = (BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName
 		EndIf
 		AddToggleOptionST("ChangeAttribute_DebugChangeAttribute_ToggleID", "Simulate attribute change", false)
 		AddToggleOptionST("ChangeAttribute_DebugAttributeType_ToggleID", "Fetish attribute", DebugAttributeTypeIsFetish)
@@ -885,9 +875,9 @@ State ChangeAttribute_DebugChangeAttribute_ToggleID
 		
 		String m_attribute_string
 		If DebugAttributeTypeIsFetish
-			m_attribute_string = DebugAttributesFetish[DebugAttributeStringIndex]
+			m_attribute_string = (BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName
 		Else
-			m_attribute_string = DebugAttributesBase[DebugAttributeStringIndex]
+			m_attribute_string = (BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName
 		EndIf
 		Debug.MessageBox(m_event_name + " fired.\nAttribute = " + m_attribute_string + "\nValue = " + DebugAttributeValue)
 		Int m_event_id = ModEvent.Create(m_event_name)
@@ -912,15 +902,15 @@ State ChangeAttribute_DebugAttributeType_ToggleID
 		SetToggleOptionValueST(DebugAttributeTypeIsFetish)
 		DebugAttributeStringIndex = 0
 		If DebugAttributeTypeIsFetish
-			SetTextOptionValueST(DebugAttributesFetish[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((FetishAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		ElseIf !DebugAttributeIsMod
 			If DebugAttributeValue < 0
 				DebugAttributeValue = 0
 				SetSliderOptionValueST(DebugAttributeValue, a_stateName = "ChangeAttribute_DebugAttributeValue_SliderID")
 			EndIf
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		Else
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		EndIf
 	EndEvent
 	
@@ -929,15 +919,15 @@ State ChangeAttribute_DebugAttributeType_ToggleID
 		SetToggleOptionValueST(DebugAttributeTypeIsFetish)
 		DebugAttributeStringIndex = 0
 		If DebugAttributeTypeIsFetish
-			SetTextOptionValueST(DebugAttributesFetish[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((FetishAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		ElseIf !DebugAttributeIsMod
 			If DebugAttributeValue < 0
 				DebugAttributeValue = 0
 				SetSliderOptionValueST(DebugAttributeValue, a_stateName = "ChangeAttribute_DebugAttributeValue_SliderID")
 			EndIf
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		Else
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex], a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName, a_stateName = "ChangeAttribute_DebugAttributeString_TextID")
 		EndIf
 	EndEvent
 	
@@ -949,28 +939,28 @@ EndState
 State ChangeAttribute_DebugAttributeString_TextID
 	Event OnSelectST()
 		If DebugAttributeTypeIsFetish
-			If (DebugAttributeStringIndex < DebugAttributesFetish.length - 1)
+			If (DebugAttributeStringIndex < FetishAttributeList.GetSize - 1)
 				DebugAttributeStringIndex += 1
 			Else
 				DebugAttributeStringIndex = 0
 			EndIf
-			SetTextOptionValueST(DebugAttributesFetish[DebugAttributeStringIndex])
+			SetTextOptionValueST((FetishAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName)
 		Else
-			If (DebugAttributeStringIndex < DebugAttributesBase.length - 1)
+			If (DebugAttributeStringIndex < BaseAttributeList.GetSize() - 1)
 				DebugAttributeStringIndex += 1
 			Else
 				DebugAttributeStringIndex = 0
 			EndIf
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex])
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName)
 		EndIf
 	EndEvent
 	
 	Event OnDefaultST()
 		DebugAttributeStringIndex = 0
 		If DebugAttributeTypeIsFetish
-			SetTextOptionValueST(DebugAttributesFetish[DebugAttributeStringIndex])
+			SetTextOptionValueST((FetishAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName)
 		Else
-			SetTextOptionValueST(DebugAttributesBase[DebugAttributeStringIndex])
+			SetTextOptionValueST((BaseAttributeList.GetAt(DebugAttributeStringIndex) as dattAttribute).AttributeName)
 		EndIf
 	EndEvent
 	
@@ -1637,8 +1627,6 @@ EndProperty
 ; ==============================
 
 Bool Property DebugAttributeTypeIsFetish = False Auto Hidden
-String[] Property DebugAttributesBase Auto Hidden
-String[] Property DebugAttributesFetish Auto Hidden
 Int Property DebugAttributeStringIndex = 0 Auto Hidden
 Int Property DebugAttributeValue = 0 Auto Hidden
 Bool Property DebugAttributeIsMod = false Auto Hidden
@@ -1690,11 +1678,18 @@ String Property ObedienceAttributeId = "_Datt_Obedience" AutoReadonly Hidden
 String Property SubmissivenessAttributeId = "_Datt_Submissiveness" AutoReadonly Hidden
 
 ; Fetish Attributes
-String Property HumiliationAttributeId = "_Datt_HumiliationLover" AutoReadonly Hidden
-String Property ExhibitionismAttributeId = "_Datt_Exhibitionist" AutoReadonly Hidden
-String Property MasochismAttributeId = "_Datt_Masochist" AutoReadonly Hidden
-String Property SadismAttributeId = "_Datt_Sadist" AutoReadonly Hidden
-String Property NymphomaniaAttributeId = "_Datt_Nymphomaniac" AutoReadonly Hidden
+String Property NymphomaniaAttributeId = "_Datt_Nymphomania" AutoReadonly Hidden
+String Property MasochismAttributeId = "_Datt_Masochism" AutoReadonly Hidden
+String Property SadismAttributeId = "_Datt_Sadism" AutoReadonly Hidden
+String Property HumiliationAttributeId = "_Datt_Humiliation" AutoReadonly Hidden
+String Property ExhibitionismAttributeId = "_Datt_Exhibitionism" AutoReadonly Hidden
+
+; Legacy Fetish Attributes
+String Property NymphomaniaLegacyAttributeId = "_Datt_Nymphomaniac" AutoReadonly Hidden
+String Property MasochismLegacyAttributeId = "_Datt_Masochist" AutoReadonly Hidden
+String Property SadismLegacyAttributeId = "_Datt_Sadist" AutoReadonly Hidden
+String Property HumiliationLegacyAttributeId = "_Datt_HumiliationLover" AutoReadonly Hidden
+String Property ExhibitionismLegacyAttributeId = "_Datt_Exhibitionist" AutoReadonly Hidden
 
 ; Base Attributes States
 String Property PrideAttributeStateId = "_Datt_Pride_State" AutoReadonly Hidden
@@ -1704,11 +1699,11 @@ String Property ObedienceAttributeStateId = "_Datt_Obedience_State" AutoReadonly
 String Property SubmissivenessAttributeStateId = "_Datt_Submissiveness_State" AutoReadonly Hidden
 
 ; Fetish Attributes States
-String Property HumiliationAttributeStateId = "_Datt_HumiliationLover_State" AutoReadonly Hidden
-String Property ExhibitionismAttributeStateId = "_Datt_Exhibitionist_State" AutoReadonly Hidden
+String Property NymphomaniaAttributeStateId = "_Datt_Nymphomaniac_State" AutoReadonly Hidden
 String Property MasochismAttributeStateId = "_Datt_Masochist_State" AutoReadonly Hidden
 String Property SadismAttributeStateId = "_Datt_Sadist_State" AutoReadonly Hidden
-String Property NymphomaniaAttributeStateId = "_Datt_Nymphomaniac_State" AutoReadonly Hidden
+String Property HumiliationAttributeStateId = "_Datt_HumiliationLover_State" AutoReadonly Hidden
+String Property ExhibitionismAttributeStateId = "_Datt_Exhibitionist_State" AutoReadonly Hidden
 
 
 

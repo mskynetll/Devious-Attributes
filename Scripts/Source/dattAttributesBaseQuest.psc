@@ -1,130 +1,59 @@
 Scriptname dattAttributesBaseQuest Extends dattQuestBase Hidden
 ; This script contains some basic functions in order to handle attributes.
 
+; TODO put them into skyui config
+String Property BaseAttributeNameList = "datt_BaseAttributeList" Auto
+String Property FetishAttributeNameList = "datt_FetishAttributeList" Auto
+String Property StateAttributeNameList = "datt_StateAttributeList" Auto
 
-
-; Changes the passed in Attribute
-; If is_modify_mode set to false, it will set the attribute to the passed in attribute_value, otherwise it will add attribute_value to the current actor's stat
-Function ChangeAttribute(Actor target_actor, String attribute_string, Int attribute_value, bool is_modify_mode = false)
-	If target_actor == None
-		Error("ChangeAttribute() was passed a form parameter, that was empty or not an actor. Aborting change...")
-		Return
-	EndIf
-	
-	If VerifyAttributeId(attribute_string) == false
-		Error("ChangeAttribute() was passed an attribute \"" + attribute_string + "\" that does not exist. Aborting change...")
-		Return
-	EndIf
-	
-	;If Mutex.TryLock() == false
-	;	QueueForChange(acActor as Form, attribute_string, attribute_value, 0)
-	;	return
-	;EndIf
-	
-	Log("ChangeAttribute() for actor = " + target_actor.GetBaseObject().GetName() +", attribute_string = " + attribute_string + ", value = " + attribute_value + ", is_modify_mode = " + is_modify_mode)
-	Faction m_attribute_faction = FactionByAttributeId(attribute_string)
-	If m_attribute_faction == None
-		Error("ChangeAttribute() could not find corresponding faction for passed attribute.")
-		Return
-	EndIf
-	
-	; Initialize attribute if needed.
-	CheckAttributeExistence(target_actor, attribute_string, true)
-	Int m_old_attribute_value = target_actor.GetFactionRank(m_attribute_faction)
-	Int m_max_attribute_value = getMaxBaseAttributeValue(attribute_string, target_actor)
-	Int m_min_attribute_value = getMinAttributeValue(attribute_string, target_actor)
-	
-	; If in modify mode, add current actor value to attribute_value.
-	; Make sure that the old actor value does not exceed the min/max values for that attribute.
-	If is_modify_mode
-		attribute_value += dattUtility.LimitValueInt(m_old_attribute_value, m_min_attribute_value, m_max_attribute_value)
-	EndIf
-	
-	If attribute_value > m_max_attribute_value
-		; Don't go higher than the max value for that attribute.
-		attribute_value = m_max_attribute_value
-		Log("ChangeAttribute() passed value of " + attribute_value + " is higher than max (" + m_max_attribute_value + "). Use max value instead...")
-	ElseIf attribute_value < m_min_attribute_value
-		; Don't go lower than the min value for that attribute.
-		attribute_value = m_min_attribute_value
-		Log("ChangeAttribute() passed value of " + attribute_value + " is lower than min (" + m_min_attribute_value + "). Use min value instead...")
-	EndIf
-	
-	; Only do changes if the new value is different than the old one.
-	If attribute_value != m_old_attribute_value
-		target_actor.SetFactionRank(m_attribute_faction, attribute_value)
-		StorageUtil.SetIntValue(target_actor, attribute_string, attribute_value)
-		
-		; If the attribute is not Soul State, set attribute state as well.
-		If IsMiscAttribute(attribute_string)
-			NotifyOfMiscChange(target_actor, attribute_value)
-		Else
-			NotifyOfChange(target_actor, attribute_string, attribute_value)
-			
-			; Attribute State
-			Int m_new_state = GetAttributeStateOfValue(attribute_string, attribute_value)
-			If m_new_state != StorageUtil.GetIntValue(target_actor, attribute_string + "_State")
-				StorageUtil.SetIntValue(target_actor, attribute_string + "_State", m_new_state)
-				NotifyOfChange(target_actor, attribute_string, m_new_state)
+; TODO add support for fetish attributes
+Event datt_registerBaseAttribute(bool is_fetish_attribute, dattAttribute attribute)
+	If attribute
+		String m_name = attribute.AttributeName
+		If m_name
+			If StringListHas(none, "datt_BaseAttributeList", m_name)
+				Warning("datt_registerBaseAttribute() attribute " + m_name + " already registered...")
+			Else
+				StringListAdd(none, "datt_BaseAttributeList", m_name, false)
 			EndIf
-			
-			RecalculateSubmissivenessIfNeededOnAttributeChange(target_actor, m_attribute_faction)
+			SetFormValue(none, "datt_" + m_name, attribute)
+		Else
+			Error("datt_registerBaseAttribute() attribute name is not defined...")
 		EndIf
+	Else
+		Error("datt_registerBaseAttribute() attribute is none...")
 	EndIf
-	;Mutex.Unlock()
-EndFunction
+EndEvent
 
-; Recalculates submissiveness if pride, self esteem or obedience has changed
-; If one of the attributes are missing, it reinitialize them with default values.
-Function RecalculateSubmissivenessIfNeededOnAttributeChange(Actor target_actor, Faction attribute_faction)
-	If(attribute_faction == Config.PrideAttributeFaction || attribute_faction == Config.SelfEsteemAttributeFaction || attribute_faction == Config.ObedienceAttributeFaction)
-		; m_pride_value
-		String m_pride_string = Config.PrideAttributeId
-		String m_selfesteem_string = Config.SelfEsteemAttributeId
-		String m_obedience_string = Config.ObedienceAttributeId
+; TODO
+Event datt_registerStateAttribute(dattAttributeState attribute)
+	If attribute
+		int m_attribute_index = 0
+		int m_attribute_count = StateAttributeList
+		dattAttribute[] m_attribute_list = CreateFormArray(StateAttributeList.Length + 1)
+		While m_attribute_index < m_attribute_count
+			m_attribute_list[m_attribute_index] = StateAttributeList[m_attribute_index]
+			m_attribute_index++
+		EndWhile
+		StateAttributeList = m_attribute_list
+		StateAttributeList[StateAttributeList.Length - 1) = attribute
 		
-		Int m_pride_value
-		Int m_selfesteem_value
-		Int m_obedience_value
 		
-		; Pride
-		If !StorageUtil.HasIntValue(target_actor, m_pride_string)
-			Int m_default_value = GetDefaultAttributeValue(m_pride_string)
-			Log("RecalculateSubmissivenessIfNeededOnAttributeChange() attribute \"" + m_pride_string + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set to m_default_value values of " + m_default_value + "...")
-			target_actor.SetFactionRank(Config.PrideAttributeFaction, m_default_value)
-			StorageUtil.SetIntValue(target_actor, m_pride_string, m_default_value)
-			m_pride_value = m_default_value
-		Else
-			m_pride_value = target_actor.GetFactionRank(Config.PrideAttributeFaction)
-		EndIf
+		m_attribute_index = 0
+		String m_attribute_name_list = CreateStringArray(StateAttributeList.Length + 1)
+		While m_attribute_index < m_attribute_count
+			m_attribute_name_list[m_attribute_index] = StateAttributeNameList[m_attribute_index]
+			m_attribute_index++
+		EndWhile
 		
-		; Self Esteem
-		If StorageUtil.HasIntValue(target_actor, m_selfesteem_string)
-			Int m_default_value = GetDefaultAttributeValue(m_selfesteem_string)
-			Log("RecalculateSubmissivenessIfNeededOnAttributeChange() attribute \"" + m_selfesteem_string + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set to m_default_value values of " + m_default_value + "...")
-			target_actor.SetFactionRank(Config.SelfEsteemAttributeFaction, m_default_value)
-			StorageUtil.SetIntValue(target_actor, m_selfesteem_string, m_default_value)
-			m_selfesteem_value = m_default_value
-		Else
-			m_selfesteem_value = target_actor.GetFactionRank(Config.SelfEsteemAttributeFaction)
-		EndIf
-		
-		; Obedience
-		If StorageUtil.HasIntValue(target_actor, m_obedience_string)
-			Int m_default_value = GetDefaultAttributeValue(m_obedience_string)
-			Log("RecalculateSubmissivenessIfNeededOnAttributeChange() attribute \"" + m_obedience_string + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set to m_default_value values of " + m_default_value + "...")
-			target_actor.SetFactionRank(Config.ObedienceAttributeFaction, m_default_value)
-			StorageUtil.SetIntValue(target_actor, m_obedience_string, m_default_value)
-			m_obedience_value = m_default_value
-		Else
-			m_obedience_value = target_actor.GetFactionRank(Config.ObedienceAttributeFaction)
-		EndIf
-		Int m_submissiveness_value = dattUtility.MaxInt(100 - ((m_pride_value + m_selfesteem_value) / 2), m_obedience_value)
-		
-		target_actor.SetFactionRank(Config.SubmissiveAttributeFaction, m_submissiveness_value)
-		StorageUtil.SetIntValue(target_actor, Config.SubmissivenessAttributeId, m_submissiveness_value)
+		StateAttributeNameList = m_attribute_name_list
+		StateAttributeNameList[StateAttributeNameList.Length - 1) = attribute.AttributeName
+		Log("datt_registerBaseAttribute registered state attribute " + attribute.AttributeName + " as " + StateAttributeList.Length + "th attribute")
+	Else
+		Error("datt_registerBaseAttribute() attribute is none...")
 	EndIf
-EndFunction
+EndEvent
+
 
 ; Function QueueForChange(Form akActor, String attributeId, Int newValue,Int isMod)
 	; MiscUtil.PrintConsole("QueueForChange -> " + (akActor as Actor).GetBaseObject().GetName() + ", " + attributeId + ":" + newValue)
@@ -161,6 +90,58 @@ Function NotifyOfMiscChange(Actor target_actor, Int attribute_value, String even
 			Warning("NotifyOfMiscChange() failed to send event. EventName = " + event_name)
 			Debug.MessageBox("NotifyOfMiscChange() failed to send event. EventName = " + event_name)
 		EndIf
+	EndIf
+EndFunction
+
+
+
+; ==============================
+; Legacy String Convertion
+; ==============================
+
+; Converts a legacy attribute string into a new one.
+; If none was found, it returns the passed string
+String Function ConvertFromLegacyAttribute(String attribute_string)
+	; Nymphomania
+	If attribute_string == Config.NymphomaniaLegacyAttributeId
+		return Config.NymphomaniaAttributeId
+	; Masochism
+	ElseIf attribute_string == Config.MasochismLegacyAttributeId
+		return Config.MasochismAttributeId
+	; Sadism
+	ElseIf attribute_string == Config.SadismLegacyAttributeId
+		return Config.SadismAttributeId
+	; Humiliation
+	ElseIf attribute_string == Config.HumiliationLegacyAttributeId
+		return Config.HumiliationAttributeId
+	; Exhibitionism
+	ElseIf attribute_string == Config.ExhibitionismLegacyAttributeId
+		return Config.ExhibitionismAttributeId
+	Else
+		return attribute_string
+	EndIf
+EndFunction
+
+; Converts a new attribute string into a legacy one.
+; If none was found, it returns the passed string
+String Function ConvertToLegacyAttribute(String attribute_string)
+	; Nymphomania
+	If attribute_string == Config.NymphomaniaAttributeId
+		return Config.NymphomaniaLegacyAttributeId
+	; Masochism
+	ElseIf attribute_string == Config.MasochismAttributeId
+		return Config.MasochismLegacyAttributeId
+	; Sadism
+	ElseIf attribute_string == Config.SadismAttributeId
+		return Config.SadismLegacyAttributeId
+	; Humiliation
+	ElseIf attribute_string == Config.HumiliationAttributeId
+		return Config.HumiliationLegacyAttributeId
+	; Exhibitionism
+	ElseIf attribute_string == Config.ExhibitionismAttributeId
+		return Config.ExhibitionismLegacyAttributeId
+	Else
+		return attribute_string
 	EndIf
 EndFunction
 
@@ -227,7 +208,8 @@ EndFunction
 
 ; Returns true if attribute is a misc attribute
 Bool Function IsMiscAttribute(String attribute_string)
-	If attribute_string == Config.SoulStateAttributeId ;|| attribute == Config.RapeTraumaAttributeID
+	If attribute_string == Config.SoulStateAttributeId
+	;|| attribute_string == Config.RapeTraumaAttributeID
 		return true
 	Else
 		return false
@@ -278,7 +260,8 @@ EndFunction
 
 ; Returns true if faction is a misc faction
 Bool Function IsMiscAttributeByFaction(Faction attribute_faction)
-	If attribute_faction == Config.SoulStateAttributeFaction ;|| attribute == Config.RapeTraumaAttributeFaction
+	If attribute_faction == Config.SoulStateAttributeFaction
+	;|| attribute_faction == Config.RapeTraumaAttributeFaction
 		return true
 	Else
 		return false
@@ -525,7 +508,7 @@ Faction Function FactionByAttributeId(String attribute_string)
 	ElseIf attribute_string == Config.ExhibitionismAttributeId
 		return Config.ExhibitionismAttributeFaction
 	Else
-		;Warning("FactionByAttributeId() could not find attribute faction for attribute_string = " + attribute_string + ".")
+		Warning("FactionByAttributeId() could not find attribute faction for attribute_string = " + attribute_string + ".")
 		return None
 	EndIf
 EndFunction
@@ -536,36 +519,37 @@ EndFunction
 ; Sanity Checks
 ; ==============================
 
-; Verifies if the inputted attribute is an existing attribute
+; Verifies if the inputted attribute string is registered as an attribute
 bool Function VerifyAttributeId(String attribute_string)
 	; Misc Attributes
-	If(attribute_string == Config.SoulStateAttributeId)
+	;If attribute_string == Config.SoulStateAttributeId
+	If attribute_string == Config.SoulStateAttributeId
 		return true
-	;ElseIf(attribute_string == Config.RapeTraumaAttributeId)
+	;ElseIf attribute_string == Config.RapeTraumaAttributeId
 	;	return true
 	
 	; Base Attributes
-	ElseIf(attribute_string == Config.WillpowerAttributeId)
+	ElseIf attribute_string == Config.WillpowerAttributeId
 		return true
-	ElseIf(attribute_string == Config.PrideAttributeId)
+	ElseIf attribute_string == Config.PrideAttributeId
 		return true
-	ElseIf(attribute_string == Config.SelfEsteemAttributeId)
+	ElseIf attribute_string == Config.SelfEsteemAttributeId
 		return true
-	ElseIf(attribute_string == Config.ObedienceAttributeId)
+	ElseIf attribute_string == Config.ObedienceAttributeId
 		return true
-	ElseIf(attribute_string == Config.SubmissivenessAttributeId)
+	ElseIf attribute_string == Config.SubmissivenessAttributeId
 		return true
 	
 	; Fetish Attributes
-	ElseIf(attribute_string == Config.NymphomaniaAttributeId)
+	ElseIf attribute_string == Config.NymphomaniaAttributeId || attribute_string == Config.NymphomaniaLegacyAttributeId
 		return true
-	ElseIf(attribute_string == Config.MasochismAttributeId)
+	ElseIf attribute_string == Config.MasochismAttributeId || attribute_string == Config.MasochismLegacyAttributeId
 		return true
-	ElseIf(attribute_string == Config.SadismAttributeId)
+	ElseIf attribute_string == Config.SadismAttributeId || attribute_string == Config.SadismLegacyAttributeId
 		return true
-	ElseIf(attribute_string == Config.HumiliationAttributeId)
+	ElseIf attribute_string == Config.HumiliationAttributeId || attribute_string == Config.HumiliationLegacyAttributeId
 		return true
-	ElseIf(attribute_string == Config.ExhibitionismAttributeId)
+	ElseIf attribute_string == Config.ExhibitionismAttributeId || attribute_string == Config.ExhibitionismLegacyAttributeId
 		return true
 	Else
 		return false
@@ -577,7 +561,7 @@ EndFunction
 ; returns -1 on error or if not existent
 ; returns 0 if no attribute was not found and had been set to defaults
 ; returns 1 if attribute has been found
-Int Function CheckAttributeExistence(Actor target_actor, String attribute_string, bool set_defaults_on_missing = true)
+Int Function CheckAttributeExistence(Actor target_actor, String attribute_string, bool set_defaults_on_missing = true)	
 	If !VerifyAttributeId(attribute_string)
 		Warning("CheckAttributeExistence() received invalid attribute_string \"" + attribute_string + "\". Aborting...")
 		Return -1
@@ -588,27 +572,36 @@ Int Function CheckAttributeExistence(Actor target_actor, String attribute_string
 		Return -1
 	EndIf
 	
-	If !StorageUtil.HasIntValue(target_actor, attribute_string)
+	; Convert legacy as well as updated attribute strings
+	String m_attribute_string_new = ConvertFromLegacyAttribute(attribute_string)
+	String m_attribute_string_legacy = ConvertToLegacyAttribute(attribute_string)
+	
+	If !StorageUtil.HasIntValue(target_actor, m_attribute_string_new) && !StorageUtil.HasIntValue(target_actor, m_attribute_string_legacy)
 		If set_defaults_on_missing
-			Int m_attribute_default_value = GetDefaultAttributeValue(attribute_string)
-			Log("CheckAttributeExistence() attribute \"" + attribute_string + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set to default values of " + m_attribute_default_value + "...")
+			Int m_attribute_default_value = GetDefaultAttributeValue(m_attribute_string_new)
+			Log("CheckAttributeExistence() attribute \"" + m_attribute_string_new + "\" not set for actor \"" + target_actor.GetBaseObject().GetName() + "\". Set to default values of " + m_attribute_default_value + "...")
 			
-			Faction m_attribute_faction = FactionByAttributeId(attribute_string)
+			Faction m_attribute_faction = FactionByAttributeId(m_attribute_string_new)
 			If m_attribute_faction == None
 				Warning("CheckAttributeExistence() could not find corresponding faction for passed attribute. Aborting...")
 				Return -1
 			EndIf
 			target_actor.SetFactionRank(m_attribute_faction, m_attribute_default_value)
-			StorageUtil.SetIntValue(target_actor, attribute_string, m_attribute_default_value)
-			
-			; Attribute State
-			Int m_new_state_value = GetAttributeStateOfValue(attribute_string, m_attribute_default_value)
-			If m_new_state_value != StorageUtil.GetIntValue(target_actor, attribute_string + "_State")
-				StorageUtil.SetIntValue(target_actor, attribute_string + "_State", m_new_state_value)
-				NotifyOfChange(target_actor, attribute_string, m_new_state_value)
+			StorageUtil.SetIntValue(target_actor, m_attribute_string_new, m_attribute_default_value)
+			; If a legacy attribute was found, save it's value as well
+			; To ensure compability with older mods, also limit it's value to the old version
+			If m_attribute_string_new != m_attribute_string_legacy
+				StorageUtil.SetIntValue(target_actor, m_attribute_string_legacy, dattUtility.LimitValueInt(m_attribute_default_value, 0, 100))
 			EndIf
 			
-			RecalculateSubmissivenessIfNeededOnAttributeChange(target_actor, m_attribute_faction)
+			; Attribute State
+			Int m_new_state_value = GetAttributeStateOfValue(m_attribute_string_new, m_attribute_default_value)
+			If m_new_state_value != StorageUtil.GetIntValue(target_actor, m_attribute_string_new + "_State")
+				StorageUtil.SetIntValue(target_actor, m_attribute_string_new + "_State", m_new_state_value)
+				NotifyOfChange(target_actor, m_attribute_string_new, m_new_state_value)
+			EndIf
+			
+			;RecalculateSubmissivenessIfNeededOnAttributeChange(target_actor, m_attribute_faction)
 			Return 0
 		Else
 			Return -1

@@ -105,6 +105,12 @@ Function DoVersionUpgrade()
 		Config.ArousalThresholdToIncreaseFetish = 80
 		ModVersion = "0.7.62"
 	EndIf
+	
+	;TODO NEW VERSION
+	If ModVersion == "0.8.00"
+		
+		ModVersion = "0.8.0"
+	EndIf
 
 	Debug.Notification("Devious Attributes is running version " + ModVersion)
 EndFunction
