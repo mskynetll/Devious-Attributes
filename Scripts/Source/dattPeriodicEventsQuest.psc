@@ -62,7 +62,7 @@ Event OnUpdateGameTime()
 EndEvent
 
 Function AdjustArousalForPCandTrackedNPCs(float hoursPassed)
-	int playerNympho = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniacAttributeId)
+	int playerNympho = AttribtesAPI.GetAttribute(Config.PlayerRef,Config.NymphomaniaAttributeId)
 	If playerNympho > 0
 		Log("Sending arousal increase for PC, nymphoValue = " + playerNympho)
 		dattUtility.SendIncreaseArousal(Config.PlayerRef, AdjustNymphoValueForArousalIncrease(playerNympho) * dattUtility.Min(0.1,hoursPassed))
@@ -73,7 +73,7 @@ Function AdjustArousalForPCandTrackedNPCs(float hoursPassed)
     While index < npcCount
         Actor npc = StorageUtil.FormListGet(None, "_datt_tracked_npcs", index) as Actor
         If(npc != None) ;precaution
-        	int nympho = AttribtesAPI.GetAttribute(npc,Config.NymphomaniacAttributeId)
+        	int nympho = AttribtesAPI.GetAttribute(npc,Config.NymphomaniaAttributeId)
         	If nympho > 0
         		Log("Sending arousal increase for " + npc.GetBaseObject().GetName() +", nymphoValue = " + nympho)
 				dattUtility.SendIncreaseArousal(npc, AdjustNymphoValueForArousalIncrease(nympho) * dattUtility.Min(0.1,hoursPassed))

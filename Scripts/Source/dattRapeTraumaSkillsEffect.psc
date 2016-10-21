@@ -11,8 +11,8 @@ Float Property OriginalMagickaRate Auto Hidden
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 	EffectTarget = akTarget	
-	float masochism = AttributesAPI.GetAttribute(EffectTarget, Config.MasochistAttributeId) as float
-	float nympho = AttributesAPI.GetAttribute(EffectTarget, Config.NymphomaniacAttributeId) as float
+	float masochism = AttributesAPI.GetAttribute(EffectTarget, Config.MasochismAttributeId) as float
+	float nympho = AttributesAPI.GetAttribute(EffectTarget, Config.NymphomaniaAttributeId) as float
 
 	If(masochism >= 95.0 || nympho >= 95.0)
 		;even if the fetishes are at max, there is still minimum damage from rape

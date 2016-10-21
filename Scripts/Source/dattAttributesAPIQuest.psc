@@ -1,116 +1,137 @@
-Scriptname dattAttributesAPIQuest Extends dattQuestBase
+Scriptname dattAttributesAPIQuest Extends dattAttributesBaseQuest
 
-Int Function GetAttribute(Actor akActor, string attributeId)
-	If akActor == None
-		Warning("[Datt] GetAttribute() received null actor reference... this is something that shouldn't happen")
-		return -1
-	EndIf
+dattConfigQuest Property Config Auto
+Int Property CurrentMutexId = 1 Auto
+Int Property NewestMutexId = 0 Auto
+
+Function OnInit()
+	; New Events
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
+	RegisterForModEvent(Config.ActorDecisionEventName1, "OnActorDecision1")
 	
-	;I hate magic strings, so check validity
-	If !VerifyAttributeId(attributeId)
-		Warning("[Datt] GetAttribute() received null invalid attribute Id (" + attributeId + ")... this is something that shouldn't happen")
-		return -1
-	EndIf
-
-	return StorageUtil.GetIntValue(akActor as Form, attributeId)
-EndFunction
-
-
-Function SetAttribute(Actor akActor, string attributeId, int value)
-	If akActor == None
-		Warning("[Datt] SetAttribute() received null actor reference... this is something that shouldn't happen")
-		return
-	EndIf
+	RegisterForModEvent(Config.ActorAffectedEventName1, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName2, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName3, "OnActorAffected1")
+	RegisterForModEvent(Config.ActorAffectedEventName4, "OnActorAffected1")
 	
-	;I hate magic strings, so check validity
-	If !VerifyAttributeId(attributeId)
-		Warning("[Datt] SetAttribute() received null invalid attribute Id (" + attributeId + ")... this is something that shouldn't happen")
-		return
-	EndIf
-
-	SendAttributeChangeEvent("Datt_SetAttribute", akActor, attributeId, value)
-EndFunction
-
-Function ModAttribute(Actor akActor, string attributeId, int value)
-	If akActor == None
-		Warning("[Datt] SetAttribute() received null actor reference... this is something that shouldn't happen")
-		return
-	EndIf
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorModAttribute")
+	RegisterForModEvent(Config.ActorSetAttributeEventName, "OnActorSetAttribute")
+	RegisterForModEvent(Config.ActorSetAttributeDefaultsEventName, "OnActorSetAttributeDefaults")
 	
-	;I hate magic strings, so check validity
-	If !VerifyAttributeId(attributeId)
-		Warning("[Datt] SetAttribute() received null invalid attribute Id (" + attributeId + ")... this is something that shouldn't happen")
-		return
-	EndIf
-
-	SendAttributeChangeEvent("Datt_ModAttribute", akActor, attributeId, value)
-EndFunction
-
-Function SetSoulState(Actor akActor, int value)
-	If akActor == None
-		Warning("[Datt] SetAttribute() received null actor reference... this is something that shouldn't happen")
-		return
-	EndIf
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorSetState")
+	RegisterForModEvent(Config.ActorModAttributeEventName, "OnActorModState")
 	
-	SendAttributeChangeEvent("Datt_SetAttribute", akActor, "_Datt_Soul_State", value)
+	RegisterForModEvent(Config.RegisterAttributeEventName, "OnAttributeRegister")
 EndFunction
 
-Function SendAttributeChangeEvent(string eventName, Actor akActor, string attributeId, int value)
-	int eventId = ModEvent.Create(eventName)
-	If eventId
-		ModEvent.PushForm(eventId, akActor as Form)
-		ModEvent.PushString(eventId, attributeId)
-		ModEvent.PushInt(eventId,value)
-		If ModEvent.Send(eventId) == false
-			Warning("[Datt] SendAttributeChangeEvent() with event (" + eventName + ") failed to send event.. will retry sending the event (too much script lag?)")
-			Utility.WaitMenuMode(0.5)
-			int retryCount = 3
-			While retryCount > 0
-				int retryEventId = ModEvent.Create(eventName)
-				If retryEventId
-					ModEvent.PushForm(retryEventId, akActor as Form)
-					ModEvent.PushString(retryEventId, attributeId)
-					ModEvent.PushInt(retryEventId,value)
-					If ModEvent.Send(retryEventId) == true
-						retryCount = 0
-						Utility.WaitMenuMode(0.1)
-					EndIf
-				Else
-					retryCount -= 1
-				EndIf
-			EndWhile
-		EndIf
-	EndIf
+Int Function CreateNewMutexId()
+	NewestMutexId++
+	return NewestMutexId
 EndFunction
 
-bool Function VerifyAttributeId(string attributeId)
-	If(attributeId == Config.PrideAttributeId)
-		return true
-	ElseIf(attributeId == Config.SelfEsteemAttributeId)
-		return true
-	ElseIf(attributeId == Config.WillpowerAttributeId)
-		return true
-	ElseIf(attributeId == Config.ObedienceAttributeId)
-		return true
-	ElseIf(attributeId == Config.HumiliationLoverAttributeId)
-		return true
-	ElseIf(attributeId == Config.ExhibitionistAttributeId)
-		return true
-	ElseIf(attributeId == Config.MasochistAttributeId)
-		return true
-	ElseIf(attributeId == Config.NymphomaniacAttributeId)
-		return true
-	ElseIf(attributeId == Config.SoulStateAttributeId)
-		return true
-	ElseIf(attributeId == Config.SadistAttributeId)
-		return true
-	ElseIf(attributeId == Config.SubmissivenessAttributeId)
-		return true		
+Function IncrementMutex(Int mutex_Id)
+	If CurrentMutexId == mutex_ID
+		CurrentMutexId++
 	Else
-		return false
+		Error("IncrementMutex(): mutex_ID (" + mutex_ID + ") is different than CurrentMutexId (" + CurrentMutexId + "). Could not increment Increment CurrentMutexId!!!")
 	EndIf
 EndFunction
 
+Function OnAttributeRegister(dattAttribute attribute_faction)
+	If attribute_faction
+		If !attribute_faction.AttributeName
+			Error("OnAttributeRegister() passed in faction name is none... Couldn't register attribute.")
+		Else
+			; It's a Base Attribute
+			If attribute_faction.AttributeType = 0
+				Config.BaseAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as base attribute.")
+			; It's a Fetish Attribute
+			ElseIf attribute_faction.AttributeType = 0
+				Config.FetishAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as fetish attribute.")
+			; It's a State Attribute
+			ElseIf attribute_faction.AttributeType = 0
+				Config.StateAttributeList.AddForm(attribute_faction)
+				;StorageUtil.SetStringValue(none, attribute_faction.AttributeName)
+				Log("OnAttributeRegister() successfully registered the attribute \"" + attribute_faction.AttributeName + "\" as state attribute.")
+			EndIf
+			; TODO Calculated Stats
+		EndIf
+	Else
+		Error("OnAttributeRegister() passed in faction is none... Couldn't register attribute.")
+	EndIf
+EndFunction
 
-
-
+Event onActorDecision(Actor target_actor, Actor master_actor, Int response_type, String[] attribute_string, Int[] attribute_magnitude)
+	; Add this call to the current cue and increment the counter.
+	Int m_mutex_ID = CreateNewMutexId()
+	
+	; Only run this function if a target_actor was defined... otherwise print an error message.
+	If !target_actor
+		Error("onActorDecision() target_actor is null... aborting.")
+	Else
+		; Make sure that response_type is not exceeding its limits.
+		If response_type < -3
+			response_type = -3
+		ElseIf response_type > 3
+			response_type = 3
+		EndIf
+		
+		int m_attribute_index = 0
+		int m_attribute_count = attribute_magnitude.length
+		
+		; Make sure that attribute_magnitude is not exceeding their limits.
+		While m_attribute_index < m_attribute_count
+			If attribute_magnitude[m_attribute_index] < -3
+				attribute_magnitude[m_attribute_index] = -3
+			ElseIf attribute_magnitude[m_attribute_index] > 3
+				attribute_magnitude[m_attribute_index] = 3
+			EndIf
+		EndWhile
+		
+		; Execute onActorDecision() function on every Base attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.BaseAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.BaseAttributeList.GetAt(m_attribute_index) as dattAttribute).onActorDecision(target_actor, master_actor, response_type, attribute_string, attribute_magnitude)
+		EndWhile
+		
+		; Execute onActorDecision() function on every Fetish attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.FetishAttributeLust.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.FetishAttributeList.GetAt(m_attribute_index) as dattAttribute).onActorDecision(target_actor, master_actor, response_type, attribute_string, attribute_magnitude)
+		EndWhile
+		
+		; Process value changes on every Base attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.BaseAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.BaseAttributeList.GetAt(m_attribute_index) as dattAttribute).ProcessAttributeChanges()
+		EndWhile
+		
+		; Process value changes on every Fetish attribute
+		m_attribute_index = 0
+		m_attribute_count = Config.FetishAttributeList.GetSize()
+		While m_attribute_index < m_attribute_count
+			(Config.FetishAttributeList.GetAt(m_attribute_index) as dattAttribute).ProcessAttributeChanges()
+		EndWhile
+		
+		
+		; TODO
+		; Process stored mod values
+		
+		; TODO
+		; Process new attribute types (automatic calculated ones such as submissiveness
+		
+		; TODO
+		; Process states
+	EndIf
+	; Function finished executing... increment the current mutex ID so the next one can proceed.
+	IncrementMutex(m_mutex_ID)
+EndEvent
