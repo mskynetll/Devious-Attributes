@@ -1,6 +1,9 @@
-Scriptname dattConfigQuest Extends SKI_ConfigBase
+Scriptname dattConfigQuest Extends Quest ;SKI_ConfigBase
 
 Actor Property PlayerRef Auto
+<<<<<<< HEAD
+Int Property LogLevel Auto Hidden
+=======
 
 String Property SettingsPageName = "Settings" AutoReadonly Hidden
 String Property AttributesPageName = "Attributes" AutoReadonly Hidden
@@ -1630,6 +1633,7 @@ Bool Property DebugAttributeTypeIsFetish = False Auto Hidden
 Int Property DebugAttributeStringIndex = 0 Auto Hidden
 Int Property DebugAttributeValue = 0 Auto Hidden
 Bool Property DebugAttributeIsMod = false Auto Hidden
+>>>>>>> origin/master
 
 
 
@@ -1638,6 +1642,7 @@ Bool Property DebugAttributeIsMod = false Auto Hidden
 ; ==============================
 
 Int Property MaxBaseAttributeValue = 100 AutoReadonly Hidden
+Int Property MinBaseAttributeValue = 0 AutoReadonly Hidden
 Int Property MaxFetishAttributeValue = 100 AutoReadonly Hidden
 Int Property MinFetishAttributeValue = -100 AutoReadonly Hidden
 
@@ -1649,17 +1654,15 @@ Int Property MinFetishAttributeValue = -100 AutoReadonly Hidden
 
 ; Base Attributes
 Int Property WillpowerAttributeDefault = 100 Auto Hidden
-Int Property PrideAttributeDefault = 100 Auto Hidden
-Int Property SelfEsteemAttributeDefault = 100 Auto Hidden
-Int Property ObedienceAttributeDefault = 0 Auto Hidden
-Int Property SubmissivenessAttributeDefault = 0 Auto Hidden
 
 ; Fetish Attributes
-Int Property HumiliationAttributeDefault = 0 Auto Hidden
-Int Property ExhibitionismAttributeDefault = 0 Auto Hidden
-Int Property SadismAttributeDefault = 0 Auto Hidden
-Int Property MasochismAttributeDefault = 0 Auto Hidden
 Int Property NymphomaniaAttributeDefault = 0 Auto Hidden
+
+; Calculated Attributes
+; None here, they are being calculated (duh)
+
+; Misc Attributes
+; None here, all Misc Attributes start with a value of 0
 
 
 
@@ -1667,17 +1670,17 @@ Int Property NymphomaniaAttributeDefault = 0 Auto Hidden
 ; Attribute IDs for StorageUtil
 ; ==============================
 
-; Misc Attributes
-String Property SoulStateAttributeId = "_Datt_Soul_State" AutoReadonly Hidden
-
 ; Base Attributes
-String Property PrideAttributeId = "_Datt_Pride" AutoReadonly Hidden
-String Property SelfEsteemAttributeId = "_Datt_SelfEsteem" AutoReadonly Hidden
-String Property WillpowerAttributeId = "_Datt_Willpower" AutoReadonly Hidden
-String Property ObedienceAttributeId = "_Datt_Obedience" AutoReadonly Hidden
-String Property SubmissivenessAttributeId = "_Datt_Submissiveness" AutoReadonly Hidden
+String Property WillpowerAttributeName = "Datt_Willpower" AutoReadonly Hidden
+; Base Attributes States
+String Property WillpowerAttributeStateName = "Datt_Willpower_State" AutoReadonly Hidden
 
 ; Fetish Attributes
+<<<<<<< HEAD
+String Property NymphomaniaAttributeName = "Datt_Nymphomania" AutoReadonly Hidden
+; Fetish Attributes States
+String Property NymphomaniaAttributeStateName = "Datt_Nymphomaniac_State" AutoReadonly Hidden
+=======
 String Property NymphomaniaAttributeId = "_Datt_Nymphomania" AutoReadonly Hidden
 String Property MasochismAttributeId = "_Datt_Masochism" AutoReadonly Hidden
 String Property SadismAttributeId = "_Datt_Sadism" AutoReadonly Hidden
@@ -1690,20 +1693,24 @@ String Property MasochismLegacyAttributeId = "_Datt_Masochist" AutoReadonly Hidd
 String Property SadismLegacyAttributeId = "_Datt_Sadist" AutoReadonly Hidden
 String Property HumiliationLegacyAttributeId = "_Datt_HumiliationLover" AutoReadonly Hidden
 String Property ExhibitionismLegacyAttributeId = "_Datt_Exhibitionist" AutoReadonly Hidden
+>>>>>>> origin/master
 
-; Base Attributes States
-String Property PrideAttributeStateId = "_Datt_Pride_State" AutoReadonly Hidden
-String Property SelfEsteemAttributeStateId = "_Datt_SelfEsteem_State" AutoReadonly Hidden
-String Property WillpowerAttributeStateId = "_Datt_Willpower_State" AutoReadonly Hidden
-String Property ObedienceAttributeStateId = "_Datt_Obedience_State" AutoReadonly Hidden
-String Property SubmissivenessAttributeStateId = "_Datt_Submissiveness_State" AutoReadonly Hidden
+; Calculated Attributes
+String Property SubmissivenessAttributeName = "Datt_Submissiveness" AutoReadonly Hidden
+; Calculated Attributes States
+String Property SubmissivenessAttributeStateName = "Datt_Submissiveness_State" AutoReadonly Hidden
 
+<<<<<<< HEAD
+; Misc Attributes
+String Property SlaveAbusivenessStateAttributeName = "Datt_Soul_State" AutoReadonly Hidden
+=======
 ; Fetish Attributes States
 String Property NymphomaniaAttributeStateId = "_Datt_Nymphomaniac_State" AutoReadonly Hidden
 String Property MasochismAttributeStateId = "_Datt_Masochist_State" AutoReadonly Hidden
 String Property SadismAttributeStateId = "_Datt_Sadist_State" AutoReadonly Hidden
 String Property HumiliationAttributeStateId = "_Datt_HumiliationLover_State" AutoReadonly Hidden
 String Property ExhibitionismAttributeStateId = "_Datt_Exhibitionist_State" AutoReadonly Hidden
+>>>>>>> origin/master
 
 
 
@@ -1721,31 +1728,33 @@ String Property PlayerDecisionWithExtraEventName2 = "Datt_PlayerDecision2WithExt
 String Property PlayerDecisionWithExtraEventName3 = "Datt_PlayerDecision3WithExtra" AutoReadonly Hidden
 String Property PlayerDecisionWithExtraEventName4 = "Datt_PlayerDecision4WithExtra" AutoReadonly Hidden
 
-String Property PlayerSoulStateChangeEventName = "Datt_PlayerSoulStateChange" AutoReadonly Hidden
+String Property PlayerSlaveAbusivenessStateChangeEventName = "Datt_PlayerSlaveAbusivenessStateChange" AutoReadonly Hidden
 
-
-dattMonitorQuest Property MonitorQuest Auto 
-
-
+; The Current Attribute Version... Increases whenever this mod introduces new Attributes.
+Int Property CurrentVersionAttributeFaction Auto
 
 ; ==============================
 ; Factions
 ; ==============================
 
-; Misc Attributes
-Faction Property SoulStateAttributeFaction Auto
-Faction Property RapeTraumaAttributeFaction Auto
+; Used to determine if an actor's attributes have been initialized. 
+Faction Property InitVersionAttributeFaction Auto
 
 ; Base Attributes
 Faction Property WillpowerAttributeFaction Auto
-Faction Property PrideAttributeFaction Auto
-Faction Property SelfEsteemAttributeFaction Auto
-Faction Property ObedienceAttributeFaction Auto
-Faction Property SubmissiveAttributeFaction Auto
 
 ; Fetish Attributes
 Faction Property NymphomaniaAttributeFaction Auto
-Faction Property MasochismAttributeFaction Auto
-Faction Property SadismAttributeFaction Auto
-Faction Property HumiliationAttributeFaction Auto
-Faction Property ExhibitionismAttributeFaction Auto
+
+; Calculated Attributes
+Faction Property SubmissivenessAttributeFaction Auto
+
+; Misc Attributes
+Faction Property SlaveAbusivenessStateAttributeFaction Auto
+
+GlobalVariable Property HateAttributeValue Auto				; -80
+GlobalVariable Property StrongDislikeAttributeValue Auto	; -50
+GlobalVariable Property DislikeAttributeValue Auto			; -20
+GlobalVariable Property LikeAttributeValue Auto				; +20
+GlobalVariable Property StrongLikeAttributeValue Auto		; +50
+GlobalVariable Property LoveAttributeValue Auto				; +80
