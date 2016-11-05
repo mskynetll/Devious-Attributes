@@ -3,31 +3,39 @@ Scriptname dattQuestAttributesAPI Extends dattQuestAttributesBase
 ; A quick check if the attributes are 
 Bool Function InitCheck(Actor target_actor)
 	If (target_actor.GetFactionRank(Config.InitVersionAttributeFaction) < Config.CurrentVersionAttributeFaction)
-		return false
+		Return False
 	Else
-		return true
+		Return True
 	EndIf
 EndFunction
 
 ; Initializes Attributes to default values for given Actor.
 ;If value no value for current_version is passed, it will initializes all attributes (a complete wipe). Otherwise, it will only do for new values (update).
 Function InitAttributes(Actor target_actor, int current_version = 0)
+	If target_actor == None
+		Warning("InitAttributes() cannot initialize attributes for actor \"None\".")
+		Return
+	Endif
 	If current_version < 1
 		; ===== Base Attributes ==== ;
+		;SetAttributeByFaction(target_actor, Config.WillpowerAttributeFaction, Config.WillpowerAttributeDefault)
 		target_actor.SetFactionRank(Config.WillpowerAttributeFaction, Config.WillpowerAttributeDefault)
 		; StorageUtil.SetIntValue(target_actor, Config.WillpowerAttributeName, Config.WillpowerAttributeDefault)
 		; StorageUtil.SetIntValue(target_actor, Config.WillpowerAttributeName, Config.WillpowerAttributeDefault)
 		
 		; ===== Fetish Attributes ==== ;
+		;SetAttributeByFaction(target_actor, Config.NymphomaniaAttributeFaction, Config.NymphomaniaAttributeDefault)
 		target_actor.SetFactionRank(Config.NymphomaniaAttributeFaction, Config.NymphomaniaAttributeDefault)
 		; StorageUtil.SetIntValue(target_actor, Config.NymphomaniaAttributeName, Config.NymphomaniaAttributeDefault)
 		; StorageUtil.SetIntValue(target_actor, Config.NymphomaniaAttributeName, Config.NymphomaniaAttributeDefault)
 		
+		; ===== Fetish Attributes ==== ;
+		; Not needed
+		
 		; ===== Misc Attributes ==== ;
+		;SetAttributeByFaction(target_actor, Config.SlaveAbusivenessStateAttributeFaction, 0)
 		target_actor.SetFactionRank(Config.SlaveAbusivenessStateAttributeFaction, 0)
 		; StorageUtil.SetIntValue(target_actor, Config.SlaveAbusivenessStateAttributeName, 0)
-	;ElseIf current_version < 2
-		; Do Stuff
 	EndIf
 	target_actor.SetFactionRank(Config.SlaveAbusivenessStateAttributeFaction, Config.CurrentVersionAttributeFaction)
 EndFunction
@@ -41,19 +49,23 @@ EndFunction
 ; Set the specified attribute to the passed value.
 Int Function SetAttributeByName(Actor target_actor, String attribute_name, Int attribute_value, Int on_error_value = 0)
 	Return ChangeAttributeByName(target_actor, attribute_name, attribute_value, false, on_error_value)
+	NotifyOfChange()
 EndFunction
 
 Int Function SetAttributeByFaction(Actor target_actor, Faction target_attribute_faction, Int attribute_value, Int on_error_value = 0)
 	Return ChangeAttributeByFaction(target_actor, target_attribute_faction, attribute_value, false, on_error_value)
+	NotifyOfChange()
 EndFunction
 
 ; Modifies the specified attribute by the passed value.
 Int Function ModAttributeByName(Actor target_actor, String attribute_string, Int attribute_value, Int on_error_value = 0)
 	Return ChangeAttributeByName(target_actor, attribute_string, attribute_value, true, on_error_value)
+	NotifyOfChange()
 EndFunction
 
 Int Function ModAttributeByFaction(Actor target_actor, Faction target_attribute_faction, Int attribute_value, Int on_error_value = 0)
 	Return ChangeAttributeByFaction(target_actor, target_attribute_faction, attribute_value, true, on_error_value)
+	NotifyOfChange()
 EndFunction
 
 
@@ -74,7 +86,7 @@ Int Function ChangeAttribute(Actor target_actor, Faction target_attribute_factio
 		Error("ChangeAttribute() was passed an empty target_attribute_faction.")
 	EndIf
 	
-	If IsCalculatedAttribute(target_attribute_faction)
+	If IsCalculatedAttributeByFaction(target_attribute_faction)
 		Warning("ChangeAttribute() calculated attributes shouldn't be set manually...")
 		Return on_error_value
 	EndIf
@@ -86,7 +98,7 @@ Int Function ChangeAttribute(Actor target_actor, Faction target_attribute_factio
 	
 	
 	
-	Log("ChangeAttribute() for actor = " + target_actor.GetBaseObject().GetName() +", target_attribute_name = " + target_attribute_name + ", value = " + attribute_value + ", is_modify_mode = " + is_modify_mode)
+	Log("ChangeAttribute() for actor = " + target_actor.GetBaseObject();/.GetName()/; +", target_attribute_name = " + target_attribute_name + ", value = " + attribute_value + ", is_modify_mode = " + is_modify_mode)
 	If !InitCheck(target_actor)
 		Log("ChangeAttribute() actor's attribute init version is not up to date... Init the new attributes.")
 		InitAttributes(target_actor, target_actor.GetFactionRank(Config.InitVersionAttributeFaction))
@@ -124,16 +136,15 @@ Int Function ChangeAttribute(Actor target_actor, Faction target_attribute_factio
 		; StorageUtil.SetIntValue(target_actor, target_attribute_name, attribute_value)
 		
 		; If the attribute is not Soul State, set attribute state as well.
-		NotifyOfChange(target_actor, target_attribute_name, attribute_value)
-		
-		;RecalculateAttributes(target_actor, target_attribute_faction)
+		HasChangesQueued = target_actor
 		
 		; ===== Legacy State calculations =====
 		; Currently not in use
+		
+		;RecalculateAttributes(target_actor, target_attribute_faction)
 	Else
 		Log("ChangeAttribute()")
 	EndIf
-	;Mutex.Unlock()
 	Return attribute_value
 EndFunction
 
@@ -141,11 +152,11 @@ EndFunction
 
 
 Int Function GetAttributeByName(Actor target_actor, String target_attribute_name, bool set_defaults_on_missing = true, Int on_error_value = 0)
-	GetAttribute(target_actor, GetFactionByName(target_attribute_name), target_attribute_name, set_defaults_on_missing, on_error_value)
+	Return GetAttribute(target_actor, GetFactionByName(target_attribute_name), target_attribute_name, set_defaults_on_missing, on_error_value)
 EndFunction
 
 Int Function GetAttributeByFaction(Actor target_actor, Faction target_attribute_faction, bool set_defaults_on_missing = true, Int on_error_value = 0)
-	GetAttribute(target_actor, target_attribute_faction, GetNameByFaction(target_attribute_faction), set_defaults_on_missing, on_error_value)
+	Return GetAttribute(target_actor, target_attribute_faction, GetNameByFaction(target_attribute_faction), set_defaults_on_missing, on_error_value)
 EndFunction
 
 
@@ -164,11 +175,6 @@ Int Function GetAttribute(Actor target_actor, Faction target_attribute_faction, 
 		Error("GetAttribute() faction and attribute name either do not match, or are not a known attribute.")
 		Return on_error_value
 	EndIf
-	
-	;If Mutex.TryLock() == false
-	;	QueueForChange(acActor as Form, target_attribute_name, attribute_value, 0)
-	;	return
-	;EndIf
 	
 	If !InitCheck(target_actor)
 		Log("GetAttribute() actor's attribute init version is not up to date... Init the new attributes.")
@@ -191,12 +197,21 @@ Int Function GetAttribute(Actor target_actor, Faction target_attribute_faction, 
 	Int m_attribute_value = target_actor.GetFactionRank(target_attribute_faction)
 	Int m_attribute_value_new = dattUtility.LimitValueInt(m_attribute_value, m_min_attribute_value, m_max_attribute_value)
 	If m_attribute_value != m_attribute_value_new
-		Warning("GetAttribute() current value of " + m_attribute_value + " for attribute \"" + target_attribute_name + "\" for actor \"" + target_actor.GetBaseObject().GetName() + "\" is exceeding the limit of " + m_attribute_value_new + ". This should not have happened! Calling ChangeAttribute()...")
+		Warning("GetAttribute() current value of " + m_attribute_value + " for attribute \"" + target_attribute_name + "\" for actor \"" + target_actor.GetBaseObject();/.GetName()/; + "\" is exceeding the limit of " + m_attribute_value_new + ". This should not have happened! Calling ChangeAttribute()...")
 		ChangeAttribute(target_actor, target_attribute_faction, GetNameByFaction(target_attribute_faction), m_attribute_value_new, false)
+		NotifyOfChangeManual(target_actor)
 		return m_attribute_value_new
 	Else
 		Return m_attribute_value
 	EndIf
+EndFunction
+
+Int Function GetAttributeStateByName(Actor target_actor, String target_attribute_name, bool set_defaults_on_missing = true, Int on_error_value = 0)
+	Return GetAttributeState(GetAttribute(target_actor, GetFactionByName(target_attribute_name), target_attribute_name, set_defaults_on_missing, on_error_value))
+EndFunction
+
+Int Function GetAttributeStateByFaction(Actor target_actor, Faction target_attribute_faction, bool set_defaults_on_missing = true, Int on_error_value = 0)
+	Return GetAttributeState(GetAttribute(target_actor, target_attribute_faction, GetNameByFaction(target_attribute_faction), set_defaults_on_missing, on_error_value))
 EndFunction
 
 
@@ -215,4 +230,6 @@ Function SetDefaults(Actor target_actor)
 	
 	; ===== Misc Attributes ===== ;
 	ChangeAttribute(target_actor, Config.SlaveAbusivenessStateAttributeFaction, Config.SlaveAbusivenessStateAttributeName, 0, false)
+	
+	NotifyOfChange()
 EndFunction

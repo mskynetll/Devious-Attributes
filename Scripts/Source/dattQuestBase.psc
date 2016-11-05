@@ -9,20 +9,23 @@ dattConfigQuest Property Config Auto
 Function Log(string asTextToPrint)
 	If Config.LogLevel >= 3
 		Debug.Trace("[Datt]" + asTextToPrint)
-		MiscUtil.PrintConsole("[Datt - Info]" + asTextToPrint)
+		; ===== Papyrus Util ===== ;
+		;MiscUtil.PrintConsole("[Datt - Info]" + asTextToPrint)
 	EndIf
 EndFunction
 
 Function Warning(string asTextToPrint)
 	If Config.LogLevel >= 2
 		Debug.Trace("[Datt]" + asTextToPrint, 1)
-		MiscUtil.PrintConsole("[Datt - Warning]" + asTextToPrint)
+		; ===== Papyrus Util ===== ;
+		;MiscUtil.PrintConsole("[Datt - Warning]" + asTextToPrint)
 	EndIf
 EndFunction
 
 Function Error(string asTextToPrint)
 	If Config.LogLevel >= 1
 		Debug.Trace("[Datt]" + asTextToPrint, 2)
-		MiscUtil.PrintConsole("[Datt - Error]" + asTextToPrint)
+		; ===== Papyrus Util ===== ;
+		;MiscUtil.PrintConsole("[Datt - Error]" + asTextToPrint)
 	EndIf
 EndFunction

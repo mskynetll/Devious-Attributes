@@ -1,11 +1,10 @@
 Scriptname dattQuestAttributesEvents Extends dattQuestAttributesAPI
 
 Function Maintenance()
-	RegisterForModEvent("Datt_SetAttribute", "OnSetAttribute")
-	RegisterForModEvent("Datt_ModAttribute", "OnModAttribute")
-	RegisterForModEvent("Datt_SetDefaults", "OnSetDefaults")
-	RegisterForModEvent("Datt_SetSoulState", "OnSetSoulState")
-	RegisterForModEvent("Datt_ClearChangeQueue", "OnClearChangeQueue")
+	;RegisterForModEvent("Datt_SetAttribute", "OnSetAttribute")
+	;RegisterForModEvent("Datt_ModAttribute", "OnModAttribute")
+	;RegisterForModEvent("Datt_SetDefaults", "OnSetDefaults")
+	;RegisterForModEvent("Datt_ClearChangeQueue", "OnClearChangeQueue")
 EndFunction
 
 ; Event to set an attribute to a specific value.
@@ -22,4 +21,20 @@ EndEvent
 ; Event to reset all attributes to default.
 Event OnSetDefaults(Form target_actor_form)
 	SetDefaults(target_actor_form as Actor)
+EndEvent
+
+Event OnActorDecision(Form victim_actor_form, String[] decision_tags, Int[] decision_tags_magnitudes, Int decision, Form[] master_actor_form)
+	Actor victim_actor = victim_actor_form as Actor
+	;Actor[] master_actor = master_actor_form as Actor[]
+	If victim_actor == None
+		Warning("OnActorDecision() victim_actor_form is invalid or not an actor. aborting...")
+		Return
+	EndIf
+	; TODO
+EndEvent
+
+Event OnActorVictim(Form[] victim_actor_form, String[] victim_tags, Int[] victim_magnitudes, Form[] master_actor_form, String[] master_tags, Int[] master_magnitudes)
+	;Actor[] victim_actor = victim_actor_form as Actor[]
+	;Actor[] master_actor = master_actor_form as Actor[]
+	; TODO
 EndEvent
