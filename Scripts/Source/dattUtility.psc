@@ -54,6 +54,7 @@ Bool Function IsValueInLimitInt(Int value, Int lowBorder, Int highBorder) global
 	EndIf
 EndFunction
 
+;/
 Function SendParameterlessEvent(String eventName) global
 	Int retries = 3
 	While(retries > 0)
@@ -153,3 +154,4 @@ Function SendEventWithFormAndIntParam(String eventName,Form fParam, Int iParam) 
 		EndIf
 	EndWhile
 EndFunction
+/;
