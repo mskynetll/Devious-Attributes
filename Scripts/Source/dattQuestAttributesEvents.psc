@@ -33,8 +33,6 @@ Event OnActorDecision(Form victim_actor_form, String[] decision_tags, Int[] deci
 	; TODO
 EndEvent
 
-Event OnActorVictim(Form[] victim_actor_form, String[] victim_tags, Int[] victim_magnitudes, Form[] master_actor_form, String[] master_tags, Int[] master_magnitudes)
-	;Actor[] victim_actor = victim_actor_form as Actor[]
-	;Actor[] master_actor = master_actor_form as Actor[]
-	; TODO
+Event OnActorVictim(Form[] victim_actor_form, String[] victim_tags, Int[] victim_magnitudes, Int victim_magnitude, Form[] master_actor_form, String[] master_tags, Int[] master_magnitudes, Int master_magnitude)
+	ActorVictim(victim_actor_form, victim_tags, victim_magnitudes, victim_magnitude, master_actor_form, master_tags, master_magnitudes, master_magnitude)
 EndEvent

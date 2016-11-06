@@ -233,3 +233,46 @@ Function SetDefaults(Actor target_actor)
 	
 	NotifyOfChange()
 EndFunction
+
+
+
+Function ActorVictim(Form[] victim_actor_form, String[] victim_tags, Int[] victim_magnitudes, Int victim_magnitude, Form[] master_actor_form, String[] master_tags, Int[] master_magnitudes, Int master_magnitude)
+	If victim_actor_form.Length <= 0 || victim_actor_form[1] as Actor != None
+		Warning("ActorVictim() victim_actor_form is empty or it's first element is not an actor. Aborting...")
+		Return
+	EndIf
+	If victim_tags.Length != victim_magnitudes.Length
+		Warning("ActorVictim() array size of victim_tags and victim_magnitudes mismatch. Aborting...")
+		Return
+	EndIf
+	If victim_tags.Length <= 0
+		Warning("ActorVictim() victim_tags is empty. Aborting...")
+		Return
+	EndIf
+	
+	If master_actor_form.Length > 0
+		If master_tags.Length != master_magnitudes.Length
+			Warning("ActorVictim() array size of master_tags and master_magnitudes mismatch. Aborting...")
+			Return
+		EndIf
+	EndIf
+	
+	Int m_current_actor_index = 0
+	While m_current_actor_index < victim_actor_form.Length
+		ActorAttributeCalculation(victim_actor_form[0] as Actor, victim_tags, victim_magnitudes, victim_magnitude, master_actor_form)
+	EndWhile
+	
+	m_current_actor_index = 0
+	While m_current_actor_index < master_actor_form.Length
+		ActorAttributeCalculation(master_actor_form[0] as Actor, master_tags, master_magnitudes, master_magnitude, victim_actor_form)
+	EndWhile
+EndFunction
+
+Function ActorAttributeCalculation(Actor victim_actor, String[] victim_tags, Int[] victim_magnitudes, Int magnitude, Form[] master_actor_form)
+	If !victim_actor
+		Error("ActorVictimProcess() victim_actor is empty or not an actor. Aborting...")
+		Return
+	EndIf
+	
+	; Do Stuff
+EndFunction
