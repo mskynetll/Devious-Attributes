@@ -1,0 +1,7 @@
+/Release
+/DeviousAttributes2.sdf
+/*.db
+/*.opendb
+/.vs
+/DeviousAttributes2/Debug/*.*
+/DeviousAttributes2/Release/*.*

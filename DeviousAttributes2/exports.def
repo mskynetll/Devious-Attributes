@@ -1,0 +1,4 @@
+LIBRARY	"DeviousAttributes2"
+EXPORTS
+SKSEPlugin_Query
+SKSEPlugin_Load
