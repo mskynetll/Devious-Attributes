@@ -3,10 +3,35 @@
 #include <skse/skse_version.h>
 #include <shlobj.h>				// CSIDL_MYCODUMENTS
 
-#include "DattAttributesTracker.h"
+#include "AttributesTracker.h"
+#include "DeviousAttributes.hpp"
+#include "EventsDispatcher.hpp"
 
 static PluginHandle					g_pluginHandle = kPluginHandle_Invalid;
-static SKSEPapyrusInterface         *g_papyrus = NULL;
+static SKSEPapyrusInterface         *g_papyrus = nullptr;
+static SKSESerializationInterface	*g_serialization = nullptr;
+const UInt32 kSerializationVersion = 1;
+
+
+void Serialization_Load(SKSESerializationInterface* intfc)
+{
+	_MESSAGE("Loading persisted data...");
+	g_AttributesTracker.Load(intfc);
+}
+
+void Serialization_Revert(SKSESerializationInterface * intfc)
+{
+	_MESSAGE("Reverting persisted data to defaults...");
+	g_AttributesTracker.Reset();
+	g_AttributesTracker.Save(intfc);
+}
+
+
+void Serialization_Save(SKSESerializationInterface * intfc)
+{
+	_MESSAGE("Saving persisted data...");
+	g_AttributesTracker.Save(intfc);
+}
 
 extern "C" {
 
@@ -17,7 +42,7 @@ extern "C" {
 		gLog.SetLogLevel(IDebugLog::kLevel_DebugMessage);
 
 		info->infoVersion = PluginInfo::kInfoVersion;
-		info->name = "Devious Attributes";
+		info->name = "DeviousAttributes";
 		info->version = 1;
 
 		g_pluginHandle = skse->GetPluginHandle();
@@ -43,18 +68,40 @@ extern "C" {
 	}
 
 	bool SKSEPlugin_Load(const SKSEInterface * skse) {	// Called by SKSE to load this plugin
-		_MESSAGE("Devious Attributes loaded...");
+		_MESSAGE("Devious Attributes loaded, starting registration of papyrus functions");
 
 		g_papyrus = (SKSEPapyrusInterface *)skse->QueryInterface(kInterface_Papyrus);
+		g_serialization = (SKSESerializationInterface*)skse->QueryInterface(kInterface_Serialization);		
 
-		bool attributesTrackerSuccess = g_papyrus->Register(AttributesTracker::RegisterFuncs);
+		bool success = g_papyrus->Register(AttributesTrackerPapyrus::RegisterFuncs);
 
-		if (attributesTrackerSuccess)
+		if (success)
 		{
-			_MESSAGE("Registeration of Papyrus functions succeeded");
+			_MESSAGE("Registeration of attribute tracking functions succeeded");
 		}
+		else return false;
+
+		success = g_papyrus->Register(EventsDispatcher::RegisterFuncs);
+
+		if (success)
+		{
+			_MESSAGE("Registeration of event dispatching functions succeeded");
+		}
+		else return false;
+
+		success = g_papyrus->Register(DeviousAttributes::RegisterFuncs);
+
+		if (success)
+		{
+			_MESSAGE("Registeration of attributes mutation functions succeeded");
+		}
+		else return false;
+
+		g_serialization->SetUniqueID(g_pluginHandle, 'Datt');
+		g_serialization->SetRevertCallback(g_pluginHandle, Serialization_Revert);
+		g_serialization->SetSaveCallback(g_pluginHandle, Serialization_Save);
+		g_serialization->SetLoadCallback(g_pluginHandle, Serialization_Load);
 
 		return true;
 	}
-
 };

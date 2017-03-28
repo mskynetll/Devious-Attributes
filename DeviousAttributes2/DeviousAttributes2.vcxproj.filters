@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DattAttributesTracker.cpp">
+    <ClCompile Include="AttributesTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -28,7 +28,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DattAttributesTracker.h">
+    <ClInclude Include="AttributesTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Attribute.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventsDispatcher.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviousAttributes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
