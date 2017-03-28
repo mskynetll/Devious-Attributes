@@ -85,13 +85,26 @@ public:
 			intfc->WriteRecordData(&willpowerVal, sizeof(float));
 			_MESSAGE("Persisted willpower value: %f", willpowerVal);
 
-			float SelfEsteemVal = SelfEsteem.Get();
-			intfc->WriteRecordData(&SelfEsteemVal, sizeof(float));
-			_MESSAGE("Persisted SelfEsteem value: %f", SelfEsteemVal);
+			float selfEsteemVal = SelfEsteem.Get();
+			intfc->WriteRecordData(&selfEsteemVal, sizeof(float));
+			_MESSAGE("Persisted selfesteem value: %f", selfEsteemVal);
 
 			float obedienceVal = Obedience.Get();
-			intfc->WriteRecordData(&obedienceVal, sizeof(float));			
+			intfc->WriteRecordData(&obedienceVal, sizeof(float));
 			_MESSAGE("Persisted obedience value: %f", obedienceVal);
+
+			float prideVal = Pride.Get();
+			intfc->WriteRecordData(&prideVal, sizeof(float));
+			_MESSAGE("Persisted pride value: %f", prideVal);
+
+			intfc->WriteRecordData(&_lastGameTimeTick, sizeof(float));
+			_MESSAGE("Persisted _lastGameTimeTick value: %f", prideVal);
+
+			intfc->WriteRecordData(&_lastSleepTime, sizeof(float));
+			_MESSAGE("Persisted _lastSleepTime value: %f", prideVal);
+
+			intfc->WriteRecordData(&_lastSpellCastTime, sizeof(float));
+			_MESSAGE("Persisted _lastSpellCastTime value: %f", prideVal);
 		}
 		else
 		{
@@ -132,6 +145,19 @@ public:
 						intfc->ReadRecordData(&val, sizeof(float));
 						_MESSAGE("Loaded obedience value: %f", val);
 						Obedience.Set(val);
+
+						intfc->ReadRecordData(&val, sizeof(float));
+						_MESSAGE("Loaded pride value: %f", val);
+						Pride.Set(val);
+
+						intfc->ReadRecordData(&_lastGameTimeTick, sizeof(float));
+						_MESSAGE("Loaded _lastGameTimeTick value: %f", val);
+
+						intfc->ReadRecordData(&_lastSleepTime, sizeof(float));
+						_MESSAGE("Loaded _lastSleepTime value: %f", val);
+
+						intfc->ReadRecordData(&_lastSpellCastTime, sizeof(float));
+						_MESSAGE("Loaded _lastSpellCastTime value: %f", val);
 					}
 					else
 					{
