@@ -13,6 +13,12 @@
 namespace DeviousAttributes {
 	Attribute* AttributeByName(BSFixedString name);
 
+	void ResetAttributeValues(StaticFunctionTag* tag)
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_AttributesTracker.AttributeChangeMutex);
+		g_AttributesTracker.Reset();
+	}
+
 	float GetAttributeValue(StaticFunctionTag* tag, BSFixedString name)
 	{
 		std::lock_guard<std::recursive_mutex> lock(g_AttributesTracker.AttributeChangeMutex);
@@ -67,6 +73,9 @@ namespace DeviousAttributes {
 	}
 
 	bool RegisterFuncs(VMClassRegistry* registry) {
+		registry->RegisterFunction(new NativeFunction0 <StaticFunctionTag, void>
+			("ResetAttributeValues", "DeviousAttributes", ResetAttributeValues, registry));
+		registry->SetFunctionFlags("DeviousAttributes", "ResetAttributeValues", VMClassRegistry::kFunctionFlag_NoWait);
 
 		registry->RegisterFunction(new NativeFunction1 <StaticFunctionTag, float, BSFixedString>
 			("GetAttributeValue", "DeviousAttributes", GetAttributeValue, registry));

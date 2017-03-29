@@ -10,6 +10,12 @@ protected:
 	float _value;
 
 	std::string _name;
+
+	static inline float KeepInValidBoundary(float val)
+	{
+		return max(0.0, min(100.0, val));
+	}
+
 public:
 	Attribute(const std::string &name)
 	{
@@ -24,13 +30,13 @@ public:
 	void Set(float val)
 	{
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		_value = val;		
+		_value = KeepInValidBoundary(val);
 	}
 
 	void Mod(std::function<float(float)> mutator)
 	{
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		_value = mutator(_value);
+		_value = KeepInValidBoundary(mutator(_value));
 	}
 
 	float Get()

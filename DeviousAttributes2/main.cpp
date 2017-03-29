@@ -19,14 +19,6 @@ void Serialization_Load(SKSESerializationInterface* intfc)
 	g_AttributesTracker.Load(intfc);
 }
 
-void Serialization_Revert(SKSESerializationInterface * intfc)
-{
-	_MESSAGE("Reverting persisted data to defaults...");
-	g_AttributesTracker.Reset();
-	g_AttributesTracker.Save(intfc);
-}
-
-
 void Serialization_Save(SKSESerializationInterface * intfc)
 {
 	_MESSAGE("Saving persisted data...");
@@ -98,7 +90,6 @@ extern "C" {
 		else return false;
 
 		g_serialization->SetUniqueID(g_pluginHandle, 'Datt');
-		g_serialization->SetRevertCallback(g_pluginHandle, Serialization_Revert);
 		g_serialization->SetSaveCallback(g_pluginHandle, Serialization_Save);
 		g_serialization->SetLoadCallback(g_pluginHandle, Serialization_Load);
 

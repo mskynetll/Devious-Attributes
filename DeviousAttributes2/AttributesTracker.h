@@ -98,13 +98,13 @@ public:
 			_MESSAGE("Persisted pride value: %f", prideVal);
 
 			intfc->WriteRecordData(&_lastGameTimeTick, sizeof(float));
-			_MESSAGE("Persisted _lastGameTimeTick value: %f", prideVal);
+			_MESSAGE("Persisted _lastGameTimeTick value: %f", _lastGameTimeTick);
 
 			intfc->WriteRecordData(&_lastSleepTime, sizeof(float));
-			_MESSAGE("Persisted _lastSleepTime value: %f", prideVal);
+			_MESSAGE("Persisted _lastSleepTime value: %f", _lastSleepTime);
 
 			intfc->WriteRecordData(&_lastSpellCastTime, sizeof(float));
-			_MESSAGE("Persisted _lastSpellCastTime value: %f", prideVal);
+			_MESSAGE("Persisted _lastSpellCastTime value: %f", _lastSpellCastTime);
 		}
 		else
 		{
@@ -151,13 +151,13 @@ public:
 						Pride.Set(val);
 
 						intfc->ReadRecordData(&_lastGameTimeTick, sizeof(float));
-						_MESSAGE("Loaded _lastGameTimeTick value: %f", val);
+						_MESSAGE("Loaded _lastGameTimeTick value: %f", _lastGameTimeTick);
 
 						intfc->ReadRecordData(&_lastSleepTime, sizeof(float));
-						_MESSAGE("Loaded _lastSleepTime value: %f", val);
+						_MESSAGE("Loaded _lastSleepTime value: %f", _lastSleepTime);
 
 						intfc->ReadRecordData(&_lastSpellCastTime, sizeof(float));
-						_MESSAGE("Loaded _lastSpellCastTime value: %f", val);
+						_MESSAGE("Loaded _lastSpellCastTime value: %f", _lastSpellCastTime);
 					}
 					else
 					{
