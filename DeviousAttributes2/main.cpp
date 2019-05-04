@@ -7,6 +7,9 @@
 #include "DeviousAttributes.hpp"
 #include "EventsDispatcher.hpp"
 
+#pragma comment(lib,"skse.lib")
+#pragma comment(lib,"common.lib")
+
 static PluginHandle					g_pluginHandle = kPluginHandle_Invalid;
 static SKSEPapyrusInterface         *g_papyrus = nullptr;
 static SKSESerializationInterface	*g_serialization = nullptr;

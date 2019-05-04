@@ -5,7 +5,7 @@ class Attribute
 {
 protected:
 	//allows the same thread to lock the mutex multiple times
-	std::recursive_mutex _mutex;
+	std::recursive_mutex _attributeMutex;
 	
 	float _value;
 
@@ -29,19 +29,19 @@ public:
 
 	void Set(float val)
 	{
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::lock_guard<std::recursive_mutex> lock(_attributeMutex);
 		_value = KeepInValidBoundary(val);
 	}
 
 	void Mod(std::function<float(float)> mutator)
 	{
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::lock_guard<std::recursive_mutex> lock(_attributeMutex);
 		_value = KeepInValidBoundary(mutator(_value));
 	}
 
 	float Get()
 	{
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::lock_guard<std::recursive_mutex> lock(_attributeMutex);
 		return _value;
 	}	
 };

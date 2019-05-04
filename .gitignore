@@ -5,3 +5,9 @@
 /.vs
 /DeviousAttributes2/Debug/*.*
 /DeviousAttributes2/Release/*.*
+/Debug
+/common/Debug
+/*.user
+/common/Release
+/skse/Debug
+/skse/Release
