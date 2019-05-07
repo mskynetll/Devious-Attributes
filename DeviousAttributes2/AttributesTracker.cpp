@@ -5,8 +5,6 @@
 namespace AttributesTrackerPapyrus {
 	bool RegisterFuncs(VMClassRegistry* registry) {
 	
-	/*	registry->RegisterFunction(
-			new NativeFunction0 <DattAttributesTracker, SInt32>("Foo", "DattAttributesTracker", Foo, registry));*/
 		return true;
 	}
 }
@@ -47,7 +45,6 @@ void AttributesTracker::OnPlayerDeviceEquip(TESObjectARMO* armor)
 {
 	try 
 	{
-		_MESSAGE("OnPlayerDeviceEquip: %s",armor->GetName());
 	}
 	catch (const std::exception& e)
 	{
@@ -59,7 +56,6 @@ void AttributesTracker::OnPlayerDeviceUnequip(TESObjectARMO* armor)
 {
 	try 
 	{
-		_MESSAGE("OnPlayerDeviceEquip: %s",armor->GetName());
 	}
 	catch (const std::exception& e)
 	{
@@ -72,23 +68,26 @@ void AttributesTracker::OnPlayerSexEnd(SInt32 numOfActors, bool isPlayerVictim, 
 	_MESSAGE("OnPlayerSexEnd: %d, IsPlayerVictim=%s, IsPlayerAggressor=%s",numOfActors, isPlayerVictim ? "true" : "false", isPlayerAggressor? "true" : "false");
 }
 
+std::recursive_mutex HitEventMutex;
 EventResult AttributesTracker::ReceiveEvent(TESHitEvent * evn, EventDispatcher<TESHitEvent> * dispatcher)
 {	
+	if(!HitEventMutex.try_lock()) //for some weird reason, many events get dispatched twice or more
+		return EventResult::kEvent_Abort;
 	try 
 	{		
 		if ((*g_thePlayer) == (Actor*)evn->target)
 		{
-			_MESSAGE("player was hit : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
+			//_MESSAGE("player was hit : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
 		}
 		else if ((*g_thePlayer) == (Actor*)evn->caster)
 		{
 			if (evn->flags & evn->kFlag_SneakAttack)
 			{
-				_MESSAGE("player did the hit (as sneak attack) : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
+				//_MESSAGE("player did the hit (as sneak attack) : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
 			}
 			else
 			{
-				_MESSAGE("player did the hit : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
+				//_MESSAGE("player did the hit : %s --> %s", Utilities::GetFormName(evn->caster->baseForm), Utilities::GetFormName(evn->target->baseForm));
 			}
 		}
 	}
@@ -99,11 +98,14 @@ EventResult AttributesTracker::ReceiveEvent(TESHitEvent * evn, EventDispatcher<T
 	return EventResult::kEvent_Continue;
 }
 
+std::recursive_mutex DeathEventMutex;
 EventResult AttributesTracker::ReceiveEvent(TESDeathEvent * evn, EventDispatcher<TESDeathEvent> * dispatcher)
 {
+	if(!DeathEventMutex.try_lock())
+		return EventResult::kEvent_Abort;
 	try 
 	{
-		_MESSAGE("Death event: %s",evn->source->baseForm->GetFullName());
+		_MESSAGE("%s died",  Utilities::GetFormName(evn->source->baseForm));
 	}
 	catch (const std::exception& e)
 	{

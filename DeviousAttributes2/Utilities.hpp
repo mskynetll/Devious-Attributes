@@ -1,6 +1,7 @@
 #pragma once
 #include <skse/GameForms.h>
 #include <skse/GameRTTI.h>
+#include "AttributesTracker.h"
 
 namespace Utilities
 {
@@ -14,13 +15,23 @@ namespace Utilities
 
 	bool IsModLoaded(StaticFunctionTag* tag, BSFixedString modFilename)
 	{
-		DataHandler* dhdl = DataHandler::GetSingleton();
-		UInt32 idx = dhdl->GetModIndex(modFilename.data);
-	
-		return idx != 0xFF;
+		_MESSAGE("WTF");
+		auto modIndex = DataHandler::GetSingleton()->GetModIndex(modFilename.data);
+		_MESSAGE("IsModLoaded(\"%s\") -> %d",modFilename.data, modIndex);
+		return modIndex != 255;
 	}
+
 	bool RegisterFuncs(VMClassRegistry* registry) {
-		registry->RegisterFunction(new NativeFunction1<StaticFunctionTag, bool, BSFixedString>
-			("IsModLoaded", "dattUtilities", IsModLoaded, registry));
+		try{
+			registry->RegisterFunction(new NativeFunction1<StaticFunctionTag, bool, BSFixedString>
+				("IsModLoaded", "dattUtilities", IsModLoaded, registry));
+		}
+		catch (const std::exception& e)
+		{
+			_MESSAGE(e.what());
+			return false;
+		}
+
+		return true;
 	}
 }

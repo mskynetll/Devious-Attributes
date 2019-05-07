@@ -92,6 +92,14 @@ extern "C" {
 		}
 		else return false;
 
+		success = g_papyrus->Register(Utilities::RegisterFuncs);
+
+		if (success)
+		{
+			_MESSAGE("Registeration of utility functions succeeded");
+		}
+		else return false;
+
 		g_serialization->SetUniqueID(g_pluginHandle, 'Datt');
 		g_serialization->SetSaveCallback(g_pluginHandle, Serialization_Save);
 		g_serialization->SetLoadCallback(g_pluginHandle, Serialization_Load);

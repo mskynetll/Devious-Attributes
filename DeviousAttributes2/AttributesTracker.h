@@ -176,4 +176,9 @@ namespace AttributesTrackerPapyrus {
 	bool RegisterFuncs(VMClassRegistry* registry);
 }
 
+namespace Utilities {
+	bool IsModLoaded(StaticFunctionTag* tag, BSFixedString modFilename);
+	bool RegisterFuncs(VMClassRegistry* registry);
+}
+
 static AttributesTracker g_AttributesTracker;
