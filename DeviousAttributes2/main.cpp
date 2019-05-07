@@ -72,7 +72,7 @@ extern "C" {
 
 		if (success)
 		{
-			_MESSAGE("Registeration of attribute tracking functions succeeded");
+			_MESSAGE("Registration of attribute tracking functions succeeded");
 		}
 		else return false;
 
@@ -80,7 +80,7 @@ extern "C" {
 
 		if (success)
 		{
-			_MESSAGE("Registeration of event dispatching functions succeeded");
+			_MESSAGE("Registration of event dispatching functions succeeded");
 		}
 		else return false;
 
@@ -88,7 +88,7 @@ extern "C" {
 
 		if (success)
 		{
-			_MESSAGE("Registeration of attributes mutation functions succeeded");
+			_MESSAGE("Registration of attributes mutation functions succeeded");
 		}
 		else return false;
 
@@ -96,7 +96,7 @@ extern "C" {
 
 		if (success)
 		{
-			_MESSAGE("Registeration of utility functions succeeded");
+			_MESSAGE("Registration of utility functions succeeded");
 		}
 		else return false;
 

@@ -15,7 +15,6 @@ namespace Utilities
 
 	bool IsModLoaded(StaticFunctionTag* tag, BSFixedString modFilename)
 	{
-		_MESSAGE("WTF");
 		auto modIndex = DataHandler::GetSingleton()->GetModIndex(modFilename.data);
 		_MESSAGE("IsModLoaded(\"%s\") -> %d",modFilename.data, modIndex);
 		return modIndex != 255;
