@@ -1,3 +1,3 @@
 Scriptname dattUtilities Hidden
 
-Function IsModLoaded(String modFilename) global native
+bool Function IsModLoaded(String modFilename) global native

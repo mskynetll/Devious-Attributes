@@ -26,6 +26,11 @@ event OnPageReset(string page)
 		AddTextOption("SelfEsteem", DeviousAttributes.GetAttributeValue("selfesteem"), 1)
 		AddTextOption("Obedience", DeviousAttributes.GetAttributeValue("obedience"), 1)
 		AddTextOption("Pride", DeviousAttributes.GetAttributeValue("pride"), 1)		
+		
+		AddHeaderOption("Loaded Mods (soft dependencies)")
+		AddToggleOption("Sexlab Mindbreak", dattUtilities.IsModLoaded("dvmb.esp"), OPTION_FLAG_DISABLED)
+		AddToggleOption("Fall of the Dragonborn", dattUtilities.IsModLoaded("FallOfTheDragonborn.esp"), OPTION_FLAG_DISABLED)
+		
 	endif
 endEvent
 
