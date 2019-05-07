@@ -1,6 +1,6 @@
 Scriptname dattPlayerMaintenanceRef extends ReferenceAlias
 
-DattAttributesTracker Property AttributesTracker Auto
+dattAttributesTracker Property AttributesTracker Auto
 
 Event OnPlayerLoadGame()
 	AttributesTracker.Maintenance()	

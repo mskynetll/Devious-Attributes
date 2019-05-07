@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommandTable.cpp" />
+    <ClCompile Include="GameReferences.cpp" />
     <ClCompile Include="GameTypes.cpp" />
     <ClCompile Include="PapyrusActiveMagicEffect.cpp" />
     <ClCompile Include="PapyrusActor.cpp" />

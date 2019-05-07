@@ -1,4 +1,4 @@
-scriptname DattDeviousAttributesMCM extends SKI_ConfigBase
+scriptname dattDeviousAttributesMCM extends SKI_ConfigBase
 
 Event OnConfigInit()
 	Pages = new String[3]

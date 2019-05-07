@@ -69,6 +69,12 @@ struct TESSleepStartEvent
 	float endTime;		// 04
 };
 
+struct TESSleepStopEvent
+{
+	bool interrupted;
+};
+
+
 // 08
 struct MenuOpenCloseEvent
 {
@@ -444,6 +450,14 @@ public:
 };
 
 template <>
+class BSTEventSink <TESSleepStopEvent>
+{
+public:
+	virtual ~BSTEventSink() {}	// todo?
+	virtual	EventResult ReceiveEvent(TESSleepStopEvent * evn, EventDispatcher<TESSleepStopEvent> * dispatcher) = 0;
+};
+
+template <>
 class BSTEventSink <MenuOpenCloseEvent>
 {
 public:
@@ -484,7 +498,8 @@ public:
 };
 
 // For testing
-//extern EventDispatcher<TESSleepStartEvent> * g_sleepStartEventDispatcher;
+extern EventDispatcher<TESSleepStartEvent> * g_sleepStartEventDispatcher;
+extern EventDispatcher<TESSleepStopEvent> * g_sleepStopEventDispatcher;
 extern EventDispatcher<TESCombatEvent> * g_combatEventDispatcher;
 extern EventDispatcher<TESDeathEvent> * g_deathEventDispatcher;
 extern EventDispatcher<BGSFootstepEvent> * g_footstepEventDispatcher;

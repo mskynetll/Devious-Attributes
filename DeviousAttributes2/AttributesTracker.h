@@ -15,8 +15,7 @@ extern const UInt32 kSerializationVersion;
 
 class AttributesTracker :
 	public BSTEventSink<TESHitEvent>,
-	public BSTEventSink<TESDeathEvent>,
-	public BSTEventSink<TESCombatEvent>	
+	public BSTEventSink<TESDeathEvent>
 {
 protected:
 
@@ -39,14 +38,12 @@ public:
 	{		
 		g_hitEventDispatcher->AddEventSink(this);	
 		g_deathEventDispatcher->AddEventSink(this);
-		g_combatEventDispatcher->AddEventSink(this);
 	}
 
 	std::recursive_mutex AttributeChangeMutex;
 
 	virtual	EventResult ReceiveEvent(TESHitEvent* evn, EventDispatcher<TESHitEvent> * dispatcher) override;
 	virtual	EventResult ReceiveEvent(TESDeathEvent* evn, EventDispatcher<TESDeathEvent> * dispatcher) override;
-	virtual	EventResult ReceiveEvent(TESCombatEvent* evn, EventDispatcher<TESCombatEvent> * dispatcher) override;
 
 	Attribute Willpower;
 	Attribute SelfEsteem;
@@ -139,7 +136,7 @@ public:
 						Willpower.Set(val);
 
 						intfc->ReadRecordData(&val, sizeof(float));
-						_MESSAGE("Loaded SelfEsteem value: %f", val);
+						_MESSAGE("Loaded self-esteem value: %f", val);
 						SelfEsteem.Set(val);
 
 						intfc->ReadRecordData(&val, sizeof(float));

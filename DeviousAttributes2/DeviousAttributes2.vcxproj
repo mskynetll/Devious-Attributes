@@ -164,6 +164,7 @@
     <ClInclude Include="AttributesTracker.h" />
     <ClInclude Include="DeviousAttributes.hpp" />
     <ClInclude Include="EventsDispatcher.hpp" />
+    <ClInclude Include="Utilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">

@@ -1,4 +1,4 @@
-Scriptname DattAttributesTracker extends Quest
+Scriptname dattAttributesTracker extends Quest
 
 SexLabFramework Property SexLab Auto
 Actor Property Player Auto
@@ -32,8 +32,24 @@ EndEvent
 
 Function OnSexAnimationEnd(string eventName, string argString, float argNum, form sender)
 	    Actor[] participants = Sexlab.HookActors(argString)
-	    Actor victim = Sexlab.HookVictim(argString)
+		Int index = participants.Length
+		bool isSexWithPlayer = false
 
+		While index
+			index -= 1
+			If participants[index] == Player
+				isSexWithPlayer = true
+			EndIf
+		EndWhile
+
+		;at least for now, we are not interested in sex that happened with an NPC...
+		;TODO: make another event to dispatch so we could track events for NPCs such as followers
+		If isSexWithPlayer == false
+			return
+		EndIf
+		
+	    Actor victim = Sexlab.HookVictim(argString)
+;TODO: make sure the player is one of the participants, otherwise perhaps another event?
 	    bool isPlayerAggressive = false
 	    bool isPlayerVictim = false
 		If victim != None && victim == Player	

@@ -7,7 +7,9 @@
 // TESBookReadEvent																														0x012E3EF0
 // TESCellAttachDetachEvent																												0x012E3F20
 // TESCellFullyLoadedEvent																												0x012E3F50
-EventDispatcher<TESCombatEvent>* g_combatEventDispatcher = (EventDispatcher<TESCombatEvent>*) 0x012E4DB0;
+//EventDispatcher<TESCombatEvent>* g_combatEventDispatcher = (EventDispatcher<TESCombatEvent>*) 0x012E4DB0;
+EventDispatcher<TESCombatEvent>* g_combatEventDispatcher = (EventDispatcher<TESCombatEvent>*) 0x012B8804;
+
 // TESContainerChangedEvent																												0x012E3FE0
 EventDispatcher<TESDeathEvent>* g_deathEventDispatcher = (EventDispatcher<TESDeathEvent>*) 0x012E4E10;
 // TESDestructionStageChangedEvent																										0x012E4E40
@@ -35,8 +37,8 @@ EventDispatcher<TESQuestStageEvent>* g_questStageEventDispatcher = (EventDispatc
 // TESSceneActionEvent																													0x012E52F0
 // TESScenePhaseEvent																													0x012E5320
 // TESSellEvent																															0x012E5350
-//EventDispatcher<TESSleepStartEvent>* g_sleepStartEventDispatcher = (EventDispatcher<TESSleepStartEvent>*) 0x012E4580;
-// TESSleepStopEvent																													0x012E53B0
+EventDispatcher<TESSleepStartEvent>* g_sleepStartEventDispatcher = (EventDispatcher<TESSleepStartEvent>*) 0x012E4580;
+EventDispatcher<TESSleepStopEvent>* g_sleepStopEventDispatcher = (EventDispatcher<TESSleepStopEvent>*) 0x012E53B0;
 // TESSpellCastEvent																													0x012E53E0
 // TESTopicInfoEvent																													0x012E5440
 // TESTrackedStatsEvent																													0x012E5470
